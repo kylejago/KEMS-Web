@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+BASE=/opt/kems-web
+CURRENT="$BASE/current"
+VERSION="not installed"
+[[ -f "$CURRENT/package.json" ]] && VERSION="$(/usr/local/bin/node -e 'const p=require(process.argv[1]);process.stdout.write(String(p.version||"unknown"))' "$CURRENT/package.json")"
+echo "KEMS Web: $VERSION"
+echo "Repository: $(cat /usr/local/lib/kems-web/github-repo 2>/dev/null || echo unknown)"
+echo "Service: $(systemctl is-active kems-web.service 2>/dev/null || true)"
+echo "Enabled: $(systemctl is-enabled kems-web.service 2>/dev/null || true)"
+HOST="$(hostnamectl --static 2>/dev/null || hostname)"
+echo "LAN URL: http://${HOST}.local:4173"
+IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
+[[ -n "$IP" ]] && echo "IP URL:  http://${IP}:4173"
+echo "Data: /var/lib/kems-web"

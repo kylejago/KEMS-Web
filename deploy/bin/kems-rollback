@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -euo pipefail
+[[ ${EUID:-$(id -u)} -eq 0 ]] || { echo "Run with sudo." >&2; exit 1; }
+BASE=/opt/kems-web
+CURRENT="$BASE/current"
+ACTIVE="$(readlink -f "$CURRENT" 2>/dev/null || true)"
+mapfile -t RELEASES < <(find "$BASE/releases" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %p\n' | sort -nr | awk '{print $2}')
+TARGET=""
+for item in "${RELEASES[@]:-}"; do
+  [[ "$item" != "$ACTIVE" ]] && { TARGET="$item"; break; }
+done
+[[ -n "$TARGET" ]] || { echo "No previous KEMS Web release is available." >&2; exit 2; }
+ln -sfn "$TARGET" "$BASE/current.new"
+mv -Tf "$BASE/current.new" "$CURRENT"
+systemctl restart kems-web.service
+for _ in $(seq 1 20); do
+  if /usr/local/bin/node /usr/local/lib/kems-web/healthcheck.mjs http://127.0.0.1:4173/api/health >/dev/null 2>&1; then
+    echo "Rolled back to $(basename "$TARGET")."
+    exit 0
+  fi
+  sleep 1
+done
+echo "Rollback target did not pass health check." >&2
+exit 3

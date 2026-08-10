@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#071217" />
+  <meta name="description" content="Focused live, simulated, comparison and ROI dashboard for KEMS 0.7.0-alpha5." />
+  <title>KEMS Alpha5 — Energy Dashboard</title>
+  <link rel="icon" href="logo.svg" type="image/svg+xml" />
+  <link rel="manifest" href="site.webmanifest" />
+  <link rel="apple-touch-icon" href="icons/kems-192.png" />
+  <link rel="stylesheet" href="styles.css?v=alpha5web2" />
+</head>
+<body>
+  <div class="ambient" aria-hidden="true"><span></span><span></span><span></span></div>
+  <header class="topbar">
+    <a class="brand" href="#live" aria-label="KEMS live dashboard">
+      <img src="logo.svg" alt="" />
+      <span><strong>KEMS</strong><small>alpha5 energy dashboard</small></span>
+    </a>
+    <nav class="primary-nav" aria-label="Primary navigation">
+      <a href="#live" data-route="live">Live today</a>
+      <a href="#simulation" data-route="simulation">Simulated today</a>
+      <a href="#compare" data-route="compare">Live vs simulated</a>
+      <a href="#performance" data-route="performance">Performance &amp; ROI</a>
+    </nav>
+    <div class="top-actions">
+      <span class="connection-pill" id="connection-pill"><i></i><span>Starting</span></span>
+      <button class="icon-button" id="refresh-button" type="button" title="Refresh data" aria-label="Refresh data">↻</button>
+      <button class="settings-button" id="settings-button" type="button" aria-label="Open settings">Settings</button>
+      <button class="icon-button mobile-menu" id="menu-button" type="button" aria-label="Open navigation" aria-expanded="false">☰</button>
+    </div>
+  </header>
+  <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile navigation">
+    <a href="#live" data-route="live">Live today</a>
+    <a href="#simulation" data-route="simulation">Simulated today</a>
+    <a href="#compare" data-route="compare">Live vs simulated</a>
+    <a href="#performance" data-route="performance">Performance &amp; ROI</a>
+  </nav>
+  <main id="app" class="app" tabindex="-1">
+    <section class="loading-screen"><img src="logo.svg" alt="" /><h1>Starting KEMS</h1><p>Preparing your energy dashboard…</p></section>
+  </main>
+  <div id="drawer-root"></div>
+  <div id="modal-root"></div>
+  <div id="toast-root" class="toast-root" aria-live="polite"></div>
+  <script type="module" src="app.js?v=alpha5web2"></script>
+</body>
+</html>

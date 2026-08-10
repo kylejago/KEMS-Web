@@ -1,0 +1,34 @@
+[Unit]
+Description=KEMS Focused Energy Dashboard
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+DynamicUser=yes
+StateDirectory=kems-web
+StateDirectoryMode=0700
+WorkingDirectory=/opt/kems-web/current
+Environment=NODE_ENV=production
+Environment=HOST=0.0.0.0
+Environment=PORT=4173
+Environment=TZ=Europe/London
+Environment=DATA_DIR=/var/lib/kems-web
+ExecStart=/usr/local/bin/node /opt/kems-web/current/server.mjs
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=15
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+RestrictRealtime=yes
+CapabilityBoundingSet=
+
+[Install]
+WantedBy=multi-user.target

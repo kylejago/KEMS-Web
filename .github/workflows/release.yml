@@ -1,0 +1,86 @@
+name: Publish KEMS Web release
+
+on:
+  push:
+    tags:
+      - 'web-v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Website version from package.json, e.g. 0.7.0-alpha5-web.3'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Test KEMS Web
+        run: npm test
+
+      - name: Resolve release version
+        id: meta
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION=$(node -p "require('./package.json').version")
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            REQUESTED='${{ inputs.version }}'
+            [ "$VERSION" = "$REQUESTED" ] || { echo "Requested $REQUESTED but package.json is $VERSION" >&2; exit 1; }
+            TAG="web-v${VERSION}"
+          else
+            TAG="$GITHUB_REF_NAME"
+            EXPECTED="${TAG#web-v}"
+            [ "$VERSION" = "$EXPECTED" ] || { echo "Tag version $EXPECTED does not match package.json $VERSION" >&2; exit 1; }
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Build Raspberry Pi release asset
+        id: build
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION='${{ steps.meta.outputs.version }}'
+          NAME="kems-web-${VERSION}-pi"
+          mkdir -p "dist/${NAME}"
+          for item in package.json server.mjs public config scripts README.md CHANGELOG.md LICENSE .env.example; do
+            [ -e "$item" ] && cp -a "$item" "dist/${NAME}/"
+          done
+          mkdir -p "dist/${NAME}/data"
+          touch "dist/${NAME}/data/.gitkeep"
+          tar -C dist -czf "dist/${NAME}.tar.gz" "$NAME"
+          (cd dist && sha256sum "${NAME}.tar.gz" > "${NAME}.tar.gz.sha256")
+          echo "archive=dist/${NAME}.tar.gz" >> "$GITHUB_OUTPUT"
+          echo "checksum=dist/${NAME}.tar.gz.sha256" >> "$GITHUB_OUTPUT"
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION='${{ steps.meta.outputs.version }}'
+          TAG='${{ steps.meta.outputs.tag }}'
+          PRERELEASE=''
+          case "$VERSION" in
+            *alpha*|*beta*|*rc*) PRERELEASE='--prerelease' ;;
+          esac
+          gh release create "$TAG" \
+            '${{ steps.build.outputs.archive }}' \
+            '${{ steps.build.outputs.checksum }}' \
+            --target "$GITHUB_SHA" \
+            --title "KEMS Web ${VERSION}" \
+            --generate-notes \
+            $PRERELEASE

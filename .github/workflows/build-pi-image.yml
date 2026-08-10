@@ -1,0 +1,133 @@
+name: Build KEMS Pi headless image
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'image/**'
+      - '.github/workflows/build-pi-image.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  image:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - name: Check out KEMS Web
+        uses: actions/checkout@v4
+
+      - name: Install image tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xz-utils util-linux mount
+
+      - name: Download and verify Raspberry Pi OS Lite 64-bit
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL='https://downloads.raspberrypi.com/raspios_lite_arm64/images/raspios_lite_arm64-2026-06-19/2026-06-18-raspios-trixie-arm64-lite.img.xz'
+          EXPECTED='acff736ca7945e3b305f07cda4abdb870910e12634991da69783611756e381b3'
+          curl -fL --retry 8 --retry-delay 5 "$URL" -o base.img.xz
+          echo "$EXPECTED  base.img.xz" | sha256sum -c -
+          xz -T0 -dk base.img.xz
+
+      - name: Inject zero-touch KEMS bootstrap
+        id: build
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMG=base.img
+          ROOT="$RUNNER_TEMP/kems-root"
+          BOOT="$RUNNER_TEMP/kems-boot"
+          mkdir -p "$ROOT" "$BOOT"
+
+          LOOP=$(sudo losetup --find --show --partscan "$IMG")
+          echo "loop=$LOOP" >> "$GITHUB_OUTPUT"
+          cleanup() {
+            sudo umount "$BOOT" 2>/dev/null || true
+            sudo umount "$ROOT" 2>/dev/null || true
+            sudo losetup -d "$LOOP" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+          sudo udevadm settle
+          sleep 2
+
+          sudo mount "${LOOP}p2" "$ROOT"
+          sudo mount "${LOOP}p1" "$BOOT"
+
+          sudo install -m 0755 image/kems-firstboot.sh "$ROOT/usr/local/sbin/kems-firstboot"
+          sudo install -m 0644 image/kems-firstboot.service "$ROOT/etc/systemd/system/kems-firstboot.service"
+          sudo mkdir -p "$ROOT/etc/systemd/system/multi-user.target.wants"
+          sudo ln -sfn ../kems-firstboot.service \
+            "$ROOT/etc/systemd/system/multi-user.target.wants/kems-firstboot.service"
+          sudo mkdir -p "$ROOT/var/lib/kems-bootstrap"
+
+          # Default appliance hostname. Raspberry Pi Imager/cloud-init can still
+          # replace it when the user explicitly chooses another hostname.
+          echo 'kems-pi' | sudo tee "$ROOT/etc/hostname" >/dev/null
+          if sudo grep -qE '^127\.0\.1\.1[[:space:]]+' "$ROOT/etc/hosts"; then
+            sudo sed -i -E 's/^127\.0\.1\.1.*/127.0.1.1\tkems-pi/' "$ROOT/etc/hosts"
+          else
+            echo -e '127.0.1.1\tkems-pi' | sudo tee -a "$ROOT/etc/hosts" >/dev/null
+          fi
+
+          # Set a cloud-init default hostname without creating a universal login.
+          # NetworkManager's normal Ethernet DHCP remains untouched.
+          if [[ -f "$BOOT/user-data" ]]; then
+            sudo cp "$BOOT/user-data" "$BOOT/user-data.kems-original"
+          fi
+          cat <<'CLOUD' | sudo tee "$BOOT/user-data" >/dev/null
+          #cloud-config
+          hostname: kems-pi
+          manage_etc_hosts: true
+          timezone: Europe/London
+          ssh_pwauth: false
+          CLOUD
+
+          sync
+          cleanup
+          trap - EXIT
+
+      - name: Compress and checksum image
+        id: package
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION=$(node -p "require('./package.json').version")
+          NAME="KEMS-Pi-${VERSION}-headless.img.xz"
+          mv base.img KEMS-Pi.img
+          xz -T0 -9 KEMS-Pi.img
+          mv KEMS-Pi.img.xz "$NAME"
+          sha256sum "$NAME" > "$NAME.sha256"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: KEMS-Pi-headless-image
+          path: |
+            ${{ steps.package.outputs.name }}
+            ${{ steps.package.outputs.name }}.sha256
+          retention-days: 14
+
+      - name: Publish/update Pi image release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.package.outputs.version }}
+          NAME: ${{ steps.package.outputs.name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="pi-image-v${VERSION}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$NAME" "$NAME.sha256" --clobber
+          else
+            gh release create "$TAG" "$NAME" "$NAME.sha256" \
+              --target "$GITHUB_SHA" \
+              --title "KEMS Pi headless image ${VERSION}" \
+              --notes "Zero-touch Raspberry Pi 4B image. Flash with Raspberry Pi Imager, connect Ethernet, and power on. KEMS installs itself from GitHub on first boot." \
+              --prerelease
+          fi

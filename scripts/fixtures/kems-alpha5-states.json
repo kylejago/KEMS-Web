@@ -1,0 +1,2594 @@
+[
+  {
+    "entity_id": "binary_sensor.kems_accumulator_healthy",
+    "state": "on",
+    "attributes": {
+      "friendly_name": "KEMS Accumulator healthy"
+    },
+    "last_changed": "2026-08-10T18:39:50.442209+00:00",
+    "last_updated": "2026-08-10T18:39:50.442209+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_battery_data_available",
+    "state": "unavailable",
+    "attributes": {
+      "friendly_name": "KEMS Battery data available"
+    },
+    "last_changed": "2026-08-10T18:31:45.754321+00:00",
+    "last_updated": "2026-08-10T18:31:45.754321+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_battery_export_enabled_in_simulation",
+    "state": "off",
+    "attributes": {
+      "friendly_name": "KEMS Battery export enabled in simulation"
+    },
+    "last_changed": "2026-08-10T18:39:50.438159+00:00",
+    "last_updated": "2026-08-10T18:39:50.438159+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_battery_export_paused_for_home_reserve",
+    "state": "off",
+    "attributes": {
+      "friendly_name": "KEMS Battery export paused for home reserve"
+    },
+    "last_changed": "2026-08-10T18:39:50.438298+00:00",
+    "last_updated": "2026-08-10T18:39:50.438298+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_battery_export_reduced_for_power_down_session",
+    "state": "off",
+    "attributes": {
+      "friendly_name": "KEMS Battery export reduced for Power Down session"
+    },
+    "last_changed": "2026-08-10T18:39:50.438957+00:00",
+    "last_updated": "2026-08-10T18:39:50.438957+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_battery_reserved_for_power_down_session",
+    "state": "off",
+    "attributes": {
+      "friendly_name": "KEMS Battery reserved for Power Down session"
+    },
+    "last_changed": "2026-08-10T18:39:50.438823+00:00",
+    "last_updated": "2026-08-10T18:39:50.438823+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_cheap_period_confirmed",
+    "state": "off",
+    "attributes": {
+      "friendly_name": "KEMS Cheap period confirmed"
+    },
+    "last_changed": "2026-08-10T18:39:50.436999+00:00",
+    "last_updated": "2026-08-10T18:39:50.436999+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_control_commands_permitted",
+    "state": "off",
+    "attributes": {
+      "friendly_name": "KEMS Control commands permitted"
+    },
+    "last_changed": "2026-08-10T18:39:50.441283+00:00",
+    "last_updated": "2026-08-10T18:39:50.441283+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_control_data_fresh",
+    "state": "on",
+    "attributes": {
+      "friendly_name": "KEMS Control data fresh"
+    },
+    "last_changed": "2026-08-10T18:39:50.440741+00:00",
+    "last_updated": "2026-08-10T18:39:50.440741+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_control_enabled",
+    "state": "off",
+    "attributes": {
+      "friendly_name": "KEMS Control enabled"
+    },
+    "last_changed": "2026-08-10T18:39:50.440881+00:00",
+    "last_updated": "2026-08-10T18:39:50.440881+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_control_plan_safe",
+    "state": "on",
+    "attributes": {
+      "friendly_name": "KEMS Control plan safe"
+    },
+    "last_changed": "2026-08-10T18:39:50.440598+00:00",
+    "last_updated": "2026-08-10T18:39:50.440598+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_eps_load_critical",
+    "state": "off",
+    "attributes": {
+      "friendly_name": "KEMS EPS load critical"
+    },
+    "last_changed": "2026-08-10T18:39:50.441678+00:00",
+    "last_updated": "2026-08-10T18:39:50.441678+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_eps_load_warning",
+    "state": "off",
+    "attributes": {
+      "friendly_name": "KEMS EPS load warning"
+    },
+    "last_changed": "2026-08-10T18:39:50.441550+00:00",
+    "last_updated": "2026-08-10T18:39:50.441550+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_ev_charging",
+    "state": "off",
+    "attributes": {
+      "friendly_name": "KEMS EV charging"
+    },
+    "last_changed": "2026-08-10T18:39:50.437414+00:00",
+    "last_updated": "2026-08-10T18:39:50.437414+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_ev_charging_allowed_by_control",
+    "state": "on",
+    "attributes": {
+      "friendly_name": "KEMS EV charging allowed by control"
+    },
+    "last_changed": "2026-08-10T18:39:50.441805+00:00",
+    "last_updated": "2026-08-10T18:39:50.441805+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_ev_connected",
+    "state": "off",
+    "attributes": {
+      "friendly_name": "KEMS EV connected"
+    },
+    "last_changed": "2026-08-10T18:39:50.437218+00:00",
+    "last_updated": "2026-08-10T18:39:50.437218+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_export_tariff_active",
+    "state": "off",
+    "attributes": {
+      "friendly_name": "KEMS Export tariff active"
+    },
+    "last_changed": "2026-08-10T18:39:50.437886+00:00",
+    "last_updated": "2026-08-10T18:39:50.437886+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_gas_data_available",
+    "state": "on",
+    "attributes": {
+      "friendly_name": "KEMS Gas data available"
+    },
+    "last_changed": "2026-08-10T18:39:50.437608+00:00",
+    "last_updated": "2026-08-10T18:39:50.437608+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_grid_available_for_control",
+    "state": "on",
+    "attributes": {
+      "friendly_name": "KEMS Grid available for control"
+    },
+    "last_changed": "2026-08-10T18:39:50.439992+00:00",
+    "last_updated": "2026-08-10T18:39:50.439992+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_grid_export_allowed_by_control",
+    "state": "off",
+    "attributes": {
+      "friendly_name": "KEMS Grid export allowed by control"
+    },
+    "last_changed": "2026-08-10T18:39:50.441940+00:00",
+    "last_updated": "2026-08-10T18:39:50.441940+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_grid_import_outside_cheap_period",
+    "state": "on",
+    "attributes": {
+      "friendly_name": "KEMS Grid import outside cheap period"
+    },
+    "last_changed": "2026-08-10T18:39:50.439862+00:00",
+    "last_updated": "2026-08-10T18:39:50.439862+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_historical_repair_required",
+    "state": "off",
+    "attributes": {
+      "friendly_name": "KEMS Historical repair required"
+    },
+    "last_changed": "2026-08-10T18:39:50.442339+00:00",
+    "last_updated": "2026-08-10T18:39:50.442339+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_intelligent_slot",
+    "state": "off",
+    "attributes": {
+      "friendly_name": "KEMS Intelligent slot"
+    },
+    "last_changed": "2026-08-10T18:39:50.436852+00:00",
+    "last_updated": "2026-08-10T18:39:50.436852+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_island_battery_conservation_active",
+    "state": "off",
+    "attributes": {
+      "friendly_name": "KEMS Island battery conservation active"
+    },
+    "last_changed": "2026-08-10T18:39:50.441421+00:00",
+    "last_updated": "2026-08-10T18:39:50.441421+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_last_power_down_completed_successfully",
+    "state": "off",
+    "attributes": {
+      "friendly_name": "KEMS Last Power Down completed successfully"
+    },
+    "last_changed": "2026-08-10T18:39:50.442603+00:00",
+    "last_updated": "2026-08-10T18:39:50.442603+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_last_power_down_ev_successfully_blocked",
+    "state": "off",
+    "attributes": {
+      "friendly_name": "KEMS Last Power Down EV successfully blocked"
+    },
+    "last_changed": "2026-08-10T18:39:50.442732+00:00",
+    "last_updated": "2026-08-10T18:39:50.442732+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_last_power_down_result_available",
+    "state": "off",
+    "attributes": {
+      "friendly_name": "KEMS Last Power Down result available"
+    },
+    "last_changed": "2026-08-10T18:39:50.442469+00:00",
+    "last_updated": "2026-08-10T18:39:50.442469+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_learning_ready",
+    "state": "on",
+    "attributes": {
+      "friendly_name": "KEMS Learning ready"
+    },
+    "last_changed": "2026-08-10T18:39:50.439091+00:00",
+    "last_updated": "2026-08-10T18:39:50.439091+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_no_export_mode_active",
+    "state": "on",
+    "attributes": {
+      "friendly_name": "KEMS No-export mode active"
+    },
+    "last_changed": "2026-08-10T18:39:50.438019+00:00",
+    "last_updated": "2026-08-10T18:39:50.438019+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_off_peak",
+    "state": "off",
+    "attributes": {
+      "friendly_name": "KEMS Off peak"
+    },
+    "last_changed": "2026-08-10T18:39:50.436701+00:00",
+    "last_updated": "2026-08-10T18:39:50.436701+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_power_down_baseline_incomplete",
+    "state": "on",
+    "attributes": {
+      "friendly_name": "KEMS Power Down baseline incomplete"
+    },
+    "last_changed": "2026-08-10T18:39:50.438692+00:00",
+    "last_updated": "2026-08-10T18:39:50.438692+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_power_down_session_active",
+    "state": "off",
+    "attributes": {
+      "friendly_name": "KEMS Power Down session active"
+    },
+    "last_changed": "2026-08-10T18:39:50.438561+00:00",
+    "last_updated": "2026-08-10T18:39:50.438561+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_power_down_session_joined",
+    "state": "on",
+    "attributes": {
+      "friendly_name": "KEMS Power Down session joined"
+    },
+    "last_changed": "2026-08-10T18:39:50.438431+00:00",
+    "last_updated": "2026-08-10T18:39:50.438431+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_proposal_solar_model_active",
+    "state": "on",
+    "attributes": {
+      "friendly_name": "KEMS Proposal solar model active"
+    },
+    "last_changed": "2026-08-10T18:39:50.437752+00:00",
+    "last_updated": "2026-08-10T18:39:50.437752+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_real_control_backend_available",
+    "state": "off",
+    "attributes": {
+      "friendly_name": "KEMS Real control backend available"
+    },
+    "last_changed": "2026-08-10T18:39:50.441152+00:00",
+    "last_updated": "2026-08-10T18:39:50.441152+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_roi_prediction_ready",
+    "state": "on",
+    "attributes": {
+      "friendly_name": "KEMS ROI prediction ready"
+    },
+    "last_changed": "2026-08-10T18:39:50.439477+00:00",
+    "last_updated": "2026-08-10T18:39:50.439477+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_simulation_ready",
+    "state": "on",
+    "attributes": {
+      "friendly_name": "KEMS Simulation ready"
+    },
+    "last_changed": "2026-08-10T18:39:50.439221+00:00",
+    "last_updated": "2026-08-10T18:39:50.439221+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_simulation_shows_a_saving",
+    "state": "on",
+    "attributes": {
+      "friendly_name": "KEMS Simulation shows a saving"
+    },
+    "last_changed": "2026-08-10T18:39:50.439348+00:00",
+    "last_updated": "2026-08-10T18:39:50.439348+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_site_import_limit_exceeded",
+    "state": "off",
+    "attributes": {
+      "friendly_name": "KEMS Site import limit exceeded"
+    },
+    "last_changed": "2026-08-10T18:39:50.442073+00:00",
+    "last_updated": "2026-08-10T18:39:50.442073+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_system_commissioned_for_control",
+    "state": "off",
+    "attributes": {
+      "friendly_name": "KEMS System commissioned for control"
+    },
+    "last_changed": "2026-08-10T18:39:50.441014+00:00",
+    "last_updated": "2026-08-10T18:39:50.441014+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_system_installed",
+    "state": "off",
+    "attributes": {
+      "friendly_name": "KEMS System installed"
+    },
+    "last_changed": "2026-08-10T18:39:50.439608+00:00",
+    "last_updated": "2026-08-10T18:39:50.439608+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_system_paid_back",
+    "state": "off",
+    "attributes": {
+      "friendly_name": "KEMS System paid back"
+    },
+    "last_changed": "2026-08-10T18:39:50.439736+00:00",
+    "last_updated": "2026-08-10T18:39:50.439736+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.kems_whole_house_island_mode",
+    "state": "off",
+    "attributes": {
+      "friendly_name": "KEMS Whole-house island mode"
+    },
+    "last_changed": "2026-08-10T18:39:50.440184+00:00",
+    "last_updated": "2026-08-10T18:39:50.440184+00:00"
+  },
+  {
+    "entity_id": "select.kems_operating_mode",
+    "state": "simulate",
+    "attributes": {
+      "friendly_name": "KEMS Operating mode"
+    },
+    "last_changed": "2026-08-10T18:39:50.443045+00:00",
+    "last_updated": "2026-08-10T18:39:50.443045+00:00"
+  },
+  {
+    "entity_id": "select.kems_virtual_scenario",
+    "state": "normal",
+    "attributes": {
+      "friendly_name": "KEMS Virtual scenario"
+    },
+    "last_changed": "2026-08-10T18:39:50.443220+00:00",
+    "last_updated": "2026-08-10T18:39:50.443220+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_accumulation_days_complete",
+    "state": "6",
+    "attributes": {
+      "friendly_name": "KEMS Accumulation days complete"
+    },
+    "last_changed": "2026-08-10T18:39:50.431543+00:00",
+    "last_updated": "2026-08-10T18:39:50.431543+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_accumulator_status",
+    "state": "healthy",
+    "attributes": {
+      "friendly_name": "KEMS Accumulator status"
+    },
+    "last_changed": "2026-08-10T18:42:50.007758+00:00",
+    "last_updated": "2026-08-10T18:42:50.007758+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_actual_payback_date",
+    "state": "unknown",
+    "attributes": {
+      "friendly_name": "KEMS Actual payback date",
+      "device_class": "timestamp"
+    },
+    "last_changed": "2026-08-10T18:39:50.419540+00:00",
+    "last_updated": "2026-08-10T18:39:50.419540+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_actual_payback_remaining",
+    "state": "unknown",
+    "attributes": {
+      "friendly_name": "KEMS Actual payback remaining",
+      "unit_of_measurement": "GBP",
+      "device_class": "monetary"
+    },
+    "last_changed": "2026-08-10T18:39:50.419383+00:00",
+    "last_updated": "2026-08-10T18:39:50.419383+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_actual_roi",
+    "state": "unknown",
+    "attributes": {
+      "friendly_name": "KEMS Actual ROI",
+      "unit_of_measurement": "%"
+    },
+    "last_changed": "2026-08-10T18:39:50.419220+00:00",
+    "last_updated": "2026-08-10T18:39:50.419220+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_actual_system_value_today",
+    "state": "unknown",
+    "attributes": {
+      "friendly_name": "KEMS Actual system value today",
+      "unit_of_measurement": "GBP",
+      "device_class": "monetary"
+    },
+    "last_changed": "2026-08-10T18:39:50.418854+00:00",
+    "last_updated": "2026-08-10T18:39:50.418854+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_actual_system_value_total",
+    "state": "unknown",
+    "attributes": {
+      "friendly_name": "KEMS Actual system value total",
+      "unit_of_measurement": "GBP",
+      "device_class": "monetary",
+      "state_class": "total"
+    },
+    "last_changed": "2026-08-10T18:42:50.005645+00:00",
+    "last_updated": "2026-08-10T18:42:50.005645+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_advice",
+    "state": "Day-rate grid import detected",
+    "attributes": {
+      "friendly_name": "KEMS Advice"
+    },
+    "last_changed": "2026-08-10T18:42:49.998867+00:00",
+    "last_updated": "2026-08-10T18:42:49.998867+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_all_time_energy_summary",
+    "state": "6141.39",
+    "attributes": {
+      "friendly_name": "KEMS All-time energy summary",
+      "unit_of_measurement": "p",
+      "start_date": "2026-08-01",
+      "end_date": "2026-08-10",
+      "days_included": 10,
+      "complete_days": 6,
+      "incomplete_days": 3,
+      "data_complete": false,
+      "house_consumption_kwh": 302.369,
+      "ev_energy_kwh": 46.958,
+      "grid_import_kwh": 302.369,
+      "grid_export_kwh": 0.0,
+      "solar_generation_kwh": 0.0,
+      "battery_charge_kwh": 0.0,
+      "battery_discharge_kwh": 0.0,
+      "gas_consumption_kwh": 2.334,
+      "import_cost_pence": 5791.39,
+      "export_income_pence": 0.0,
+      "gas_cost_pence": 350.0,
+      "actual_avoided_import_value_pence": 0.0,
+      "actual_system_value_pence": 0.0,
+      "simulated_grid_import_kwh": 465.528,
+      "simulated_grid_export_kwh": 376.374,
+      "simulated_solar_generation_kwh": 266.738,
+      "simulated_battery_charge_kwh": 335.316,
+      "simulated_battery_to_home_kwh": 160.034,
+      "simulated_battery_export_kwh": 141.222,
+      "simulated_avoided_day_rate_import_kwh": 160.034,
+      "simulated_import_cost_pence": 2422.63,
+      "simulated_export_income_pence": 4516.48,
+      "simulated_net_cost_pence": -2164.95,
+      "simulated_avoided_import_value_pence": 3368.79,
+      "simulated_system_value_pence": 7956.36,
+      "actual_net_cost_pence": 6141.39
+    },
+    "last_changed": "2026-08-10T18:42:50.008670+00:00",
+    "last_updated": "2026-08-10T18:42:50.008670+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_avoided_day_rate_import_today",
+    "state": "7.702",
+    "attributes": {
+      "friendly_name": "KEMS Avoided day-rate import today",
+      "unit_of_measurement": "kWh",
+      "device_class": "energy"
+    },
+    "last_changed": "2026-08-10T18:41:49.999699+00:00",
+    "last_updated": "2026-08-10T18:41:49.999699+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_battery_energy_reserved_for_home",
+    "state": "5.632",
+    "attributes": {
+      "friendly_name": "KEMS Battery energy reserved for home",
+      "unit_of_measurement": "kWh",
+      "device_class": "energy"
+    },
+    "last_changed": "2026-08-10T18:42:50.002233+00:00",
+    "last_updated": "2026-08-10T18:42:50.002233+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_battery_power",
+    "state": "unavailable",
+    "attributes": {
+      "friendly_name": "KEMS Battery power",
+      "unit_of_measurement": "kW",
+      "device_class": "power",
+      "state_class": "measurement"
+    },
+    "last_changed": "2026-08-10T18:31:45.754334+00:00",
+    "last_updated": "2026-08-10T18:31:45.754334+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_battery_state_of_charge",
+    "state": "unavailable",
+    "attributes": {
+      "friendly_name": "KEMS Battery state of charge",
+      "unit_of_measurement": "%",
+      "device_class": "battery"
+    },
+    "last_changed": "2026-08-10T18:31:45.754308+00:00",
+    "last_updated": "2026-08-10T18:31:45.754308+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_configured_site_import_limit",
+    "state": "unknown",
+    "attributes": {
+      "friendly_name": "KEMS Configured site import limit",
+      "unit_of_measurement": "kW",
+      "device_class": "power"
+    },
+    "last_changed": "2026-08-10T18:39:50.430227+00:00",
+    "last_updated": "2026-08-10T18:39:50.430227+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_control_blocked_reason",
+    "state": "Virtual backend only",
+    "attributes": {
+      "friendly_name": "KEMS Control blocked reason"
+    },
+    "last_changed": "2026-08-10T18:39:50.428015+00:00",
+    "last_updated": "2026-08-10T18:39:50.428015+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_control_data_age",
+    "state": "16.3",
+    "attributes": {
+      "friendly_name": "KEMS Control data age",
+      "unit_of_measurement": "s"
+    },
+    "last_changed": "2026-08-10T18:42:50.007030+00:00",
+    "last_updated": "2026-08-10T18:42:50.007030+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_control_next_action",
+    "state": "Use solar and battery for the home; keep deliberate grid export disabled until the export tariff is active",
+    "attributes": {
+      "friendly_name": "KEMS Control next action"
+    },
+    "last_changed": "2026-08-10T18:39:50.428169+00:00",
+    "last_updated": "2026-08-10T18:39:50.428169+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_control_operating_reason",
+    "state": "awaiting_export_tariff",
+    "attributes": {
+      "friendly_name": "KEMS Control operating reason"
+    },
+    "last_changed": "2026-08-10T18:39:50.425135+00:00",
+    "last_updated": "2026-08-10T18:39:50.425135+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_control_preflight",
+    "state": "PASS",
+    "attributes": {
+      "friendly_name": "KEMS Control preflight"
+    },
+    "last_changed": "2026-08-10T18:39:50.428318+00:00",
+    "last_updated": "2026-08-10T18:39:50.428318+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_current_import_rate",
+    "state": "28.3036",
+    "attributes": {
+      "friendly_name": "KEMS Current import rate",
+      "unit_of_measurement": "p/kWh"
+    },
+    "last_changed": "2026-08-10T18:39:50.401910+00:00",
+    "last_updated": "2026-08-10T18:39:50.401910+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_data_quality",
+    "state": "100.0",
+    "attributes": {
+      "friendly_name": "KEMS Data quality",
+      "unit_of_measurement": "%"
+    },
+    "last_changed": "2026-08-10T18:42:49.997028+00:00",
+    "last_updated": "2026-08-10T18:42:49.997028+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_desired_battery_charge_power",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS Desired battery charge power",
+      "unit_of_measurement": "kW",
+      "device_class": "power"
+    },
+    "last_changed": "2026-08-10T18:39:50.425447+00:00",
+    "last_updated": "2026-08-10T18:39:50.425447+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_desired_battery_export_power",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS Desired battery export power",
+      "unit_of_measurement": "kW",
+      "device_class": "power"
+    },
+    "last_changed": "2026-08-10T18:39:50.425773+00:00",
+    "last_updated": "2026-08-10T18:39:50.425773+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_desired_battery_to_home_power",
+    "state": "1.28",
+    "attributes": {
+      "friendly_name": "KEMS Desired battery to home power",
+      "unit_of_measurement": "kW",
+      "device_class": "power"
+    },
+    "last_changed": "2026-08-10T18:42:50.006663+00:00",
+    "last_updated": "2026-08-10T18:42:50.006663+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_desired_inverter_work_mode",
+    "state": "Self Use",
+    "attributes": {
+      "friendly_name": "KEMS Desired inverter work mode"
+    },
+    "last_changed": "2026-08-10T18:39:50.425285+00:00",
+    "last_updated": "2026-08-10T18:39:50.425285+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_desired_minimum_soc",
+    "state": "10.0",
+    "attributes": {
+      "friendly_name": "KEMS Desired minimum SOC",
+      "unit_of_measurement": "%"
+    },
+    "last_changed": "2026-08-10T18:39:50.426127+00:00",
+    "last_updated": "2026-08-10T18:39:50.426127+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_desired_total_battery_discharge_power",
+    "state": "1.28",
+    "attributes": {
+      "friendly_name": "KEMS Desired total battery discharge power",
+      "unit_of_measurement": "kW",
+      "device_class": "power"
+    },
+    "last_changed": "2026-08-10T18:42:50.006750+00:00",
+    "last_updated": "2026-08-10T18:42:50.006750+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_eps_headroom",
+    "state": "7.0",
+    "attributes": {
+      "friendly_name": "KEMS EPS headroom",
+      "unit_of_measurement": "kW",
+      "device_class": "power"
+    },
+    "last_changed": "2026-08-10T18:39:50.426457+00:00",
+    "last_updated": "2026-08-10T18:39:50.426457+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_eps_load_reduction_required",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS EPS load reduction required",
+      "unit_of_measurement": "kW",
+      "device_class": "power"
+    },
+    "last_changed": "2026-08-10T18:39:50.430874+00:00",
+    "last_updated": "2026-08-10T18:39:50.430874+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_eps_load_status",
+    "state": "not_active",
+    "attributes": {
+      "friendly_name": "KEMS EPS load status"
+    },
+    "last_changed": "2026-08-10T18:39:50.430711+00:00",
+    "last_updated": "2026-08-10T18:39:50.430711+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_eps_output_limit",
+    "state": "7.0",
+    "attributes": {
+      "friendly_name": "KEMS EPS output limit",
+      "unit_of_measurement": "kW",
+      "device_class": "power"
+    },
+    "last_changed": "2026-08-10T18:39:50.430045+00:00",
+    "last_updated": "2026-08-10T18:39:50.430045+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_eps_utilisation",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS EPS utilisation",
+      "unit_of_measurement": "%"
+    },
+    "last_changed": "2026-08-10T18:39:50.426610+00:00",
+    "last_updated": "2026-08-10T18:39:50.426610+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_estimated_lifetime_battery_cycles",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS Estimated lifetime battery cycles",
+      "unit_of_measurement": "cycles"
+    },
+    "last_changed": "2026-08-10T18:39:50.424349+00:00",
+    "last_updated": "2026-08-10T18:39:50.424349+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_estimated_outage_runtime",
+    "state": "unknown",
+    "attributes": {
+      "friendly_name": "KEMS Estimated outage runtime",
+      "unit_of_measurement": "h"
+    },
+    "last_changed": "2026-08-10T18:39:50.427714+00:00",
+    "last_updated": "2026-08-10T18:39:50.427714+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_estimated_power_down_session_bonus",
+    "state": "4.32",
+    "attributes": {
+      "friendly_name": "KEMS Estimated Power Down session bonus",
+      "unit_of_measurement": "p"
+    },
+    "last_changed": "2026-08-10T18:39:50.412788+00:00",
+    "last_updated": "2026-08-10T18:39:50.412788+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_estimated_power_down_session_export",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS Estimated Power Down session export",
+      "unit_of_measurement": "kWh",
+      "device_class": "energy"
+    },
+    "last_changed": "2026-08-10T18:39:50.412469+00:00",
+    "last_updated": "2026-08-10T18:39:50.412469+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_estimated_power_down_session_export_income",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS Estimated Power Down session export income",
+      "unit_of_measurement": "p"
+    },
+    "last_changed": "2026-08-10T18:39:50.412941+00:00",
+    "last_updated": "2026-08-10T18:39:50.412941+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_estimated_power_down_session_rewardable_reduction",
+    "state": "2.161",
+    "attributes": {
+      "friendly_name": "KEMS Estimated Power Down session rewardable reduction",
+      "unit_of_measurement": "kWh",
+      "device_class": "energy"
+    },
+    "last_changed": "2026-08-10T18:39:50.412632+00:00",
+    "last_updated": "2026-08-10T18:39:50.412632+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_estimated_power_down_session_total_income",
+    "state": "4.32",
+    "attributes": {
+      "friendly_name": "KEMS Estimated Power Down session total income",
+      "unit_of_measurement": "p"
+    },
+    "last_changed": "2026-08-10T18:39:50.413100+00:00",
+    "last_updated": "2026-08-10T18:39:50.413100+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_ev_charging_power",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS EV charging power",
+      "unit_of_measurement": "kW",
+      "device_class": "power"
+    },
+    "last_changed": "2026-08-10T18:39:50.402976+00:00",
+    "last_updated": "2026-08-10T18:39:50.402976+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_ev_state_of_charge",
+    "state": "97.0",
+    "attributes": {
+      "friendly_name": "KEMS EV state of charge",
+      "unit_of_measurement": "%",
+      "device_class": "battery"
+    },
+    "last_changed": "2026-08-10T18:39:50.403173+00:00",
+    "last_updated": "2026-08-10T18:39:50.403173+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_export_tariff_status",
+    "state": "awaiting",
+    "attributes": {
+      "friendly_name": "KEMS Export tariff status"
+    },
+    "last_changed": "2026-08-10T18:42:49.997265+00:00",
+    "last_updated": "2026-08-10T18:42:49.997265+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_exportable_battery_energy_remaining",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS Exportable battery energy remaining",
+      "unit_of_measurement": "kWh",
+      "device_class": "energy"
+    },
+    "last_changed": "2026-08-10T18:39:50.409487+00:00",
+    "last_updated": "2026-08-10T18:39:50.409487+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_forecast_solar_until_next_cheap_period",
+    "state": "0.157",
+    "attributes": {
+      "friendly_name": "KEMS Forecast solar until next cheap period",
+      "unit_of_measurement": "kWh",
+      "device_class": "energy"
+    },
+    "last_changed": "2026-08-10T18:42:50.002334+00:00",
+    "last_updated": "2026-08-10T18:42:50.002334+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_gas_cost_this_month",
+    "state": "350.0",
+    "attributes": {
+      "friendly_name": "KEMS Gas cost this month",
+      "unit_of_measurement": "p"
+    },
+    "last_changed": "2026-08-10T18:39:50.416005+00:00",
+    "last_updated": "2026-08-10T18:39:50.416005+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_gas_cost_today",
+    "state": "33.0",
+    "attributes": {
+      "friendly_name": "KEMS Gas cost today",
+      "unit_of_measurement": "p"
+    },
+    "last_changed": "2026-08-10T18:39:50.415684+00:00",
+    "last_updated": "2026-08-10T18:39:50.415684+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_gas_current_rate",
+    "state": "7.8727",
+    "attributes": {
+      "friendly_name": "KEMS Gas current rate",
+      "unit_of_measurement": "p/kWh"
+    },
+    "last_changed": "2026-08-10T18:39:50.415198+00:00",
+    "last_updated": "2026-08-10T18:39:50.415198+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_gas_share_of_whole_home_energy",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS Gas share of whole-home energy",
+      "unit_of_measurement": "%"
+    },
+    "last_changed": "2026-08-10T18:39:50.416953+00:00",
+    "last_updated": "2026-08-10T18:39:50.416953+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_gas_standing_charge",
+    "state": "33.25917",
+    "attributes": {
+      "friendly_name": "KEMS Gas standing charge",
+      "unit_of_measurement": "p/day"
+    },
+    "last_changed": "2026-08-10T18:39:50.415362+00:00",
+    "last_updated": "2026-08-10T18:39:50.415362+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_gas_usage_this_month",
+    "state": "2.334",
+    "attributes": {
+      "friendly_name": "KEMS Gas usage this month",
+      "unit_of_measurement": "kWh",
+      "device_class": "energy",
+      "state_class": "total"
+    },
+    "last_changed": "2026-08-10T18:39:50.415849+00:00",
+    "last_updated": "2026-08-10T18:39:50.415849+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_gas_usage_today",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS Gas usage today",
+      "unit_of_measurement": "kWh",
+      "device_class": "energy",
+      "state_class": "total"
+    },
+    "last_changed": "2026-08-10T18:39:50.415529+00:00",
+    "last_updated": "2026-08-10T18:39:50.415529+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_grid_export",
+    "state": "unavailable",
+    "attributes": {
+      "friendly_name": "KEMS Grid export",
+      "unit_of_measurement": "kW",
+      "device_class": "power",
+      "state_class": "measurement"
+    },
+    "last_changed": "2026-08-10T18:31:45.754344+00:00",
+    "last_updated": "2026-08-10T18:31:45.754344+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_grid_flow_direction",
+    "state": "Importing",
+    "attributes": {
+      "friendly_name": "KEMS Grid flow direction"
+    },
+    "last_changed": "2026-08-10T18:42:49.998562+00:00",
+    "last_updated": "2026-08-10T18:42:49.998562+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_grid_import",
+    "state": "1.568",
+    "attributes": {
+      "friendly_name": "KEMS Grid import",
+      "unit_of_measurement": "kW",
+      "device_class": "power",
+      "state_class": "measurement"
+    },
+    "last_changed": "2026-08-10T18:42:49.997489+00:00",
+    "last_updated": "2026-08-10T18:42:49.997489+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_grid_net_power",
+    "state": "1.568",
+    "attributes": {
+      "friendly_name": "KEMS Grid net power",
+      "unit_of_measurement": "kW",
+      "device_class": "power",
+      "state_class": "measurement"
+    },
+    "last_changed": "2026-08-10T18:42:49.998478+00:00",
+    "last_updated": "2026-08-10T18:42:49.998478+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_grid_normalisation_mode",
+    "state": "single_import_source",
+    "attributes": {
+      "friendly_name": "KEMS Grid normalisation mode"
+    },
+    "last_changed": "2026-08-10T18:42:49.998619+00:00",
+    "last_updated": "2026-08-10T18:42:49.998619+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_history_samples",
+    "state": "2256",
+    "attributes": {
+      "friendly_name": "KEMS History samples"
+    },
+    "last_changed": "2026-08-10T18:41:49.996778+00:00",
+    "last_updated": "2026-08-10T18:41:49.996778+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_home_reserve_forecast_source",
+    "state": "learned_profile",
+    "attributes": {
+      "friendly_name": "KEMS Home reserve forecast source"
+    },
+    "last_changed": "2026-08-10T18:39:50.410644+00:00",
+    "last_updated": "2026-08-10T18:39:50.410644+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_hours_until_next_cheap_period",
+    "state": "3.79",
+    "attributes": {
+      "friendly_name": "KEMS Hours until next cheap period",
+      "unit_of_measurement": "h"
+    },
+    "last_changed": "2026-08-10T18:42:50.002386+00:00",
+    "last_updated": "2026-08-10T18:42:50.002386+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_house_load",
+    "state": "1.568",
+    "attributes": {
+      "friendly_name": "KEMS House load",
+      "unit_of_measurement": "kW",
+      "device_class": "power",
+      "state_class": "measurement"
+    },
+    "last_changed": "2026-08-10T18:42:49.997421+00:00",
+    "last_updated": "2026-08-10T18:42:49.997421+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_island_battery_status",
+    "state": "not_active",
+    "attributes": {
+      "friendly_name": "KEMS Island battery status"
+    },
+    "last_changed": "2026-08-10T18:39:50.427260+00:00",
+    "last_updated": "2026-08-10T18:39:50.427260+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_island_battery_to_house_power",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS Island battery to house power",
+      "unit_of_measurement": "kW",
+      "device_class": "power"
+    },
+    "last_changed": "2026-08-10T18:39:50.427107+00:00",
+    "last_updated": "2026-08-10T18:39:50.427107+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_island_conservation_threshold",
+    "state": "20.0",
+    "attributes": {
+      "friendly_name": "KEMS Island conservation threshold",
+      "unit_of_measurement": "%"
+    },
+    "last_changed": "2026-08-10T18:39:50.427413+00:00",
+    "last_updated": "2026-08-10T18:39:50.427413+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_island_emergency_floor",
+    "state": "10.0",
+    "attributes": {
+      "friendly_name": "KEMS Island emergency floor",
+      "unit_of_measurement": "%"
+    },
+    "last_changed": "2026-08-10T18:39:50.427565+00:00",
+    "last_updated": "2026-08-10T18:39:50.427565+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_island_solar_to_battery_power",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS Island solar to battery power",
+      "unit_of_measurement": "kW",
+      "device_class": "power"
+    },
+    "last_changed": "2026-08-10T18:39:50.426937+00:00",
+    "last_updated": "2026-08-10T18:39:50.426937+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_island_solar_to_house_power",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS Island solar to house power",
+      "unit_of_measurement": "kW",
+      "device_class": "power"
+    },
+    "last_changed": "2026-08-10T18:39:50.426775+00:00",
+    "last_updated": "2026-08-10T18:39:50.426775+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_kh7_battery_charge_limit",
+    "state": "7.0",
+    "attributes": {
+      "friendly_name": "KEMS KH7 battery charge limit",
+      "unit_of_measurement": "kW",
+      "device_class": "power"
+    },
+    "last_changed": "2026-08-10T18:39:50.429526+00:00",
+    "last_updated": "2026-08-10T18:39:50.429526+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_kh7_battery_discharge_limit",
+    "state": "7.0",
+    "attributes": {
+      "friendly_name": "KEMS KH7 battery discharge limit",
+      "unit_of_measurement": "kW",
+      "device_class": "power"
+    },
+    "last_changed": "2026-08-10T18:39:50.429696+00:00",
+    "last_updated": "2026-08-10T18:39:50.429696+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_kh7_combined_ac_output_limit",
+    "state": "7.0",
+    "attributes": {
+      "friendly_name": "KEMS KH7 combined AC output limit",
+      "unit_of_measurement": "kW",
+      "device_class": "power"
+    },
+    "last_changed": "2026-08-10T18:39:50.429357+00:00",
+    "last_updated": "2026-08-10T18:39:50.429357+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_kh7_output_headroom",
+    "state": "5.432",
+    "attributes": {
+      "friendly_name": "KEMS KH7 output headroom",
+      "unit_of_measurement": "kW",
+      "device_class": "power",
+      "state_class": "measurement"
+    },
+    "last_changed": "2026-08-10T18:42:50.007626+00:00",
+    "last_updated": "2026-08-10T18:42:50.007626+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_last_daily_rollover",
+    "state": "2026-08-09",
+    "attributes": {
+      "friendly_name": "KEMS Last daily rollover",
+      "device_class": "date"
+    },
+    "last_changed": "2026-08-10T18:39:50.431221+00:00",
+    "last_updated": "2026-08-10T18:39:50.431221+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_last_power_down_bonus",
+    "state": "unknown",
+    "attributes": {
+      "friendly_name": "KEMS Last Power Down bonus",
+      "unit_of_measurement": "p"
+    },
+    "last_changed": "2026-08-10T18:39:50.435522+00:00",
+    "last_updated": "2026-08-10T18:39:50.435522+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_last_power_down_combined_estimated_income",
+    "state": "unknown",
+    "attributes": {
+      "friendly_name": "KEMS Last Power Down combined estimated income",
+      "unit_of_measurement": "p"
+    },
+    "last_changed": "2026-08-10T18:39:50.435870+00:00",
+    "last_updated": "2026-08-10T18:39:50.435870+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_last_power_down_end",
+    "state": "unknown",
+    "attributes": {
+      "friendly_name": "KEMS Last Power Down end",
+      "device_class": "timestamp"
+    },
+    "last_changed": "2026-08-10T18:39:50.433193+00:00",
+    "last_updated": "2026-08-10T18:39:50.433193+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_last_power_down_finishing_simulated_soc",
+    "state": "unknown",
+    "attributes": {
+      "friendly_name": "KEMS Last Power Down finishing simulated SOC",
+      "unit_of_measurement": "%"
+    },
+    "last_changed": "2026-08-10T18:39:50.433493+00:00",
+    "last_updated": "2026-08-10T18:39:50.433493+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_last_power_down_fixed_export_income",
+    "state": "unknown",
+    "attributes": {
+      "friendly_name": "KEMS Last Power Down fixed export income",
+      "unit_of_measurement": "p"
+    },
+    "last_changed": "2026-08-10T18:39:50.435698+00:00",
+    "last_updated": "2026-08-10T18:39:50.435698+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_last_power_down_maximum_inverter_output",
+    "state": "unknown",
+    "attributes": {
+      "friendly_name": "KEMS Last Power Down maximum inverter output",
+      "unit_of_measurement": "kW",
+      "device_class": "power"
+    },
+    "last_changed": "2026-08-10T18:39:50.435138+00:00",
+    "last_updated": "2026-08-10T18:39:50.435138+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_last_power_down_planned_battery_to_home_energy",
+    "state": "unknown",
+    "attributes": {
+      "friendly_name": "KEMS Last Power Down planned battery-to-home energy",
+      "unit_of_measurement": "kWh",
+      "device_class": "energy"
+    },
+    "last_changed": "2026-08-10T18:39:50.433657+00:00",
+    "last_updated": "2026-08-10T18:39:50.433657+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_last_power_down_planned_export",
+    "state": "unknown",
+    "attributes": {
+      "friendly_name": "KEMS Last Power Down planned export",
+      "unit_of_measurement": "kWh",
+      "device_class": "energy"
+    },
+    "last_changed": "2026-08-10T18:39:50.434916+00:00",
+    "last_updated": "2026-08-10T18:39:50.434916+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_last_power_down_result",
+    "state": "unavailable",
+    "attributes": {
+      "friendly_name": "KEMS Last Power Down result"
+    },
+    "last_changed": "2026-08-10T18:39:50.432841+00:00",
+    "last_updated": "2026-08-10T18:39:50.432841+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_last_power_down_rewardable_reduction",
+    "state": "unknown",
+    "attributes": {
+      "friendly_name": "KEMS Last Power Down rewardable reduction",
+      "unit_of_measurement": "kWh",
+      "device_class": "energy"
+    },
+    "last_changed": "2026-08-10T18:39:50.435337+00:00",
+    "last_updated": "2026-08-10T18:39:50.435337+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_last_power_down_start",
+    "state": "unknown",
+    "attributes": {
+      "friendly_name": "KEMS Last Power Down start",
+      "device_class": "timestamp"
+    },
+    "last_changed": "2026-08-10T18:39:50.433021+00:00",
+    "last_updated": "2026-08-10T18:39:50.433021+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_last_power_down_starting_simulated_soc",
+    "state": "unknown",
+    "attributes": {
+      "friendly_name": "KEMS Last Power Down starting simulated SOC",
+      "unit_of_measurement": "%"
+    },
+    "last_changed": "2026-08-10T18:39:50.433344+00:00",
+    "last_updated": "2026-08-10T18:39:50.433344+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_last_successful_accumulation",
+    "state": "2026-08-10T18:42:49+00:00",
+    "attributes": {
+      "friendly_name": "KEMS Last successful accumulation",
+      "device_class": "timestamp"
+    },
+    "last_changed": "2026-08-10T18:42:50.007871+00:00",
+    "last_updated": "2026-08-10T18:42:50.007871+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_learning_confidence",
+    "state": "27.6",
+    "attributes": {
+      "friendly_name": "KEMS Learning confidence",
+      "unit_of_measurement": "%"
+    },
+    "last_changed": "2026-08-10T18:42:49.998718+00:00",
+    "last_updated": "2026-08-10T18:42:49.998718+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_lifetime_avoided_import_value",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS Lifetime avoided import value",
+      "unit_of_measurement": "GBP",
+      "device_class": "monetary",
+      "state_class": "total"
+    },
+    "last_changed": "2026-08-10T18:39:50.423506+00:00",
+    "last_updated": "2026-08-10T18:39:50.423506+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_lifetime_battery_charge",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS Lifetime battery charge",
+      "unit_of_measurement": "kWh",
+      "device_class": "energy",
+      "state_class": "total_increasing"
+    },
+    "last_changed": "2026-08-10T18:39:50.422273+00:00",
+    "last_updated": "2026-08-10T18:39:50.422273+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_lifetime_battery_discharge",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS Lifetime battery discharge",
+      "unit_of_measurement": "kWh",
+      "device_class": "energy",
+      "state_class": "total_increasing"
+    },
+    "last_changed": "2026-08-10T18:39:50.422440+00:00",
+    "last_updated": "2026-08-10T18:39:50.422440+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_lifetime_ev_charging",
+    "state": "46.958",
+    "attributes": {
+      "friendly_name": "KEMS Lifetime EV charging",
+      "unit_of_measurement": "kWh",
+      "device_class": "energy",
+      "state_class": "total_increasing"
+    },
+    "last_changed": "2026-08-10T18:39:50.421553+00:00",
+    "last_updated": "2026-08-10T18:39:50.421553+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_lifetime_export_income",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS Lifetime export income",
+      "unit_of_measurement": "GBP",
+      "device_class": "monetary",
+      "state_class": "total"
+    },
+    "last_changed": "2026-08-10T18:39:50.423144+00:00",
+    "last_updated": "2026-08-10T18:39:50.423144+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_lifetime_gas_consumption",
+    "state": "2.334",
+    "attributes": {
+      "friendly_name": "KEMS Lifetime gas consumption",
+      "unit_of_measurement": "kWh",
+      "device_class": "energy",
+      "state_class": "total_increasing"
+    },
+    "last_changed": "2026-08-10T18:39:50.422608+00:00",
+    "last_updated": "2026-08-10T18:39:50.422608+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_lifetime_gas_cost",
+    "state": "3.5",
+    "attributes": {
+      "friendly_name": "KEMS Lifetime gas cost",
+      "unit_of_measurement": "GBP",
+      "device_class": "monetary",
+      "state_class": "total"
+    },
+    "last_changed": "2026-08-10T18:39:50.423335+00:00",
+    "last_updated": "2026-08-10T18:39:50.423335+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_lifetime_grid_export",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS Lifetime grid export",
+      "unit_of_measurement": "kWh",
+      "device_class": "energy",
+      "state_class": "total_increasing"
+    },
+    "last_changed": "2026-08-10T18:39:50.421930+00:00",
+    "last_updated": "2026-08-10T18:39:50.421930+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_lifetime_grid_import",
+    "state": "302.369",
+    "attributes": {
+      "friendly_name": "KEMS Lifetime grid import",
+      "unit_of_measurement": "kWh",
+      "device_class": "energy",
+      "state_class": "total_increasing"
+    },
+    "last_changed": "2026-08-10T18:41:50.000819+00:00",
+    "last_updated": "2026-08-10T18:41:50.000819+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_lifetime_grid_independence",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS Lifetime grid independence",
+      "unit_of_measurement": "%"
+    },
+    "last_changed": "2026-08-10T18:39:50.424190+00:00",
+    "last_updated": "2026-08-10T18:39:50.424190+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_lifetime_house_electricity",
+    "state": "302.369",
+    "attributes": {
+      "friendly_name": "KEMS Lifetime house electricity",
+      "unit_of_measurement": "kWh",
+      "device_class": "energy",
+      "state_class": "total_increasing"
+    },
+    "last_changed": "2026-08-10T18:41:50.000764+00:00",
+    "last_updated": "2026-08-10T18:41:50.000764+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_lifetime_import_cost",
+    "state": "57.91",
+    "attributes": {
+      "friendly_name": "KEMS Lifetime import cost",
+      "unit_of_measurement": "GBP",
+      "device_class": "monetary",
+      "state_class": "total"
+    },
+    "last_changed": "2026-08-10T18:41:50.000968+00:00",
+    "last_updated": "2026-08-10T18:41:50.000968+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_lifetime_net_energy_cost",
+    "state": "61.41",
+    "attributes": {
+      "friendly_name": "KEMS Lifetime net energy cost",
+      "unit_of_measurement": "GBP",
+      "device_class": "monetary",
+      "state_class": "total"
+    },
+    "last_changed": "2026-08-10T18:41:50.001125+00:00",
+    "last_updated": "2026-08-10T18:41:50.001125+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_lifetime_observed_days",
+    "state": "10",
+    "attributes": {
+      "friendly_name": "KEMS Lifetime observed days",
+      "state_class": "total_increasing"
+    },
+    "last_changed": "2026-08-10T18:42:50.005866+00:00",
+    "last_updated": "2026-08-10T18:42:50.005866+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_lifetime_simulated_system_value",
+    "state": "79.56",
+    "attributes": {
+      "friendly_name": "KEMS Lifetime simulated system value",
+      "unit_of_measurement": "GBP",
+      "device_class": "monetary",
+      "state_class": "total"
+    },
+    "last_changed": "2026-08-10T18:41:50.001073+00:00",
+    "last_updated": "2026-08-10T18:41:50.001073+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_lifetime_solar_generation",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS Lifetime solar generation",
+      "unit_of_measurement": "kWh",
+      "device_class": "energy",
+      "state_class": "total_increasing"
+    },
+    "last_changed": "2026-08-10T18:39:50.422104+00:00",
+    "last_updated": "2026-08-10T18:39:50.422104+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_lifetime_system_value",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS Lifetime system value",
+      "unit_of_measurement": "GBP",
+      "device_class": "monetary",
+      "state_class": "total"
+    },
+    "last_changed": "2026-08-10T18:39:50.423678+00:00",
+    "last_updated": "2026-08-10T18:39:50.423678+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_lifetime_whole_home_energy",
+    "state": "304.703",
+    "attributes": {
+      "friendly_name": "KEMS Lifetime whole-home energy",
+      "unit_of_measurement": "kWh",
+      "device_class": "energy",
+      "state_class": "total_increasing"
+    },
+    "last_changed": "2026-08-10T18:41:50.000931+00:00",
+    "last_updated": "2026-08-10T18:41:50.000931+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_month_energy_summary",
+    "state": "6141.39",
+    "attributes": {
+      "friendly_name": "KEMS Month energy summary",
+      "unit_of_measurement": "p",
+      "start_date": "2026-08-01",
+      "end_date": "2026-08-10",
+      "days_included": 10,
+      "complete_days": 6,
+      "incomplete_days": 3,
+      "data_complete": false,
+      "house_consumption_kwh": 302.369,
+      "ev_energy_kwh": 46.958,
+      "grid_import_kwh": 302.369,
+      "grid_export_kwh": 0.0,
+      "solar_generation_kwh": 0.0,
+      "battery_charge_kwh": 0.0,
+      "battery_discharge_kwh": 0.0,
+      "gas_consumption_kwh": 2.334,
+      "import_cost_pence": 5791.39,
+      "export_income_pence": 0.0,
+      "gas_cost_pence": 350.0,
+      "actual_avoided_import_value_pence": 0.0,
+      "actual_system_value_pence": 0.0,
+      "simulated_grid_import_kwh": 465.528,
+      "simulated_grid_export_kwh": 376.374,
+      "simulated_solar_generation_kwh": 266.738,
+      "simulated_battery_charge_kwh": 335.316,
+      "simulated_battery_to_home_kwh": 160.034,
+      "simulated_battery_export_kwh": 141.222,
+      "simulated_avoided_day_rate_import_kwh": 160.034,
+      "simulated_import_cost_pence": 2422.63,
+      "simulated_export_income_pence": 4516.48,
+      "simulated_net_cost_pence": -2164.95,
+      "simulated_avoided_import_value_pence": 3368.79,
+      "simulated_system_value_pence": 7956.36,
+      "actual_net_cost_pence": 6141.39
+    },
+    "last_changed": "2026-08-10T18:42:50.008373+00:00",
+    "last_updated": "2026-08-10T18:42:50.008373+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_next_import_rate",
+    "state": "3.4933",
+    "attributes": {
+      "friendly_name": "KEMS Next import rate",
+      "unit_of_measurement": "p/kWh"
+    },
+    "last_changed": "2026-08-10T18:39:50.402071+00:00",
+    "last_updated": "2026-08-10T18:39:50.402071+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_next_off_peak_start",
+    "state": "2026-08-10T22:30:00+00:00",
+    "attributes": {
+      "friendly_name": "KEMS Next off-peak start",
+      "device_class": "timestamp"
+    },
+    "last_changed": "2026-08-10T18:39:50.402633+00:00",
+    "last_updated": "2026-08-10T18:39:50.402633+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_next_power_down_session_end",
+    "state": "2026-08-12T19:00:00+00:00",
+    "attributes": {
+      "friendly_name": "KEMS Next Power Down session end",
+      "device_class": "timestamp"
+    },
+    "last_changed": "2026-08-10T18:39:50.411179+00:00",
+    "last_updated": "2026-08-10T18:39:50.411179+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_next_power_down_session_start",
+    "state": "2026-08-12T17:00:00+00:00",
+    "attributes": {
+      "friendly_name": "KEMS Next Power Down session start",
+      "device_class": "timestamp"
+    },
+    "last_changed": "2026-08-10T18:39:50.410982+00:00",
+    "last_updated": "2026-08-10T18:39:50.410982+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_observed_cost_today",
+    "state": "575.39",
+    "attributes": {
+      "friendly_name": "KEMS Observed electricity net cost today",
+      "unit_of_measurement": "p"
+    },
+    "last_changed": "2026-08-10T18:41:49.997478+00:00",
+    "last_updated": "2026-08-10T18:41:49.997478+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_observed_export_income_today",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS Observed export income today",
+      "unit_of_measurement": "p"
+    },
+    "last_changed": "2026-08-10T18:39:50.406424+00:00",
+    "last_updated": "2026-08-10T18:39:50.406424+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_observed_grid_export_today",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS Observed grid export today",
+      "unit_of_measurement": "kWh",
+      "device_class": "energy"
+    },
+    "last_changed": "2026-08-10T18:39:50.406267+00:00",
+    "last_updated": "2026-08-10T18:39:50.406267+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_observed_grid_import_today",
+    "state": "32.112",
+    "attributes": {
+      "friendly_name": "KEMS Observed grid import today",
+      "unit_of_measurement": "kWh",
+      "device_class": "energy"
+    },
+    "last_changed": "2026-08-10T18:41:49.998661+00:00",
+    "last_updated": "2026-08-10T18:41:49.998661+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_off_peak_end",
+    "state": "2026-08-11T04:30:00+00:00",
+    "attributes": {
+      "friendly_name": "KEMS Off-peak end",
+      "device_class": "timestamp"
+    },
+    "last_changed": "2026-08-10T18:39:50.402805+00:00",
+    "last_updated": "2026-08-10T18:39:50.402805+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_operating_mode",
+    "state": "simulate",
+    "attributes": {
+      "friendly_name": "KEMS Operating mode"
+    },
+    "last_changed": "2026-08-10T18:39:50.424501+00:00",
+    "last_updated": "2026-08-10T18:39:50.424501+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_overnight_charge_target_energy",
+    "state": "unknown",
+    "attributes": {
+      "friendly_name": "KEMS Overnight charge target energy",
+      "unit_of_measurement": "kWh",
+      "device_class": "energy"
+    },
+    "last_changed": "2026-08-10T18:39:50.409968+00:00",
+    "last_updated": "2026-08-10T18:39:50.409968+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_overnight_charge_target_soc",
+    "state": "unknown",
+    "attributes": {
+      "friendly_name": "KEMS Overnight charge target SOC",
+      "unit_of_measurement": "%"
+    },
+    "last_changed": "2026-08-10T18:39:50.409809+00:00",
+    "last_updated": "2026-08-10T18:39:50.409809+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_phase",
+    "state": "Observe \u2192 Learn \u2192 Advise \u2192 Simulate \u2192 Control Lab",
+    "attributes": {
+      "friendly_name": "KEMS Phase"
+    },
+    "last_changed": "2026-08-10T18:39:50.401184+00:00",
+    "last_updated": "2026-08-10T18:39:50.401184+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_power_down_session_baseline_net_energy",
+    "state": "2.161",
+    "attributes": {
+      "friendly_name": "KEMS Power Down session baseline net energy",
+      "unit_of_measurement": "kWh",
+      "device_class": "energy"
+    },
+    "last_changed": "2026-08-10T18:39:50.411803+00:00",
+    "last_updated": "2026-08-10T18:39:50.411803+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_power_down_session_baseline_source",
+    "state": "import_only_assumed_zero_export",
+    "attributes": {
+      "friendly_name": "KEMS Power Down session baseline source"
+    },
+    "last_changed": "2026-08-10T18:39:50.411956+00:00",
+    "last_updated": "2026-08-10T18:39:50.411956+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_power_down_session_battery_reserve",
+    "state": "unknown",
+    "attributes": {
+      "friendly_name": "KEMS Power Down session battery reserve",
+      "unit_of_measurement": "kWh",
+      "device_class": "energy"
+    },
+    "last_changed": "2026-08-10T18:39:50.412142+00:00",
+    "last_updated": "2026-08-10T18:39:50.412142+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_power_down_session_bonus_rate",
+    "state": "2.0",
+    "attributes": {
+      "friendly_name": "KEMS Power Down session bonus rate",
+      "unit_of_measurement": "p/kWh"
+    },
+    "last_changed": "2026-08-10T18:39:50.411639+00:00",
+    "last_updated": "2026-08-10T18:39:50.411639+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_power_down_session_duration",
+    "state": "120.0",
+    "attributes": {
+      "friendly_name": "KEMS Power Down session duration",
+      "unit_of_measurement": "min"
+    },
+    "last_changed": "2026-08-10T18:39:50.411334+00:00",
+    "last_updated": "2026-08-10T18:39:50.411334+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_power_down_session_export_target",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS Power Down session export target",
+      "unit_of_measurement": "kW",
+      "device_class": "power"
+    },
+    "last_changed": "2026-08-10T18:39:50.412306+00:00",
+    "last_updated": "2026-08-10T18:39:50.412306+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_power_down_session_octopoints_per_kwh",
+    "state": "16.0",
+    "attributes": {
+      "friendly_name": "KEMS Power Down session Octopoints per kWh",
+      "unit_of_measurement": "points/kWh"
+    },
+    "last_changed": "2026-08-10T18:39:50.411487+00:00",
+    "last_updated": "2026-08-10T18:39:50.411487+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_predicted_annual_saving",
+    "state": "3279.37",
+    "attributes": {
+      "friendly_name": "KEMS Predicted annual saving",
+      "unit_of_measurement": "GBP/year"
+    },
+    "last_changed": "2026-08-10T18:42:50.005293+00:00",
+    "last_updated": "2026-08-10T18:42:50.005293+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_predicted_energy_until_off_peak",
+    "state": "5.198",
+    "attributes": {
+      "friendly_name": "KEMS Predicted energy until off-peak",
+      "unit_of_measurement": "kWh",
+      "device_class": "energy"
+    },
+    "last_changed": "2026-08-10T18:42:49.998809+00:00",
+    "last_updated": "2026-08-10T18:42:49.998809+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_predicted_net_value",
+    "state": "17018.63",
+    "attributes": {
+      "friendly_name": "KEMS Predicted net value",
+      "unit_of_measurement": "GBP",
+      "device_class": "monetary"
+    },
+    "last_changed": "2026-08-10T18:42:50.005450+00:00",
+    "last_updated": "2026-08-10T18:42:50.005450+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_predicted_payback",
+    "state": "6.25",
+    "attributes": {
+      "friendly_name": "KEMS Predicted payback",
+      "unit_of_measurement": "years"
+    },
+    "last_changed": "2026-08-10T18:39:50.417587+00:00",
+    "last_updated": "2026-08-10T18:39:50.417587+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_predicted_payback_date",
+    "state": "2032-11-09T15:12:49+00:00",
+    "attributes": {
+      "friendly_name": "KEMS Predicted payback date",
+      "device_class": "timestamp"
+    },
+    "last_changed": "2026-08-10T18:42:50.005391+00:00",
+    "last_updated": "2026-08-10T18:42:50.005391+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_profit_after_payback",
+    "state": "unknown",
+    "attributes": {
+      "friendly_name": "KEMS Profit after payback",
+      "unit_of_measurement": "GBP",
+      "device_class": "monetary",
+      "state_class": "total"
+    },
+    "last_changed": "2026-08-10T18:39:50.419698+00:00",
+    "last_updated": "2026-08-10T18:39:50.419698+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_projected_grid_import_before_cheap_period",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS Projected grid import before cheap period",
+      "unit_of_measurement": "kWh",
+      "device_class": "energy"
+    },
+    "last_changed": "2026-08-10T18:39:50.410810+00:00",
+    "last_updated": "2026-08-10T18:39:50.410810+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_projected_soc_at_cheap_period_start",
+    "state": "44.5",
+    "attributes": {
+      "friendly_name": "KEMS Projected SOC at cheap-period start",
+      "unit_of_measurement": "%"
+    },
+    "last_changed": "2026-08-10T18:39:50.410495+00:00",
+    "last_updated": "2026-08-10T18:39:50.410495+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_proposal_annual_saving_benchmark",
+    "state": "1856.0",
+    "attributes": {
+      "friendly_name": "KEMS Proposal annual saving benchmark",
+      "unit_of_measurement": "GBP/year"
+    },
+    "last_changed": "2026-08-10T18:39:50.418068+00:00",
+    "last_updated": "2026-08-10T18:39:50.418068+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_proposal_net_savings_benchmark",
+    "state": "34133.0",
+    "attributes": {
+      "friendly_name": "KEMS Proposal net savings benchmark",
+      "unit_of_measurement": "GBP",
+      "device_class": "monetary"
+    },
+    "last_changed": "2026-08-10T18:39:50.418391+00:00",
+    "last_updated": "2026-08-10T18:39:50.418391+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_proposal_payback_benchmark",
+    "state": "9.75",
+    "attributes": {
+      "friendly_name": "KEMS Proposal payback benchmark",
+      "unit_of_measurement": "years"
+    },
+    "last_changed": "2026-08-10T18:39:50.418229+00:00",
+    "last_updated": "2026-08-10T18:39:50.418229+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_proposal_solar_target_today",
+    "state": "30.0",
+    "attributes": {
+      "friendly_name": "KEMS Proposal solar target today",
+      "unit_of_measurement": "kWh",
+      "device_class": "energy"
+    },
+    "last_changed": "2026-08-10T18:39:50.415031+00:00",
+    "last_updated": "2026-08-10T18:39:50.415031+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_raw_grid_export_source",
+    "state": "unavailable",
+    "attributes": {
+      "friendly_name": "KEMS Raw grid export source",
+      "unit_of_measurement": "kW",
+      "device_class": "power",
+      "state_class": "measurement"
+    },
+    "last_changed": "2026-08-10T18:31:45.754356+00:00",
+    "last_updated": "2026-08-10T18:31:45.754356+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_raw_grid_import_source",
+    "state": "1.568",
+    "attributes": {
+      "friendly_name": "KEMS Raw grid import source",
+      "unit_of_measurement": "kW",
+      "device_class": "power",
+      "state_class": "measurement"
+    },
+    "last_changed": "2026-08-10T18:42:49.998672+00:00",
+    "last_updated": "2026-08-10T18:42:49.998672+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_roi_confidence",
+    "state": "29.5",
+    "attributes": {
+      "friendly_name": "KEMS ROI confidence",
+      "unit_of_measurement": "%"
+    },
+    "last_changed": "2026-08-10T18:39:50.418546+00:00",
+    "last_updated": "2026-08-10T18:39:50.418546+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_roi_status",
+    "state": "Pre-install ROI simulation",
+    "attributes": {
+      "friendly_name": "KEMS ROI status"
+    },
+    "last_changed": "2026-08-10T18:39:50.417107+00:00",
+    "last_updated": "2026-08-10T18:39:50.417107+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_simulated_battery_charged_today",
+    "state": "30.413",
+    "attributes": {
+      "friendly_name": "KEMS Simulated battery charged today",
+      "unit_of_measurement": "kWh",
+      "device_class": "energy"
+    },
+    "last_changed": "2026-08-10T18:42:49.999447+00:00",
+    "last_updated": "2026-08-10T18:42:49.999447+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_simulated_battery_charging_power",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS Simulated battery charging power",
+      "unit_of_measurement": "kW",
+      "device_class": "power",
+      "state_class": "measurement"
+    },
+    "last_changed": "2026-08-10T18:42:50.007187+00:00",
+    "last_updated": "2026-08-10T18:42:50.007187+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_simulated_battery_export_power",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS Simulated battery export power",
+      "unit_of_measurement": "kW",
+      "device_class": "power",
+      "state_class": "measurement"
+    },
+    "last_changed": "2026-08-10T18:39:50.409029+00:00",
+    "last_updated": "2026-08-10T18:39:50.409029+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_simulated_battery_export_today",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS Simulated battery export today",
+      "unit_of_measurement": "kWh",
+      "device_class": "energy"
+    },
+    "last_changed": "2026-08-10T18:39:50.407768+00:00",
+    "last_updated": "2026-08-10T18:39:50.407768+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_simulated_battery_power",
+    "state": "1.28",
+    "attributes": {
+      "friendly_name": "KEMS Simulated battery power",
+      "unit_of_measurement": "kW",
+      "device_class": "power",
+      "state_class": "measurement"
+    },
+    "last_changed": "2026-08-10T18:42:50.003454+00:00",
+    "last_updated": "2026-08-10T18:42:50.003454+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_simulated_battery_state_of_charge",
+    "state": "55.0",
+    "attributes": {
+      "friendly_name": "KEMS Simulated battery state of charge",
+      "unit_of_measurement": "%"
+    },
+    "last_changed": "2026-08-10T18:42:49.999519+00:00",
+    "last_updated": "2026-08-10T18:42:49.999519+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_simulated_battery_to_home_power",
+    "state": "1.28",
+    "attributes": {
+      "friendly_name": "KEMS Simulated battery to home power",
+      "unit_of_measurement": "kW",
+      "device_class": "power",
+      "state_class": "measurement"
+    },
+    "last_changed": "2026-08-10T18:42:50.000986+00:00",
+    "last_updated": "2026-08-10T18:42:50.000986+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_simulated_battery_to_home_today",
+    "state": "7.702",
+    "attributes": {
+      "friendly_name": "KEMS Simulated battery to home today",
+      "unit_of_measurement": "kWh",
+      "device_class": "energy"
+    },
+    "last_changed": "2026-08-10T18:41:49.998892+00:00",
+    "last_updated": "2026-08-10T18:41:49.998892+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_simulated_export_income_today",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS Simulated export income today",
+      "unit_of_measurement": "p"
+    },
+    "last_changed": "2026-08-10T18:39:50.406911+00:00",
+    "last_updated": "2026-08-10T18:39:50.406911+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_simulated_grid_bypass_power",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS Simulated grid bypass power",
+      "unit_of_measurement": "kW",
+      "device_class": "power",
+      "state_class": "measurement"
+    },
+    "last_changed": "2026-08-10T18:39:50.428997+00:00",
+    "last_updated": "2026-08-10T18:39:50.428997+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_simulated_grid_export_power",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS Simulated grid export power",
+      "unit_of_measurement": "kW",
+      "device_class": "power",
+      "state_class": "measurement"
+    },
+    "last_changed": "2026-08-10T18:39:50.414405+00:00",
+    "last_updated": "2026-08-10T18:39:50.414405+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_simulated_grid_export_today",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS Simulated grid export today",
+      "unit_of_measurement": "kWh",
+      "device_class": "energy"
+    },
+    "last_changed": "2026-08-10T18:39:50.406756+00:00",
+    "last_updated": "2026-08-10T18:39:50.406756+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_simulated_grid_import_power",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS Simulated grid import power",
+      "unit_of_measurement": "kW",
+      "device_class": "power",
+      "state_class": "measurement"
+    },
+    "last_changed": "2026-08-10T18:39:50.414183+00:00",
+    "last_updated": "2026-08-10T18:39:50.414183+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_simulated_grid_import_today",
+    "state": "26.695",
+    "attributes": {
+      "friendly_name": "KEMS Simulated grid import today",
+      "unit_of_measurement": "kWh",
+      "device_class": "energy"
+    },
+    "last_changed": "2026-08-10T18:42:49.999341+00:00",
+    "last_updated": "2026-08-10T18:42:49.999341+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_simulated_grid_net_power",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS Simulated grid net power",
+      "unit_of_measurement": "kW",
+      "device_class": "power",
+      "state_class": "measurement"
+    },
+    "last_changed": "2026-08-10T18:39:50.414630+00:00",
+    "last_updated": "2026-08-10T18:39:50.414630+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_simulated_house_load_power",
+    "state": "1.568",
+    "attributes": {
+      "friendly_name": "KEMS Simulated house load power",
+      "unit_of_measurement": "kW",
+      "device_class": "power",
+      "state_class": "measurement"
+    },
+    "last_changed": "2026-08-10T18:42:50.002970+00:00",
+    "last_updated": "2026-08-10T18:42:50.002970+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_simulated_kems_cost_today",
+    "state": "126.06",
+    "attributes": {
+      "friendly_name": "KEMS Simulated electricity net cost today",
+      "unit_of_measurement": "p"
+    },
+    "last_changed": "2026-08-10T18:42:49.998956+00:00",
+    "last_updated": "2026-08-10T18:42:49.998956+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_simulated_power_down_session_bonus_today",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS Simulated Power Down session bonus today",
+      "unit_of_measurement": "p"
+    },
+    "last_changed": "2026-08-10T18:39:50.413253+00:00",
+    "last_updated": "2026-08-10T18:39:50.413253+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_simulated_saving_today",
+    "state": "449.33",
+    "attributes": {
+      "friendly_name": "KEMS Simulated electricity saving today",
+      "unit_of_measurement": "p"
+    },
+    "last_changed": "2026-08-10T18:42:49.999232+00:00",
+    "last_updated": "2026-08-10T18:42:49.999232+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_simulated_solar_curtailed_today",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS Simulated solar curtailed today",
+      "unit_of_measurement": "kWh",
+      "device_class": "energy"
+    },
+    "last_changed": "2026-08-10T18:39:50.407270+00:00",
+    "last_updated": "2026-08-10T18:39:50.407270+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_simulated_solar_generation_today",
+    "state": "29.728",
+    "attributes": {
+      "friendly_name": "KEMS Simulated solar generation today",
+      "unit_of_measurement": "kWh",
+      "device_class": "energy"
+    },
+    "last_changed": "2026-08-10T18:41:49.998806+00:00",
+    "last_updated": "2026-08-10T18:41:49.998806+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_simulated_solar_power",
+    "state": "0.288",
+    "attributes": {
+      "friendly_name": "KEMS Simulated solar power",
+      "unit_of_measurement": "kW",
+      "device_class": "power",
+      "state_class": "measurement"
+    },
+    "last_changed": "2026-08-10T18:42:50.003042+00:00",
+    "last_updated": "2026-08-10T18:42:50.003042+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_simulated_solar_to_battery_power",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS Simulated solar to battery power",
+      "unit_of_measurement": "kW",
+      "device_class": "power",
+      "state_class": "measurement"
+    },
+    "last_changed": "2026-08-10T18:39:50.408626+00:00",
+    "last_updated": "2026-08-10T18:39:50.408626+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_simulated_total_kh7_ac_output",
+    "state": "1.568",
+    "attributes": {
+      "friendly_name": "KEMS Simulated total KH7 AC output",
+      "unit_of_measurement": "kW",
+      "device_class": "power",
+      "state_class": "measurement"
+    },
+    "last_changed": "2026-08-10T18:42:50.007339+00:00",
+    "last_updated": "2026-08-10T18:42:50.007339+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_simulated_total_site_import",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS Simulated total site import",
+      "unit_of_measurement": "kW",
+      "device_class": "power",
+      "state_class": "measurement"
+    },
+    "last_changed": "2026-08-10T18:39:50.429175+00:00",
+    "last_updated": "2026-08-10T18:39:50.429175+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_simulation_export_rate",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS Simulation export rate",
+      "unit_of_measurement": "p/kWh"
+    },
+    "last_changed": "2026-08-10T18:39:50.402260+00:00",
+    "last_updated": "2026-08-10T18:39:50.402260+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_simulation_strategy",
+    "state": "self_use",
+    "attributes": {
+      "friendly_name": "KEMS Simulation strategy"
+    },
+    "last_changed": "2026-08-10T18:42:50.002834+00:00",
+    "last_updated": "2026-08-10T18:42:50.002834+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_site_import_headroom",
+    "state": "unknown",
+    "attributes": {
+      "friendly_name": "KEMS Site import headroom",
+      "unit_of_measurement": "kW",
+      "device_class": "power",
+      "state_class": "measurement"
+    },
+    "last_changed": "2026-08-10T18:39:50.430391+00:00",
+    "last_updated": "2026-08-10T18:39:50.430391+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_source_validation",
+    "state": "OK",
+    "attributes": {
+      "friendly_name": "KEMS Source validation"
+    },
+    "last_changed": "2026-08-10T18:39:50.436084+00:00",
+    "last_updated": "2026-08-10T18:39:50.436084+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_status",
+    "state": "Active",
+    "attributes": {
+      "friendly_name": "KEMS Status"
+    },
+    "last_changed": "2026-08-10T18:39:50.400839+00:00",
+    "last_updated": "2026-08-10T18:39:50.400839+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_system_investment",
+    "state": "20995.0",
+    "attributes": {
+      "friendly_name": "KEMS System investment",
+      "unit_of_measurement": "GBP",
+      "device_class": "monetary"
+    },
+    "last_changed": "2026-08-10T18:39:50.417275+00:00",
+    "last_updated": "2026-08-10T18:39:50.417275+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_system_operating_costs",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS System operating costs",
+      "unit_of_measurement": "GBP",
+      "device_class": "monetary",
+      "state_class": "total"
+    },
+    "last_changed": "2026-08-10T18:39:50.419863+00:00",
+    "last_updated": "2026-08-10T18:39:50.419863+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_system_operating_days",
+    "state": "0",
+    "attributes": {
+      "friendly_name": "KEMS System operating days",
+      "state_class": "total_increasing"
+    },
+    "last_changed": "2026-08-10T18:39:50.421159+00:00",
+    "last_updated": "2026-08-10T18:39:50.421159+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_system_profile",
+    "state": "151 Foxhole Road - LA Renewables KH7 proposal 10439248",
+    "attributes": {
+      "friendly_name": "KEMS System profile"
+    },
+    "last_changed": "2026-08-10T18:39:50.401738+00:00",
+    "last_updated": "2026-08-10T18:39:50.401738+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_target_battery_export_power",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS Target battery export power",
+      "unit_of_measurement": "kW",
+      "device_class": "power",
+      "state_class": "measurement"
+    },
+    "last_changed": "2026-08-10T18:42:50.002048+00:00",
+    "last_updated": "2026-08-10T18:42:50.002048+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_today_energy_summary",
+    "state": "608.39",
+    "attributes": {
+      "friendly_name": "KEMS Today energy summary",
+      "unit_of_measurement": "p",
+      "start_date": "2026-08-10",
+      "end_date": "2026-08-10",
+      "days_included": 1,
+      "complete_days": 0,
+      "incomplete_days": 0,
+      "data_complete": false,
+      "house_consumption_kwh": 32.112,
+      "ev_energy_kwh": 3.648,
+      "grid_import_kwh": 32.112,
+      "grid_export_kwh": 0.0,
+      "solar_generation_kwh": 0.0,
+      "battery_charge_kwh": 0.0,
+      "battery_discharge_kwh": 0.0,
+      "gas_consumption_kwh": 0.0,
+      "import_cost_pence": 575.39,
+      "export_income_pence": 0.0,
+      "gas_cost_pence": 33.0,
+      "actual_avoided_import_value_pence": 0.0,
+      "actual_system_value_pence": 0.0,
+      "simulated_grid_import_kwh": 26.695,
+      "simulated_grid_export_kwh": 0.0,
+      "simulated_solar_generation_kwh": 29.728,
+      "simulated_battery_charge_kwh": 30.413,
+      "simulated_battery_to_home_kwh": 7.702,
+      "simulated_battery_export_kwh": 0.0,
+      "simulated_avoided_day_rate_import_kwh": 7.702,
+      "simulated_import_cost_pence": 126.06,
+      "simulated_export_income_pence": 0.0,
+      "simulated_net_cost_pence": 126.06,
+      "simulated_avoided_import_value_pence": 449.33,
+      "simulated_system_value_pence": 449.33,
+      "actual_net_cost_pence": 608.39
+    },
+    "last_changed": "2026-08-10T18:42:50.008045+00:00",
+    "last_updated": "2026-08-10T18:42:50.008045+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_typical_daily_gas_usage",
+    "state": "0.259",
+    "attributes": {
+      "friendly_name": "KEMS Typical daily gas usage",
+      "unit_of_measurement": "kWh",
+      "device_class": "energy"
+    },
+    "last_changed": "2026-08-10T18:39:50.416177+00:00",
+    "last_updated": "2026-08-10T18:39:50.416177+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_typical_house_load_now",
+    "state": "1.274",
+    "attributes": {
+      "friendly_name": "KEMS Typical house load now",
+      "unit_of_measurement": "kW",
+      "device_class": "power"
+    },
+    "last_changed": "2026-08-10T18:41:49.997343+00:00",
+    "last_updated": "2026-08-10T18:41:49.997343+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_typical_solar_power_now",
+    "state": "unknown",
+    "attributes": {
+      "friendly_name": "KEMS Typical solar power now",
+      "unit_of_measurement": "kW",
+      "device_class": "power"
+    },
+    "last_changed": "2026-08-10T18:39:50.404844+00:00",
+    "last_updated": "2026-08-10T18:39:50.404844+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_virtual_control_scenario",
+    "state": "normal",
+    "attributes": {
+      "friendly_name": "KEMS Virtual control scenario"
+    },
+    "last_changed": "2026-08-10T18:39:50.424649+00:00",
+    "last_updated": "2026-08-10T18:39:50.424649+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_virtual_scenario_house_load",
+    "state": "1.568",
+    "attributes": {
+      "friendly_name": "KEMS Virtual scenario house load",
+      "unit_of_measurement": "kW",
+      "device_class": "power"
+    },
+    "last_changed": "2026-08-10T18:42:50.006478+00:00",
+    "last_updated": "2026-08-10T18:42:50.006478+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_virtual_scenario_solar_power",
+    "state": "0.288",
+    "attributes": {
+      "friendly_name": "KEMS Virtual scenario solar power",
+      "unit_of_measurement": "kW",
+      "device_class": "power"
+    },
+    "last_changed": "2026-08-10T18:42:50.006542+00:00",
+    "last_updated": "2026-08-10T18:42:50.006542+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_week_energy_summary",
+    "state": "608.39",
+    "attributes": {
+      "friendly_name": "KEMS Week energy summary",
+      "unit_of_measurement": "p",
+      "start_date": "2026-08-10",
+      "end_date": "2026-08-10",
+      "days_included": 1,
+      "complete_days": 0,
+      "incomplete_days": 0,
+      "data_complete": false,
+      "house_consumption_kwh": 32.112,
+      "ev_energy_kwh": 3.648,
+      "grid_import_kwh": 32.112,
+      "grid_export_kwh": 0.0,
+      "solar_generation_kwh": 0.0,
+      "battery_charge_kwh": 0.0,
+      "battery_discharge_kwh": 0.0,
+      "gas_consumption_kwh": 0.0,
+      "import_cost_pence": 575.39,
+      "export_income_pence": 0.0,
+      "gas_cost_pence": 33.0,
+      "actual_avoided_import_value_pence": 0.0,
+      "actual_system_value_pence": 0.0,
+      "simulated_grid_import_kwh": 26.695,
+      "simulated_grid_export_kwh": 0.0,
+      "simulated_solar_generation_kwh": 29.728,
+      "simulated_battery_charge_kwh": 30.413,
+      "simulated_battery_to_home_kwh": 7.702,
+      "simulated_battery_export_kwh": 0.0,
+      "simulated_avoided_day_rate_import_kwh": 7.702,
+      "simulated_import_cost_pence": 126.06,
+      "simulated_export_income_pence": 0.0,
+      "simulated_net_cost_pence": 126.06,
+      "simulated_avoided_import_value_pence": 449.33,
+      "simulated_system_value_pence": 449.33,
+      "actual_net_cost_pence": 608.39
+    },
+    "last_changed": "2026-08-10T18:42:50.008217+00:00",
+    "last_updated": "2026-08-10T18:42:50.008217+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_whole_home_energy_today",
+    "state": "32.112",
+    "attributes": {
+      "friendly_name": "KEMS Whole-home energy today",
+      "unit_of_measurement": "kWh",
+      "device_class": "energy",
+      "state_class": "total"
+    },
+    "last_changed": "2026-08-10T18:41:50.000249+00:00",
+    "last_updated": "2026-08-10T18:41:50.000249+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_whole_home_observed_cost_today",
+    "state": "662.09",
+    "attributes": {
+      "friendly_name": "KEMS Whole-home observed cost today",
+      "unit_of_measurement": "p"
+    },
+    "last_changed": "2026-08-10T18:41:50.000138+00:00",
+    "last_updated": "2026-08-10T18:41:50.000138+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_whole_home_simulated_cost_today",
+    "state": "212.76",
+    "attributes": {
+      "friendly_name": "KEMS Whole-home simulated cost today",
+      "unit_of_measurement": "p"
+    },
+    "last_changed": "2026-08-10T18:42:50.005040+00:00",
+    "last_updated": "2026-08-10T18:42:50.005040+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_whole_home_simulated_saving_today",
+    "state": "449.33",
+    "attributes": {
+      "friendly_name": "KEMS Whole-home simulated saving today",
+      "unit_of_measurement": "p"
+    },
+    "last_changed": "2026-08-10T18:42:50.005126+00:00",
+    "last_updated": "2026-08-10T18:42:50.005126+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_whole_house_eps_load",
+    "state": "0.0",
+    "attributes": {
+      "friendly_name": "KEMS Whole-house EPS load",
+      "unit_of_measurement": "kW",
+      "device_class": "power"
+    },
+    "last_changed": "2026-08-10T18:39:50.426296+00:00",
+    "last_updated": "2026-08-10T18:39:50.426296+00:00"
+  },
+  {
+    "entity_id": "sensor.kems_year_energy_summary",
+    "state": "6141.39",
+    "attributes": {
+      "friendly_name": "KEMS Year energy summary",
+      "unit_of_measurement": "p",
+      "start_date": "2026-01-01",
+      "end_date": "2026-08-10",
+      "days_included": 10,
+      "complete_days": 6,
+      "incomplete_days": 3,
+      "data_complete": false,
+      "house_consumption_kwh": 302.369,
+      "ev_energy_kwh": 46.958,
+      "grid_import_kwh": 302.369,
+      "grid_export_kwh": 0.0,
+      "solar_generation_kwh": 0.0,
+      "battery_charge_kwh": 0.0,
+      "battery_discharge_kwh": 0.0,
+      "gas_consumption_kwh": 2.334,
+      "import_cost_pence": 5791.39,
+      "export_income_pence": 0.0,
+      "gas_cost_pence": 350.0,
+      "actual_avoided_import_value_pence": 0.0,
+      "actual_system_value_pence": 0.0,
+      "simulated_grid_import_kwh": 465.528,
+      "simulated_grid_export_kwh": 376.374,
+      "simulated_solar_generation_kwh": 266.738,
+      "simulated_battery_charge_kwh": 335.316,
+      "simulated_battery_to_home_kwh": 160.034,
+      "simulated_battery_export_kwh": 141.222,
+      "simulated_avoided_day_rate_import_kwh": 160.034,
+      "simulated_import_cost_pence": 2422.63,
+      "simulated_export_income_pence": 4516.48,
+      "simulated_net_cost_pence": -2164.95,
+      "simulated_avoided_import_value_pence": 3368.79,
+      "simulated_system_value_pence": 7956.36,
+      "actual_net_cost_pence": 6141.39
+    },
+    "last_changed": "2026-08-10T18:42:50.008523+00:00",
+    "last_updated": "2026-08-10T18:42:50.008523+00:00"
+  },
+  {
+    "entity_id": "switch.kems_emergency_stop",
+    "state": "off",
+    "attributes": {
+      "friendly_name": "KEMS Emergency stop"
+    },
+    "last_changed": "2026-08-10T18:39:50.443510+00:00",
+    "last_updated": "2026-08-10T18:39:50.443510+00:00"
+  },
+  {
+    "entity_id": "switch.kems_master_control_enable",
+    "state": "off",
+    "attributes": {
+      "friendly_name": "KEMS Master control enable"
+    },
+    "last_changed": "2026-08-10T18:39:50.443664+00:00",
+    "last_updated": "2026-08-10T18:39:50.443664+00:00"
+  }
+]

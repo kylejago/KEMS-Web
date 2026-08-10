@@ -1,0 +1,21 @@
+services:
+  kems-web-companion:
+    build: .
+    container_name: kems-web-companion
+    restart: unless-stopped
+    ports:
+      - "4173:4173"
+    environment:
+      HOST: 0.0.0.0
+      PORT: 4173
+      TZ: Europe/London
+      DATA_DIR: /data
+      POLL_INTERVAL_MS: 8000
+    volumes:
+      - ./kems-data:/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4173/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
