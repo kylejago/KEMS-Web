@@ -1,14 +1,14 @@
 {
   "name": "kems-web-companion",
-  "version": "0.7.0-alpha5-web.3",
+  "version": "0.7.0-alpha5-web.4",
   "private": true,
   "type": "module",
   "description": "Focused four-view read-only KEMS 0.7.0-alpha5 local energy dashboard with Raspberry Pi/GitHub deployment and PWA support",
   "scripts": {
     "start": "node server.mjs",
     "dev": "node --watch server.mjs",
-    "check": "node --check server.mjs && node --check public/app.js && node --check scripts/smoke-test.mjs && node --check scripts/kems-alpha5-fixture-test.mjs",
-    "test": "npm run check && node scripts/smoke-test.mjs && node scripts/kems-alpha5-fixture-test.mjs"
+    "check": "node --check server.mjs && node --check public/app.js && node --check scripts/smoke-test.mjs && node --check scripts/kems-alpha5-fixture-test.mjs && node --check image/kems-setup-status.mjs && node --check scripts/pi-deployment-test.mjs",
+    "test": "npm run check && node scripts/smoke-test.mjs && node scripts/kems-alpha5-fixture-test.mjs && node scripts/pi-deployment-test.mjs"
   },
   "engines": {
     "node": ">=22"

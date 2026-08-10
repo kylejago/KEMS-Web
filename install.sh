@@ -69,7 +69,17 @@ VERSION="$(node -e 'const p=require(process.argv[1]); process.stdout.write(Strin
 [[ -n "$VERSION" ]] || { echo "KEMS Web package has no version." >&2; exit 5; }
 
 mkdir -p "$BASE/releases" "$LIB_DIR" "$DATA_DIR"
-chmod 700 "$DATA_DIR" || true
+
+# Use a stable non-login service account. This avoids DynamicUser/StateDirectory
+# relocation of /var/lib/kems-web and keeps the persistent data path predictable.
+if ! getent group kemsweb >/dev/null 2>&1; then
+  groupadd --system kemsweb
+fi
+if ! id -u kemsweb >/dev/null 2>&1; then
+  useradd --system --gid kemsweb --home-dir "$DATA_DIR" --shell /usr/sbin/nologin --no-create-home kemsweb
+fi
+chown -R kemsweb:kemsweb "$DATA_DIR"
+chmod 700 "$DATA_DIR"
 DEST="$BASE/releases/$VERSION"
 rm -rf "$DEST"
 mkdir -p "$DEST"
@@ -106,6 +116,11 @@ fi
 
 systemctl daemon-reload
 systemctl enable --now avahi-daemon.service
+# The headless image uses port 4173 for its setup status page. Hand the port
+# over to the real KEMS service only when the application is ready to start.
+if systemctl list-unit-files kems-setup-status.service >/dev/null 2>&1; then
+  systemctl stop kems-setup-status.service || true
+fi
 systemctl enable --now kems-web.service
 
 OK=0

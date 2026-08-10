@@ -1,7 +1,7 @@
 [Unit]
-Description=KEMS Web zero-touch first-boot installer
+Description=KEMS Web resilient zero-touch first-boot installer
 Wants=network-online.target
-After=network-online.target cloud-final.service
+After=network-online.target
 ConditionPathExists=!/var/lib/kems-bootstrap/complete
 StartLimitIntervalSec=0
 
@@ -9,7 +9,7 @@ StartLimitIntervalSec=0
 Type=oneshot
 ExecStart=/usr/local/sbin/kems-firstboot
 Restart=on-failure
-RestartSec=30
+RestartSec=60
 TimeoutStartSec=infinity
 
 [Install]

@@ -5,9 +5,8 @@ After=network-online.target
 
 [Service]
 Type=simple
-DynamicUser=yes
-StateDirectory=kems-web
-StateDirectoryMode=0700
+User=kemsweb
+Group=kemsweb
 WorkingDirectory=/opt/kems-web/current
 Environment=NODE_ENV=production
 Environment=HOST=0.0.0.0
@@ -29,6 +28,7 @@ RestrictSUIDSGID=yes
 LockPersonality=yes
 RestrictRealtime=yes
 CapabilityBoundingSet=
+ReadWritePaths=/var/lib/kems-web
 
 [Install]
 WantedBy=multi-user.target

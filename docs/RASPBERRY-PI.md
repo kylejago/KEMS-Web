@@ -34,6 +34,11 @@ http://kems-pi.local:4173
 
 On the first visit, enter the Home Assistant URL reachable from the Pi (normally the local HA address) and a long-lived access token.
 
+
+## Headless image first-boot status
+
+The web.4 headless image contains Node.js and a tiny status server before first boot. Once the Pi has an IP address, open `http://kems-pi.local:4173` or `http://<pi-ip>:4173`. The page shows network/package/GitHub/KEMS setup progress and recent bootstrap log lines. If setup fails, the page remains available and the installer retries automatically. When installation succeeds, the real KEMS dashboard replaces the status page on the same port.
+
 ## Updating
 
 Published website releases are GitHub Release assets. The Pi asks GitHub for the newest published KEMS Web release, downloads the `.tar.gz` and matching `.sha256`, verifies it, syntax-checks and smoke-tests it, installs it next to the current release, and only then switches the `current` symlink.
@@ -65,8 +70,8 @@ Persistent data is not stored inside release folders, so updates and rollbacks d
 3. Tag the matching version, for example:
 
 ```bash
-git tag web-v0.7.0-alpha5-web.3
-git push origin web-v0.7.0-alpha5-web.3
+git tag web-v0.7.0-alpha5-web.4
+git push origin web-v0.7.0-alpha5-web.4
 ```
 
 The included GitHub Actions workflow runs the tests, creates a Raspberry Pi release archive plus SHA-256 file, and publishes both as a GitHub Release.

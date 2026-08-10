@@ -1,0 +1,19 @@
+[Unit]
+Description=KEMS first-boot setup status page
+After=local-fs.target
+ConditionPathExists=!/var/lib/kems-bootstrap/complete
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/node /usr/local/lib/kems-bootstrap/kems-setup-status.mjs
+Restart=always
+RestartSec=2
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadOnlyPaths=/var/log
+ReadWritePaths=/var/lib/kems-bootstrap
+
+[Install]
+WantedBy=multi-user.target

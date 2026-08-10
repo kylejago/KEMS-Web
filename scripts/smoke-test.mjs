@@ -30,7 +30,7 @@ try{
   ]);
   const shellResponse=await fetch(`http://127.0.0.1:${port}/`);
   const csp=shellResponse.headers.get("content-security-policy")||"";
-  if(!health.ok || health.version!=="0.7.0-alpha5-web.3")throw new Error("Health/version failed.");
+  if(!health.ok || health.version!=="0.7.0-alpha5-web.4")throw new Error("Health/version failed.");
   if(config.dataMode!=="unconfigured" || setup.configured)throw new Error("Fresh setup state failed.");
   if(live.source!=="unconfigured" || live.connected)throw new Error("Unconfigured snapshot failed.");
   if(history.length)throw new Error("Unconfigured history should be empty.");

@@ -1,11 +1,11 @@
 {
   "name": "KEMS",
   "longName": "Kyle Energy Management System",
-  "version": "0.7.0-alpha5-web.3",
+  "version": "0.7.0-alpha5-web.4",
   "tagline": "Live reality. Alpha5 simulation. One clear energy story.",
   "summary": "A focused local read-only companion for KEMS 0.7.0-alpha5, separating live, simulated, comparison and long-term performance data.",
   "repository": "https://github.com/kylejago/KEMS-Web",
-  "build": "Alpha5 local focused dashboard \u00b7 GitHub/Pi/PWA",
+  "build": "Alpha5 local focused dashboard \u00b7 GitHub/Pi/PWA \u00b7 resilient headless bootstrap",
   "principles": [
     "Home Assistant and KEMS remain the source of truth.",
     "Home is always the centre of the energy-flow model.",

@@ -1,4 +1,4 @@
-# KEMS Web — 0.7.0-alpha5-web.3
+# KEMS Web — 0.7.0-alpha5-web.4
 
 Focused local companion website for **KEMS 0.7.0-alpha5**.
 
@@ -23,6 +23,8 @@ or SSH session: first boot downloads this repository's `install.sh`, installs
 KEMS, enables the service and reboots.
 
 See [GITHUB-FIRST-SETUP.md](GITHUB-FIRST-SETUP.md).
+
+During first boot, port `4173` is available as a setup-status page almost immediately after networking comes up. It shows the current installation stage and diagnostic log. When KEMS passes its health check, the setup page is stopped and the normal dashboard takes over the same port.
 
 ## Raspberry Pi: one-command GitHub install
 

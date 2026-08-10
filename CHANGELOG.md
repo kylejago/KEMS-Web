@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.7.0-alpha5-web.4
+
+### Resilient headless Raspberry Pi bootstrap
+
+- Adds an immediate first-boot setup/status page on port 4173.
+- Pre-bakes the verified Node.js 22 ARM64 runtime into the Pi image so the status page does not depend on apt or GitHub.
+- Shows setup stage, progress, IP address and the tail of the first-boot diagnostic log.
+- Keeps retrying failed first-boot installs automatically and leaves the diagnostic page available when an error occurs.
+- Removes the fragile `After=cloud-final.service` dependency; cloud-init completion is waited for inside the bootstrap with a bounded timeout instead.
+- Uses a stable non-login `kemsweb` service account and a predictable `/var/lib/kems-web` persistent data directory rather than combining a pre-created data path with systemd `DynamicUser=StateDirectory=` handling.
+- Hands port 4173 from the setup-status service to KEMS only when the real application is ready to start.
+
 ## 0.7.0-alpha5-web.3
 
 - Added a zero-touch Raspberry Pi 4B image bootstrapper.
