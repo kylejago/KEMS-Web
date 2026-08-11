@@ -87,7 +87,9 @@ const state = {
   lastAnalyticsLoad: 0,
   catalog: [],
   catalogQuery: "",
-  diagnostics: null
+  diagnostics: null,
+  system: null,
+  systemPolling: null
 };
 
 function routeFromHash() {
@@ -161,6 +163,25 @@ function formatDurationYears(value) {
   if (!Number.isFinite(value)) return "Unavailable";
   if (value < 1) return `${Math.max(1, Math.round(value * 12))} months`;
   return `${formatNumber(value, "", 1)} years`;
+}
+
+function formatBytes(value) {
+  if (!Number.isFinite(value) || value < 0) return "Unavailable";
+  const units = ["B", "KB", "MB", "GB", "TB"];
+  let amount = value;
+  let index = 0;
+  while (amount >= 1024 && index < units.length - 1) { amount /= 1024; index += 1; }
+  return `${formatNumber(amount, "", index === 0 ? 0 : 1)} ${units[index]}`;
+}
+
+function formatUptime(seconds) {
+  if (!Number.isFinite(seconds) || seconds < 0) return "Unavailable";
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  if (days) return `${days}d ${hours}h ${minutes}m`;
+  if (hours) return `${hours}h ${minutes}m`;
+  return `${minutes}m`;
 }
 
 function formatEntityValue(item) {
@@ -548,10 +569,20 @@ function lineChart(points, definitions, options = {}) {
     }).join("");
     return renderedSegments;
   }).join("");
+  const chartEvents = (options.events || []).filter((event) => {
+    const at = new Date(event?.at).getTime();
+    return Number.isFinite(at) && at >= start && at <= end;
+  }).slice(-6);
+  const eventMarkers = chartEvents.map((event, index) => {
+    const px = x(event.at);
+    const markerY = padding.top + 12 + (index % 2) * 18;
+    return `<g class="chart-event"><line class="chart-event-line" x1="${px.toFixed(2)}" y1="${padding.top}" x2="${px.toFixed(2)}" y2="${height - padding.bottom}"></line><circle class="chart-event-dot" cx="${px.toFixed(2)}" cy="${markerY}" r="8"></circle><text class="chart-event-number" x="${px.toFixed(2)}" y="${markerY + 3}" text-anchor="middle">${index + 1}</text><title>${escapeHtml(`${formatTime(event.at)} — ${event.label}`)}</title></g>`;
+  }).join("");
   const availableDefinitions = definitions.filter((definition) => usable.some((point) => Number.isFinite(definition.value(point))));
   const legend = `<div class="chart-legend">${availableDefinitions.map((definition) => `<span><i style="background:${definition.colour}"></i>${escapeHtml(definition.label)}</span>`).join("")}</div>`;
+  const eventLegend = chartEvents.length ? `<div class="chart-event-list">${chartEvents.map((event, index) => `<span><b>${index + 1}</b><strong>${escapeHtml(formatTime(event.at))}</strong>${escapeHtml(event.label)}</span>`).join("")}</div>` : "";
   const note = usable.length === 1 ? `<div class="chart-note">Only one recorder sample is currently available.</div>` : "";
-  return `<div class="chart-wrap"><svg class="chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(options.label || "Energy chart")}">${grid}${ticks}${paths}</svg>${legend}${note}</div>`;
+  return `<div class="chart-wrap"><svg class="chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(options.label || "Energy chart")}">${grid}${ticks}${paths}${eventMarkers}</svg>${legend}${eventLegend}${note}</div>`;
 }
 
 function groupedBarChart(points, definitions, options = {}) {
@@ -653,7 +684,7 @@ function currentPowerChart(mode = "live") {
       { label: "Grid export", colour: COLOURS.positive, value: (point) => -(point.simulatedGridExport || 0) },
       { label: "Solar", colour: COLOURS.solar, value: (point) => point.solarSimulated },
       { label: "Battery to home", colour: COLOURS.battery, value: (point) => point.simulatedBatteryToHome }
-    ], { unit: "kW", label: "Simulated power through today" });
+    ], { unit: "kW", label: "Simulated power through today", events: state.today?.policyEvents || [] });
   }
   return lineChart(history, [
     { label: "Home", colour: COLOURS.home, value: (point) => point.house },
@@ -777,7 +808,7 @@ function comparisonChart() {
   return lineChart(history, [
     { label: "Live grid", colour: COLOURS.live, value: (point) => point.grid },
     { label: "Simulated grid", colour: COLOURS.simulated, dashed: true, value: (point) => Number.isFinite(point.simulatedGridImport) || Number.isFinite(point.simulatedGridExport) ? (point.simulatedGridImport || 0) - (point.simulatedGridExport || 0) : null }
-  ], { unit: "kW", label: "Live versus simulated net grid power" });
+  ], { unit: "kW", label: "Live versus simulated net grid power", events: state.today?.policyEvents || [] });
 }
 
 function compareView() {
@@ -1001,11 +1032,200 @@ function bindConnectionForm() {
   });
 }
 
+function systemTone(value) {
+  return ["active", "success", "healthy"].includes(String(value || "").toLowerCase()) ? "good" : ["error", "failed", "offline"].includes(String(value || "").toLowerCase()) ? "bad" : "neutral";
+}
+
+function systemSectionContent() {
+  const system = state.system;
+  if (!system) return `<h3>KEMS Pi server</h3><div class="system-loading">Loading Pi status…</div>`;
+  if (!system.available) {
+    return `<h3>KEMS Pi server</h3><div class="system-unavailable"><strong>Pi management unavailable</strong><p>${escapeHtml(system.error || "This KEMS instance does not have the Pi management helper installed.")}</p></div>`;
+  }
+  const action = system.action || { state: "idle", progress: 0 };
+  const actionRunning = action.state === "running";
+  const latest = system.latestRelease || {};
+  const updateCopy = system.updateAvailable
+    ? `<div class="update-banner"><div><span>Update available</span><strong>${escapeHtml(latest.version || "New release")}</strong></div><button class="button primary" id="install-update" type="button" ${actionRunning ? "disabled" : ""}>Install update</button></div>`
+    : `<div class="update-banner current"><div><span>Software</span><strong>${latest.available ? "Up to date" : "Installed"}</strong><small>${latest.error ? escapeHtml(latest.error) : "Latest GitHub release checked"}</small></div><button class="button secondary" id="check-update" type="button" ${actionRunning ? "disabled" : ""}>Check now</button></div>`;
+  const actionPanel = action.state && action.state !== "idle" ? `<div class="maintenance-progress ${escapeHtml(systemTone(action.state))}"><div><span>${escapeHtml(action.action || "Maintenance")}</span><strong>${escapeHtml(action.state)}</strong></div><div class="maintenance-track"><i style="width:${clamp(Number(action.progress) || 0, 0, 100)}%"></i></div><p>${escapeHtml(action.message || "")}</p></div>` : "";
+  return `<h3>KEMS Pi server</h3>
+    <div class="system-status-line"><span class="system-dot ${escapeHtml(systemTone(system.service))}"></span><strong>${system.service === "active" ? "Healthy" : escapeHtml(system.service || "Unknown")}</strong><span>${escapeHtml(system.hostname || "kems-pi")}${system.ip ? ` · ${escapeHtml(system.ip)}` : ""}</span></div>
+    <div class="system-grid">
+      <div><span>Installed</span><strong>${escapeHtml(system.installedVersion || "Unknown")}</strong></div>
+      <div><span>Latest GitHub</span><strong>${escapeHtml(latest.version || (latest.available ? "Unknown" : "Not checked"))}</strong></div>
+      <div><span>Pi uptime</span><strong>${escapeHtml(formatUptime(system.uptimeSeconds))}</strong></div>
+      <div><span>KEMS data</span><strong>${escapeHtml(formatBytes(system.dataDirectoryBytes))}</strong></div>
+      <div><span>Storage used</span><strong>${escapeHtml(Number.isFinite(system.disk?.usedPercent) ? `${system.disk.usedPercent}%` : "Unavailable")}</strong><small>${escapeHtml(`${formatBytes(system.disk?.usedBytes)} / ${formatBytes(system.disk?.totalBytes)}`)}</small></div>
+      <div><span>Memory used</span><strong>${escapeHtml(Number.isFinite(system.memory?.usedPercent) ? `${system.memory.usedPercent}%` : "Unavailable")}</strong><small>${escapeHtml(`${formatBytes(system.memory?.usedBytes)} / ${formatBytes(system.memory?.totalBytes)}`)}</small></div>
+      <div><span>Node.js</span><strong>${escapeHtml(system.nodeVersion || "Unknown")}</strong></div>
+      <div><span>Rollback</span><strong>${system.rollbackAvailable ? "Available" : "No older release"}</strong></div>
+    </div>
+    ${updateCopy}${actionPanel}
+    <div class="drawer-actions system-actions">
+      ${system.updateAvailable ? `<button class="button secondary" id="check-update" type="button" ${actionRunning ? "disabled" : ""}>Re-check</button>` : ""}
+      <button class="button secondary" id="view-system-logs" type="button">View logs</button>
+      <button class="button secondary" id="backup-kems" type="button" ${actionRunning ? "disabled" : ""}>Backup</button>
+      <button class="button secondary" id="restore-kems" type="button" ${actionRunning ? "disabled" : ""}>Restore</button>
+      <button class="button secondary" id="rollback-kems" type="button" ${!system.rollbackAvailable || actionRunning ? "disabled" : ""}>Rollback</button>
+      <button class="button secondary" id="restart-kems" type="button" ${actionRunning ? "disabled" : ""}>Restart KEMS</button>
+      <button class="button danger" id="reboot-pi" type="button" ${actionRunning ? "disabled" : ""}>Reboot Pi</button>
+    </div>
+    <p class="drawer-note">System controls are intentionally available only when KEMS is opened directly on your home LAN. Future remote/Cloudflare access will not expose these buttons by default.</p>`;
+}
+
+function bindSystemControls() {
+  document.querySelector("#check-update")?.addEventListener("click", () => refreshSystemStatus(true));
+  document.querySelector("#install-update")?.addEventListener("click", () => runSystemAction("update"));
+  document.querySelector("#rollback-kems")?.addEventListener("click", () => runSystemAction("rollback"));
+  document.querySelector("#restart-kems")?.addEventListener("click", () => runSystemAction("restart"));
+  document.querySelector("#reboot-pi")?.addEventListener("click", () => runSystemAction("reboot"));
+  document.querySelector("#view-system-logs")?.addEventListener("click", showSystemLogs);
+  document.querySelector("#backup-kems")?.addEventListener("click", showBackupModal);
+  document.querySelector("#restore-kems")?.addEventListener("click", showRestoreModal);
+}
+
+function updateSystemSection() {
+  const section = document.querySelector("#system-section");
+  if (!section) return;
+  section.innerHTML = systemSectionContent();
+  bindSystemControls();
+}
+
+async function refreshSystemStatus(force = false) {
+  try {
+    const priorVersion = state.system?.installedVersion || state.config?.project?.version;
+    state.system = await getJson(`/api/system/status${force ? "?refresh=1" : ""}`);
+    updateSystemSection();
+    const action = state.system?.action;
+    if (state.system?.installedVersion && priorVersion && state.system.installedVersion !== priorVersion) toast(`KEMS Web ${state.system.installedVersion} is now installed.`, "good");
+    if (state.system?.installedVersion && state.config?.project?.version && state.system.installedVersion !== state.config.project.version && action?.state !== "running") {
+      setTimeout(() => window.location.reload(), 1200);
+      return;
+    }
+    if (action?.state === "running") startSystemPolling();
+    else stopSystemPolling();
+  } catch (error) {
+    state.system = { available: false, error: error.message };
+    updateSystemSection();
+  }
+}
+
+function startSystemPolling() {
+  if (state.systemPolling) return;
+  state.systemPolling = setInterval(async () => {
+    if (!document.querySelector("#system-section")) { stopSystemPolling(); return; }
+    try { await refreshSystemStatus(false); } catch {}
+  }, 2200);
+}
+
+function stopSystemPolling() {
+  if (!state.systemPolling) return;
+  clearInterval(state.systemPolling);
+  state.systemPolling = null;
+}
+
+async function runSystemAction(action) {
+  const copy = {
+    update: "Install the latest tested KEMS Web release from GitHub? The dashboard will restart automatically and roll back if its health check fails.",
+    rollback: "Roll back to the previous KEMS Web release? Your Home Assistant connection and history will be kept.",
+    restart: "Restart the KEMS Web service? The dashboard will be unavailable for a few seconds.",
+    reboot: "Reboot the Raspberry Pi now? KEMS will be unavailable for around a minute."
+  };
+  if (!window.confirm(copy[action] || "Continue?")) return;
+  try {
+    const result = await getJson("/api/system/action", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action }) });
+    state.system = { ...(state.system || {}), action: result.status || { action, state: "running", progress: 3, message: `${action} started` } };
+    updateSystemSection();
+    startSystemPolling();
+    if (action === "reboot") waitForServerReturn();
+  } catch (error) {
+    toast(error.message, "danger");
+  }
+}
+
+function waitForServerReturn() {
+  let attempts = 0;
+  const timer = setInterval(async () => {
+    attempts += 1;
+    try {
+      await getJson("/api/health");
+      if (attempts > 2) {
+        clearInterval(timer);
+        window.location.reload();
+      }
+    } catch {}
+    if (attempts > 80) clearInterval(timer);
+  }, 3000);
+}
+
+async function showSystemLogs() {
+  modalRoot.innerHTML = `<div class="modal-backdrop"><section class="modal"><header><div><p class="eyebrow">KEMS Pi</p><h2>System logs</h2></div><button id="close-modal" class="icon-button" type="button">×</button></header><div class="modal-body"><div class="system-loading">Loading recent logs…</div></div></section></div>`;
+  document.querySelector("#close-modal")?.addEventListener("click", () => modalRoot.innerHTML = "");
+  try {
+    const logs = await getJson("/api/system/logs");
+    const block = (title, lines) => `<h3 class="log-title">${escapeHtml(title)}</h3><pre>${escapeHtml((lines || []).join("\n") || "No recent entries.")}</pre>`;
+    document.querySelector(".modal-body").innerHTML = `${block("Maintenance", logs.action)}${block("KEMS Web", logs.web)}${block("Pi manager", logs.manager)}`;
+  } catch (error) {
+    document.querySelector(".modal-body").innerHTML = `<div class="error-panel">${escapeHtml(error.message)}</div>`;
+  }
+}
+
+function showBackupModal() {
+  modalRoot.innerHTML = `<div class="modal-backdrop"><section class="modal"><header><div><p class="eyebrow">KEMS Pi backup</p><h2>Download encrypted backup</h2></div><button id="close-modal" class="icon-button" type="button">×</button></header><div class="modal-body"><p class="modal-copy">The backup contains the saved Home Assistant connection, encryption key, local ledger and retained Pi history. Choose a password so the downloaded file is encrypted.</p><form id="backup-form"><label><span>Backup password</span><input class="input" id="backup-password" type="password" minlength="8" required autocomplete="new-password" /></label><label><span>Confirm password</span><input class="input" id="backup-password-confirm" type="password" minlength="8" required autocomplete="new-password" /></label><div id="backup-result" class="form-result"></div><button class="button primary" type="submit">Create &amp; download backup</button></form></div></section></div>`;
+  document.querySelector("#close-modal")?.addEventListener("click", () => modalRoot.innerHTML = "");
+  document.querySelector("#backup-form")?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const password = document.querySelector("#backup-password").value;
+    const confirmation = document.querySelector("#backup-password-confirm").value;
+    const result = document.querySelector("#backup-result");
+    if (password !== confirmation) { result.className = "form-result danger"; result.textContent = "The passwords do not match."; return; }
+    result.className = "form-result"; result.textContent = "Encrypting backup…";
+    try {
+      const response = await fetch("/api/system/backup", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) });
+      if (!response.ok) { let body = {}; try { body = await response.json(); } catch {} throw new Error(body.error || `Backup failed (${response.status})`); }
+      const blob = await response.blob();
+      const disposition = response.headers.get("Content-Disposition") || "";
+      const match = disposition.match(/filename="?([^";]+)"?/i);
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = match?.[1] || "KEMS-Web-backup.kemsbackup";
+      document.body.append(link); link.click(); link.remove();
+      setTimeout(() => URL.revokeObjectURL(link.href), 2000);
+      modalRoot.innerHTML = "";
+      toast("Encrypted KEMS backup downloaded.", "good");
+    } catch (error) { result.className = "form-result danger"; result.textContent = error.message; }
+  });
+}
+
+function showRestoreModal() {
+  modalRoot.innerHTML = `<div class="modal-backdrop"><section class="modal"><header><div><p class="eyebrow">KEMS Pi backup</p><h2>Restore KEMS Web backup</h2></div><button id="close-modal" class="icon-button" type="button">×</button></header><div class="modal-body"><p class="modal-copy">Restore replaces the Pi website connection/history files with the selected encrypted backup. Home Assistant itself is not changed. KEMS Web will restart afterward.</p><form id="restore-form"><label><span>Backup file</span><input class="input file-input" id="restore-file" type="file" accept=".kemsbackup,application/octet-stream" required /></label><label><span>Backup password</span><input class="input" id="restore-password" type="password" minlength="8" required autocomplete="current-password" /></label><div id="restore-result" class="form-result"></div><button class="button danger" type="submit">Restore backup</button></form></div></section></div>`;
+  document.querySelector("#close-modal")?.addEventListener("click", () => modalRoot.innerHTML = "");
+  document.querySelector("#restore-form")?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const file = document.querySelector("#restore-file").files?.[0];
+    const password = document.querySelector("#restore-password").value;
+    const result = document.querySelector("#restore-result");
+    if (!file) return;
+    if (!window.confirm("Restore this KEMS Web backup and replace the current Pi website data?")) return;
+    result.className = "form-result"; result.textContent = "Decrypting and validating backup…";
+    try {
+      const response = await fetch("/api/system/restore", { method: "POST", headers: { "Content-Type": "application/octet-stream", "X-KEMS-Backup-Password": encodeURIComponent(password) }, body: await file.arrayBuffer() });
+      let body = {}; try { body = await response.json(); } catch {}
+      if (!response.ok) throw new Error(body.error || `Restore failed (${response.status})`);
+      result.className = "form-result good"; result.textContent = "Backup restored. Restarting KEMS Web…";
+      await getJson("/api/system/action", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "restart" }) });
+      setTimeout(() => waitForServerReturn(), 700);
+    } catch (error) { result.className = "form-result danger"; result.textContent = error.message; }
+  });
+}
+
 async function openSettingsDrawer() {
   try {
     const requests = [];
     if (!state.catalog.length && state.setup?.configured) requests.push(getJson("/api/entity-catalog").then((response) => { state.catalog = response.entities || []; }));
     requests.push(getJson("/api/history-diagnostics").then((response) => { state.diagnostics = response; }));
+    requests.push(getJson("/api/system/status").then((response) => { state.system = response; }).catch((error) => { state.system = { available: false, error: error.message }; }));
     await Promise.allSettled(requests);
   } catch {}
   renderSettingsDrawer();
@@ -1015,17 +1235,18 @@ function renderSettingsDrawer() {
   const query = state.catalogQuery.toLowerCase();
   const items = state.catalog.filter((item) => !query || item.entityId.toLowerCase().includes(query) || String(item.attributes?.friendly_name || "").toLowerCase().includes(query)).slice(0, 100);
   drawerRoot.innerHTML = `<div class="drawer-backdrop"><aside class="drawer" aria-label="KEMS settings">
-    <header><div><p class="eyebrow">Dashboard settings</p><h2>Connection &amp; entities</h2></div><button id="close-drawer" class="icon-button" type="button" aria-label="Close settings">×</button></header>
+    <header><div><p class="eyebrow">Dashboard settings</p><h2>KEMS settings &amp; Pi</h2></div><button id="close-drawer" class="icon-button" type="button" aria-label="Close settings">×</button></header>
     <div class="drawer-content">
       <section class="drawer-section"><h3>Home Assistant connection</h3><div class="connection-summary"><span>Address</span><strong>${escapeHtml(state.setup?.homeAssistantUrl || "Not configured")}</strong><span>Status</span><strong>${state.snapshot?.connected ? "Connected" : "Offline"}</strong><span>KEMS entities</span><strong>${escapeHtml(String(state.snapshot?.discovery?.totalKemsEntities || 0))}</strong></div><div class="drawer-actions"><button class="button secondary" id="change-connection" type="button">Change connection</button><button class="button danger" id="remove-connection" type="button">Remove saved connection</button></div></section>
       <section class="drawer-section"><h3>Data classification</h3><div class="badge-guide">${sourceBadge("live")}${sourceBadge("observed")}${sourceBadge("simulated")}${sourceBadge("calculated")}${sourceBadge("forecast")}</div></section>
       <section class="drawer-section"><h3>KEMS app</h3><div class="connection-summary"><span>Status</span><strong>${escapeHtml(pwaStatus().label)}</strong><span>Mode</span><strong>${isStandaloneApp() ? "Installed app" : "Website"}</strong></div><p class="drawer-note">${escapeHtml(pwaStatus().detail)}</p>${deferredInstallPrompt ? `<div class="drawer-actions"><button class="button primary" id="install-pwa" type="button">Install KEMS app</button></div>` : ""}</section>
+      <section class="drawer-section system-management" id="system-section">${systemSectionContent()}</section>
       <section class="drawer-section"><h3>History diagnostics</h3><div class="connection-summary"><span>Current-day source</span><strong>${escapeHtml(state.diagnostics?.currentDay?.source || "Not checked")}</strong><span>Current-day points</span><strong>${escapeHtml(String(state.diagnostics?.currentDay?.points || 0))}</strong><span>Energy history source</span><strong>${escapeHtml(state.diagnostics?.energyDashboard?.source || state.diagnostics?.fallback?.source || state.diagnostics?.statistics?.source || "Not checked")}</strong><span>Energy statistic changes</span><strong>${escapeHtml(String(state.diagnostics?.energyDashboard?.points || 0))}</strong><span>KEMS lifetime points</span><strong>${escapeHtml(String(state.diagnostics?.statistics?.points || 0))}</strong><span>Local ledger days</span><strong>${escapeHtml(String(state.diagnostics?.localLedgerDays || 0))}</strong></div>${state.diagnostics?.energyDashboard?.warning ? `<p class="drawer-note">${escapeHtml(state.diagnostics.energyDashboard.warning)}</p>` : state.diagnostics?.statistics?.warning ? `<p class="drawer-note">${escapeHtml(state.diagnostics.statistics.warning)}</p>` : ""}</section>
       <section class="drawer-section entity-explorer"><h3>KEMS entity explorer</h3><input id="entity-search" class="input" type="search" placeholder="Search entity or friendly name" value="${escapeHtml(state.catalogQuery)}" /><div class="entity-list">${items.map((item) => `<button type="button" data-entity-id="${escapeHtml(item.entityId)}"><span><strong>${escapeHtml(item.attributes?.friendly_name || item.entityId)}</strong><small>${escapeHtml(item.entityId)}</small></span><b>${escapeHtml(formatEntityValue(item))}</b></button>`).join("") || `<p>No matching entities.</p>`}</div></section>
     </div>
   </aside></div>`;
-  document.querySelector("#close-drawer")?.addEventListener("click", () => drawerRoot.innerHTML = "");
-  document.querySelector(".drawer-backdrop")?.addEventListener("click", (event) => { if (event.target.classList.contains("drawer-backdrop")) drawerRoot.innerHTML = ""; });
+  document.querySelector("#close-drawer")?.addEventListener("click", () => { stopSystemPolling(); drawerRoot.innerHTML = ""; });
+  document.querySelector(".drawer-backdrop")?.addEventListener("click", (event) => { if (event.target.classList.contains("drawer-backdrop")) { stopSystemPolling(); drawerRoot.innerHTML = ""; } });
   document.querySelector("#entity-search")?.addEventListener("input", (event) => { state.catalogQuery = event.target.value; renderSettingsDrawer(); document.querySelector("#entity-search")?.focus(); });
   document.querySelectorAll("[data-entity-id]").forEach((button) => button.addEventListener("click", () => showEntity(button.dataset.entityId)));
   document.querySelector("#change-connection")?.addEventListener("click", () => {
@@ -1034,6 +1255,8 @@ function renderSettingsDrawer() {
   });
   document.querySelector("#remove-connection")?.addEventListener("click", removeConnection);
   document.querySelector("#install-pwa")?.addEventListener("click", installPwa);
+  bindSystemControls();
+  if (state.system?.action?.state === "running") startSystemPolling();
 }
 
 function showEntity(entityId) {

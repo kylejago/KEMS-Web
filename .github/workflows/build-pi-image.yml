@@ -6,7 +6,7 @@ on:
     paths:
       - 'image/**'
       - 'install.sh'
-      - 'deploy/systemd/kems-web.service'
+      - 'deploy/**'
       - '.github/workflows/build-pi-image.yml'
 
 permissions:

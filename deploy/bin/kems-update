@@ -14,7 +14,7 @@ CURRENT_VERSION=""
 [[ -f "$CURRENT/package.json" ]] && CURRENT_VERSION="$(node -e 'const p=require(process.argv[1]);process.stdout.write(String(p.version||""))' "$CURRENT/package.json")"
 
 echo "Checking GitHub for KEMS Web releases..."
-curl -fsSL --retry 4 -H 'Accept: application/vnd.github+json' \
+curl -fsSL --retry 4 -H 'Accept: application/vnd.github+json' -H 'User-Agent: KEMS-Web-Updater' \
   "https://api.github.com/repos/${REPO}/releases?per_page=30" -o "$TMP/releases.json"
 
 node - "$TMP/releases.json" "$TMP/selection.env" <<'NODE'
@@ -35,8 +35,10 @@ fs.writeFileSync(output, lines.join('\n') + '\n');
 NODE
 source "$TMP/selection.env"
 
+echo "Downloading release ${TAG}..."
 curl -fsSL --retry 4 -L "$ARCHIVE_URL" -o "$TMP/$ARCHIVE_NAME"
 if [[ -n "$CHECKSUM_URL" ]]; then
+  echo "Verifying release checksum..."
   curl -fsSL --retry 4 -L "$CHECKSUM_URL" -o "$TMP/$ARCHIVE_NAME.sha256"
   (cd "$TMP" && sha256sum -c "$ARCHIVE_NAME.sha256")
 else
@@ -44,6 +46,7 @@ else
   exit 3
 fi
 
+echo "Preparing KEMS Web release..."
 tar -xzf "$TMP/$ARCHIVE_NAME" -C "$TMP"
 ROOT="$(find "$TMP" -mindepth 1 -maxdepth 2 -type f -name package.json -printf '%h\n' | head -n1)"
 [[ -n "$ROOT" && -f "$ROOT/server.mjs" ]] || { echo "Invalid KEMS Web release archive." >&2; exit 4; }
@@ -67,10 +70,13 @@ if [[ -f "$DEST/scripts/smoke-test.mjs" ]]; then
 fi
 
 PREVIOUS="$(readlink -f "$CURRENT" 2>/dev/null || true)"
+echo "Switching active release to ${VERSION}..."
 ln -sfn "$DEST" "$BASE/current.new"
 mv -Tf "$BASE/current.new" "$CURRENT"
+echo "Restarting KEMS Web..."
 systemctl restart kems-web.service
 
+echo "Waiting for KEMS Web health check..."
 OK=0
 for _ in $(seq 1 30); do
   if node "$LIB/healthcheck.mjs" http://127.0.0.1:4173/api/health >/dev/null 2>&1; then OK=1; break; fi
@@ -89,6 +95,24 @@ fi
 
 sha256sum "$TMP/$ARCHIVE_NAME" > "$DEST/INSTALLED_SHA256"
 echo "Updated KEMS Web: ${CURRENT_VERSION:-none} -> ${VERSION} (${TAG})"
+
+# A release can update the appliance helper files too. Replace command files by
+# inode so an updater that is currently executing never truncates itself.
+if [[ -d "$DEST/deploy" ]]; then
+  if [[ -f "$DEST/deploy/bin/kems-update" ]]; then install -m 0755 "$DEST/deploy/bin/kems-update" /usr/local/sbin/kems-update.new && mv -f /usr/local/sbin/kems-update.new /usr/local/sbin/kems-update; fi
+  if [[ -f "$DEST/deploy/bin/kems-rollback" ]]; then install -m 0755 "$DEST/deploy/bin/kems-rollback" /usr/local/sbin/kems-rollback.new && mv -f /usr/local/sbin/kems-rollback.new /usr/local/sbin/kems-rollback; fi
+  if [[ -f "$DEST/deploy/bin/kems-status" ]]; then install -m 0755 "$DEST/deploy/bin/kems-status" /usr/local/sbin/kems-status.new && mv -f /usr/local/sbin/kems-status.new /usr/local/sbin/kems-status; fi
+  [[ -f "$DEST/deploy/healthcheck.mjs" ]] && install -m 0644 "$DEST/deploy/healthcheck.mjs" "$LIB/healthcheck.mjs"
+  [[ -f "$DEST/deploy/manager.mjs" ]] && install -m 0644 "$DEST/deploy/manager.mjs" "$LIB/manager.mjs"
+  [[ -f "$DEST/deploy/systemd/kems-web.service" ]] && install -m 0644 "$DEST/deploy/systemd/kems-web.service" /etc/systemd/system/kems-web.service
+  [[ -f "$DEST/deploy/systemd/kems-web-manager.service" ]] && install -m 0644 "$DEST/deploy/systemd/kems-web-manager.service" /etc/systemd/system/kems-web-manager.service
+  mkdir -p /var/lib/kems-web-management
+  chown root:kemsweb /var/lib/kems-web-management 2>/dev/null || true
+  chmod 750 /var/lib/kems-web-management 2>/dev/null || true
+  systemctl daemon-reload
+  systemctl enable kems-web-manager.service >/dev/null 2>&1 || true
+  systemctl is-active --quiet kems-web-manager.service || systemctl start kems-web-manager.service || true
+fi
 
 # Keep the active release plus the two most recently modified older versions.
 ACTIVE="$(readlink -f "$CURRENT")"

@@ -1,8 +1,8 @@
-# KEMS Web — 0.7.0-alpha5-web.4
+# KEMS Web — 0.7.0-alpha5-web.5
 
 Focused local companion website for **KEMS 0.7.0-alpha5**.
 
-The dashboard remains read-only: Home Assistant/KEMS is the source of truth and the website does not call Home Assistant services.
+Home Assistant/KEMS remains the source of truth. The energy dashboard does not call Home Assistant services and keeps live, observed, simulated and calculated data visibly separate.
 
 ## Main views
 
@@ -11,57 +11,79 @@ The dashboard remains read-only: Home Assistant/KEMS is the source of truth and 
 - Live vs Simulated
 - Performance & ROI — Day / Week / Month / Year / All time
 
-KEMS alpha5 native period summaries are used for long-term headline values, with recorder/statistics history used for chart detail.
+KEMS alpha5 native period summaries are authoritative for long-term headline values. Home Assistant recorder/statistics history supplies chart detail when available.
 
+## web.5 — Raspberry Pi appliance management
+
+When installed through the KEMS headless Pi image, **Settings → KEMS Pi server** now provides local browser management for the appliance:
+
+- Pi/KEMS health and IP address
+- installed and latest GitHub release versions
+- Pi uptime, memory and storage usage
+- KEMS persistent-data size
+- Check for update / Install update
+- update progress and result
+- automatic health-check rollback remains in the updater
+- manual rollback to the prior release
+- restart KEMS Web
+- reboot the Pi
+- recent KEMS/manager/update logs
+- password-encrypted backup download
+- password-encrypted backup restore
+
+System-control endpoints are intentionally available only when KEMS is opened directly using a local address such as `http://kems-pi.local:4173` or a private LAN IP. Requests arriving through a future reverse proxy/Cloudflare hostname are blocked from Pi-management actions by default.
+
+Persistent website data remains under `/var/lib/kems-web`, outside versioned releases.
+
+## Policy history and period-chart repair
+
+The simulated and comparison power charts can now mark Home Assistant-recorded changes to:
+
+- export tariff status
+- no-export policy
+- simulation strategy
+
+This preserves the historical simulation that actually ran during the day while making a later policy change visible rather than retrospectively rewriting the graph.
+
+Week/Month/Year/All-time chart buckets are now clipped to the **native alpha5 period start/end dates**. Baseline values used internally for cumulative-statistic calculations are no longer shown outside the selected period.
 
 ## Zero-touch Raspberry Pi image
 
-This release includes `image/` plus the **Build KEMS Pi headless image** GitHub
-Actions workflow. The generated `.img.xz` can be selected directly with
-Raspberry Pi Imager. With Ethernet connected, the Pi needs no monitor, keyboard
-or SSH session: first boot downloads this repository's `install.sh`, installs
-KEMS, enables the service and reboots.
+The repository contains the **Build KEMS Pi headless image** GitHub Actions workflow. The generated `.img.xz` can be flashed directly with Raspberry Pi Imager.
 
-See [GITHUB-FIRST-SETUP.md](GITHUB-FIRST-SETUP.md).
-
-During first boot, port `4173` is available as a setup-status page almost immediately after networking comes up. It shows the current installation stage and diagnostic log. When KEMS passes its health check, the setup page is stopped and the normal dashboard takes over the same port.
-
-## Raspberry Pi: one-command GitHub install
-
-After flashing Raspberry Pi OS Lite 64-bit and enabling SSH:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/kylejago/KEMS-Web/main/install.sh | sudo bash
-```
-
-Then open:
+With Ethernet connected, the Pi needs no monitor, keyboard or SSH session. Port `4173` first shows the setup-status page; once installation is healthy, the normal KEMS dashboard takes over that same address:
 
 ```text
 http://kems-pi.local:4173
 ```
 
-Enter the Home Assistant address and long-lived access token on first use.
+See [GITHUB-FIRST-SETUP.md](GITHUB-FIRST-SETUP.md) and [docs/RASPBERRY-PI.md](docs/RASPBERRY-PI.md).
 
-See [docs/RASPBERRY-PI.md](docs/RASPBERRY-PI.md) for full details.
+## GitHub updates
 
-## Updates
+Published website releases are checksum-verified GitHub Release assets. The Pi downloads, syntax-checks and smoke-tests a new release, switches atomically, restarts KEMS and health-checks the result. If the health check fails, it automatically returns to the previous release.
+
+From web.5 onward the normal route is simply:
+
+**Settings → KEMS Pi server → Check now → Install update**
+
+The command-line tools remain available for recovery:
 
 ```bash
 sudo kems-update
-```
-
-The updater discovers the newest GitHub Release (including alpha/prerelease builds), downloads the Pi archive and its SHA-256 file, verifies and tests it, then switches versions atomically. A failed health check rolls back automatically.
-
-```bash
-kems-status
 sudo kems-rollback
+kems-status
 ```
 
-Persistent data is stored in `/var/lib/kems-web`, outside all versioned release folders.
+## Encrypted backup / restore
+
+A KEMS Web backup includes only the Pi website's persistent files (saved HA connection, its local encryption key, website ledger and retained power history). The backup is compressed and encrypted with **AES-256-GCM**, using a key derived from the password you enter with `scrypt`.
+
+The backup never modifies or backs up Home Assistant itself. Keep the backup password somewhere safe; it is not stored by KEMS.
 
 ## Android / installable website
 
-This version is PWA-ready. When KEMS is later served from an HTTPS address, Android can install the website as an app from the browser. The installed app uses the same Pi backend and the same KEMS/Home Assistant data.
+KEMS remains PWA-ready. When it is later served over HTTPS, Android can install the website as an app. The installed app uses the same Raspberry Pi backend and the same Home Assistant/KEMS data.
 
 See [docs/ANDROID-PWA.md](docs/ANDROID-PWA.md).
 
@@ -72,7 +94,7 @@ Windows launchers remain included:
 - `start-kems.cmd`
 - `start-kems.ps1`
 
-Node.js 22 or newer is required.
+Node.js 22 or newer is required. Pi-management controls will show as unavailable on a normal Windows installation, while the energy dashboard continues to work normally.
 
 ## Development
 
@@ -81,4 +103,4 @@ npm test
 npm start
 ```
 
-Default port: `4173`.
+Default dashboard port: `4173`.

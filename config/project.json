@@ -1,11 +1,11 @@
 {
   "name": "KEMS",
   "longName": "Kyle Energy Management System",
-  "version": "0.7.0-alpha5-web.4",
+  "version": "0.7.0-alpha5-web.5",
   "tagline": "Live reality. Alpha5 simulation. One clear energy story.",
   "summary": "A focused local read-only companion for KEMS 0.7.0-alpha5, separating live, simulated, comparison and long-term performance data.",
   "repository": "https://github.com/kylejago/KEMS-Web",
-  "build": "Alpha5 local focused dashboard \u00b7 GitHub/Pi/PWA \u00b7 resilient headless bootstrap",
+  "build": "Alpha5 local focused dashboard \u00b7 GitHub/Pi/PWA \u00b7 browser-managed Pi appliance",
   "principles": [
     "Home Assistant and KEMS remain the source of truth.",
     "Home is always the centre of the energy-flow model.",
@@ -13,6 +13,7 @@
     "Live, simulated and calculated allocation data are visibly labelled.",
     "KEMS native period summaries are authoritative for Week, Month, Year and All time.",
     "The website remains read-only and cannot call Home Assistant services.",
-    "Raspberry Pi installs and updates can be sourced from signed GitHub releases without touching persistent KEMS data."
+    "Raspberry Pi installs and updates can be sourced from signed GitHub releases without touching persistent KEMS data.",
+    "Raspberry Pi maintenance, updates and encrypted backups are managed locally from the KEMS Settings panel."
   ]
 }

@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Website version from package.json, e.g. 0.7.0-alpha5-web.4'
+        description: 'Website version from package.json, e.g. 0.7.0-alpha5-web.5'
         required: true
         type: string
 
@@ -55,7 +55,7 @@ jobs:
           VERSION='${{ steps.meta.outputs.version }}'
           NAME="kems-web-${VERSION}-pi"
           mkdir -p "dist/${NAME}"
-          for item in package.json server.mjs public config scripts README.md CHANGELOG.md LICENSE .env.example; do
+          for item in package.json server.mjs public config scripts deploy README.md CHANGELOG.md LICENSE .env.example; do
             [ -e "$item" ] && cp -a "$item" "dist/${NAME}/"
           done
           mkdir -p "dist/${NAME}/data"

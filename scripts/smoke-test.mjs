@@ -18,7 +18,7 @@ try{
   let ready=false;
   for(let i=0;i<35;i+=1){await sleep(150);try{if((await fetch(`http://127.0.0.1:${port}/api/health`)).ok){ready=true;break;}}catch{}}
   if(!ready)throw new Error(`Server did not start.\n${output}`);
-  const [health,config,setup,live,history,html,js,css]=await Promise.all([
+  const [health,config,setup,live,history,html,js,css,system]=await Promise.all([
     fetch(`http://127.0.0.1:${port}/api/health`).then(r=>r.json()),
     fetch(`http://127.0.0.1:${port}/api/config`).then(r=>r.json()),
     fetch(`http://127.0.0.1:${port}/api/setup/status`).then(r=>r.json()),
@@ -26,17 +26,20 @@ try{
     fetch(`http://127.0.0.1:${port}/api/history?hours=24`).then(r=>r.json()),
     fetch(`http://127.0.0.1:${port}/`).then(r=>r.text()),
     fetch(`http://127.0.0.1:${port}/app.js`).then(r=>r.text()),
-    fetch(`http://127.0.0.1:${port}/styles.css`).then(r=>r.text())
+    fetch(`http://127.0.0.1:${port}/styles.css`).then(r=>r.text()),
+    fetch(`http://127.0.0.1:${port}/api/system/status`).then(r=>r.json())
   ]);
   const shellResponse=await fetch(`http://127.0.0.1:${port}/`);
   const csp=shellResponse.headers.get("content-security-policy")||"";
-  if(!health.ok || health.version!=="0.7.0-alpha5-web.4")throw new Error("Health/version failed.");
+  if(!health.ok || health.version!=="0.7.0-alpha5-web.5")throw new Error("Health/version failed.");
   if(config.dataMode!=="unconfigured" || setup.configured)throw new Error("Fresh setup state failed.");
   if(live.source!=="unconfigured" || live.connected)throw new Error("Unconfigured snapshot failed.");
   if(history.length)throw new Error("Unconfigured history should be empty.");
   if(!html.includes("alpha5 energy dashboard"))throw new Error("HTML shell incomplete.");
   if(!js.includes("renderConnectionPage") || !js.includes("liveView") || !js.includes("simulationView") || !js.includes("compareView") || !js.includes("performanceView"))throw new Error("Frontend bundle incomplete.");
-  if(!css.includes(".connection-layout") || !css.includes(".energy-flow") || !css.includes(".breakdown-grid") || !css.includes(".economics-layout"))throw new Error("Styles incomplete.");
+  if(!css.includes(".connection-layout") || !css.includes(".energy-flow") || !css.includes(".breakdown-grid") || !css.includes(".economics-layout") || !css.includes(".system-grid") || !css.includes(".chart-event-list"))throw new Error("Styles incomplete.");
+  if(!js.includes("systemSectionContent") || !js.includes("showBackupModal") || !js.includes("runSystemAction"))throw new Error("Pi management frontend is missing.");
+  if(system.available!==false)throw new Error("Non-Pi smoke environment should report the manager as unavailable rather than failing the site.");
   if(!csp.includes("style-src 'self' 'unsafe-inline'"))throw new Error("Dynamic SVG and chart styles are blocked by the CSP.");
   console.log(`Smoke test passed: setup ready, ${config.mappedEntityCount} alpha5 mappings.`);
 }finally{child.kill("SIGTERM");fs.rmSync(dataDir,{recursive:true,force:true});}

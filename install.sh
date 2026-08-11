@@ -68,7 +68,7 @@ fi
 VERSION="$(node -e 'const p=require(process.argv[1]); process.stdout.write(String(p.version||""))' "$SRC/package.json")"
 [[ -n "$VERSION" ]] || { echo "KEMS Web package has no version." >&2; exit 5; }
 
-mkdir -p "$BASE/releases" "$LIB_DIR" "$DATA_DIR"
+mkdir -p "$BASE/releases" "$LIB_DIR" "$DATA_DIR" /var/lib/kems-web-management
 
 # Use a stable non-login service account. This avoids DynamicUser/StateDirectory
 # relocation of /var/lib/kems-web and keeps the persistent data path predictable.
@@ -80,6 +80,8 @@ if ! id -u kemsweb >/dev/null 2>&1; then
 fi
 chown -R kemsweb:kemsweb "$DATA_DIR"
 chmod 700 "$DATA_DIR"
+chown root:kemsweb /var/lib/kems-web-management
+chmod 750 /var/lib/kems-web-management
 DEST="$BASE/releases/$VERSION"
 rm -rf "$DEST"
 mkdir -p "$DEST"
@@ -94,7 +96,9 @@ install -m 0755 "$SRC/deploy/bin/kems-update" /usr/local/sbin/kems-update
 install -m 0755 "$SRC/deploy/bin/kems-rollback" /usr/local/sbin/kems-rollback
 install -m 0755 "$SRC/deploy/bin/kems-status" /usr/local/sbin/kems-status
 install -m 0644 "$SRC/deploy/healthcheck.mjs" "$LIB_DIR/healthcheck.mjs"
+install -m 0644 "$SRC/deploy/manager.mjs" "$LIB_DIR/manager.mjs"
 install -m 0644 "$SRC/deploy/systemd/kems-web.service" /etc/systemd/system/kems-web.service
+install -m 0644 "$SRC/deploy/systemd/kems-web-manager.service" /etc/systemd/system/kems-web-manager.service
 printf '%s\n' "$REPO" > "$LIB_DIR/github-repo"
 
 node --check "$DEST/server.mjs"
@@ -116,6 +120,7 @@ fi
 
 systemctl daemon-reload
 systemctl enable --now avahi-daemon.service
+systemctl enable --now kems-web-manager.service
 # The headless image uses port 4173 for its setup status page. Hand the port
 # over to the real KEMS service only when the application is ready to start.
 if systemctl list-unit-files kems-setup-status.service >/dev/null 2>&1; then

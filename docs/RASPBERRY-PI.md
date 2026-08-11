@@ -1,30 +1,17 @@
 # KEMS Web on Raspberry Pi 4B
 
-## Recommended first install
+## Recommended appliance install
 
-Use the standard Raspberry Pi Imager rather than a custom KEMS operating-system image. Flash **Raspberry Pi OS Lite (64-bit)** and use Imager's customisation page to configure:
+For a completely headless Pi, use the GitHub-built **KEMS Pi headless image** rather than a stock Raspberry Pi OS install.
 
-- hostname (recommended: `kems-pi`)
-- your normal Linux username/password
-- Wi-Fi, if Ethernet will not be used
-- SSH
+1. Push the current KEMS-Web source to GitHub.
+2. Run **Build KEMS Pi headless image** in GitHub Actions.
+3. Download the `.img.xz` from the generated Pi-image release.
+4. Select it in Raspberry Pi Imager with **Use custom**.
+5. Flash the SD card.
+6. Connect Ethernet and power on the Pi 4B.
 
-After first boot, connect with SSH and run one command:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/kylejago/KEMS-Web/main/install.sh | sudo bash
-```
-
-The installer:
-
-1. checks for 64-bit ARM Raspberry Pi OS;
-2. installs the current official Node.js 22 ARM64 runtime and verifies its SHA-256 checksum;
-3. downloads the KEMS Web repository from GitHub;
-4. installs KEMS under `/opt/kems-web/releases/<version>`;
-5. stores all persistent configuration/history separately in `/var/lib/kems-web`;
-6. enables the `kems-web` systemd service;
-7. enables `.local` hostname discovery using Avahi;
-8. starts the dashboard on port `4173`.
+The image contains Raspberry Pi OS Lite 64-bit, Node.js for the immediate first-boot status page, and the KEMS bootstrap. The actual current KEMS Web source is downloaded from `kylejago/KEMS-Web` on first boot.
 
 Open:
 
@@ -32,48 +19,92 @@ Open:
 http://kems-pi.local:4173
 ```
 
-On the first visit, enter the Home Assistant URL reachable from the Pi (normally the local HA address) and a long-lived access token.
+During setup, that address shows installation progress and recent bootstrap log lines. When the real KEMS service passes its health check, it takes over port 4173 automatically.
 
+## Persistent paths
 
-## Headless image first-boot status
+Website releases:
 
-The web.4 headless image contains Node.js and a tiny status server before first boot. Once the Pi has an IP address, open `http://kems-pi.local:4173` or `http://<pi-ip>:4173`. The page shows network/package/GitHub/KEMS setup progress and recent bootstrap log lines. If setup fails, the page remains available and the installer retries automatically. When installation succeeds, the real KEMS dashboard replaces the status page on the same port.
+```text
+/opt/kems-web/releases/<version>
+/opt/kems-web/current -> active release
+```
 
-## Updating
+Persistent website data:
 
-Published website releases are GitHub Release assets. The Pi asks GitHub for the newest published KEMS Web release, downloads the `.tar.gz` and matching `.sha256`, verifies it, syntax-checks and smoke-tests it, installs it next to the current release, and only then switches the `current` symlink.
+```text
+/var/lib/kems-web
+```
+
+Root Pi-management state/logs:
+
+```text
+/var/lib/kems-web-management
+```
+
+Home Assistant credentials/history are therefore separate from the release being upgraded or rolled back.
+
+## Browser management (web.5+)
+
+Open **Settings → KEMS Pi server** from the local KEMS address.
+
+The page shows:
+
+- KEMS service health
+- Pi hostname/IP
+- installed version
+- latest GitHub release
+- uptime
+- memory/storage usage
+- KEMS persistent-data size
+- rollback availability
+- maintenance progress
+
+Available actions:
+
+- Check now
+- Install update
+- View logs
+- Backup
+- Restore
+- Rollback
+- Restart KEMS
+- Reboot Pi
+
+The root management helper listens only on `127.0.0.1:4174`; it is not exposed to the LAN. The normal KEMS server proxies a very small allow-listed management API to it. Browser-facing system actions are additionally restricted to direct local `.local`/private-IP access and are rejected through forwarded/reverse-proxy requests.
+
+## Update safety
+
+The updater:
+
+1. asks GitHub for the newest KEMS Web release;
+2. downloads the Pi `.tar.gz` and matching `.sha256`;
+3. verifies SHA-256;
+4. extracts into a new version directory;
+5. syntax-checks and smoke-tests it;
+6. switches `/opt/kems-web/current` atomically;
+7. restarts KEMS;
+8. runs a local health check;
+9. automatically rolls back if the new release does not become healthy.
+
+The old CLI commands remain:
 
 ```bash
 sudo kems-update
-```
-
-If the new version fails the local health check, KEMS automatically returns to the prior version.
-
-Manual rollback:
-
-```bash
 sudo kems-rollback
-```
-
-Status:
-
-```bash
 kems-status
 ```
 
-Persistent data is not stored inside release folders, so updates and rollbacks do not replace the Home Assistant token, KEMS local history, or local ledger.
+## Encrypted backup
 
-## Publishing a new release
+**Settings → KEMS Pi server → Backup** creates a `.kemsbackup` file. It contains only KEMS Web persistent data and is encrypted with the password entered in the browser.
 
-1. Update `package.json` and `config/project.json` to the new website version.
-2. Commit and push the code.
-3. Tag the matching version, for example:
+Restore validates and decrypts the file, atomically replaces the stored website data and restarts the KEMS Web service. It does not write to Home Assistant.
+
+## Manual stock-OS recovery install
+
+If SSH is ever deliberately enabled on a recovery Pi, KEMS can still be installed on Raspberry Pi OS Lite 64-bit with:
 
 ```bash
-git tag web-v0.7.0-alpha5-web.4
-git push origin web-v0.7.0-alpha5-web.4
+curl -fsSL https://raw.githubusercontent.com/kylejago/KEMS-Web/main/install.sh | sudo bash
 ```
-
-The included GitHub Actions workflow runs the tests, creates a Raspberry Pi release archive plus SHA-256 file, and publishes both as a GitHub Release.
-
-After that, every installed Pi can update with `sudo kems-update`.

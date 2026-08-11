@@ -2,52 +2,64 @@
 
 Repository: `kylejago/KEMS-Web`
 
-## Create the repository
+## Repository
 
-Create a **Public** repository named `KEMS-Web`.
+Use the existing **Public** `KEMS-Web` repository. The package includes its own README, `.gitignore` and MIT licence.
 
-Leave these GitHub creation options **unticked**:
+Copy the contents of the web.5 package into the repository root, commit and push.
 
-- Add a README file
-- Add .gitignore
-- Choose a license
-
-This package already contains `README.md`, `.gitignore`, and an MIT `LICENSE`.
-The default branch should be `main`.
-
-Upload/commit the complete contents of this package to the repository root.
-
-## Build the headless Pi image
-
-After the first commit:
+## Publish the web.5 website release
 
 1. Open **Actions**.
-2. Select **Build KEMS Pi headless image**.
+2. Select **Publish KEMS Web release**.
 3. Choose **Run workflow**.
-4. Wait for the build to finish.
-5. Download `KEMS-Pi-<version>-headless.img.xz` from the generated GitHub Release.
-6. In Raspberry Pi Imager choose **Use custom** and select that `.img.xz` file.
+4. Enter `0.7.0-alpha5-web.5`.
+5. Run the workflow.
+
+The workflow tests the complete site and publishes:
+
+- `kems-web-0.7.0-alpha5-web.5-pi.tar.gz`
+- `kems-web-0.7.0-alpha5-web.5-pi.tar.gz.sha256`
+
+These are what the browser/CLI updater uses for future installs.
+
+## Build the web.5 headless Pi image
+
+The web.5 management helper requires one privileged appliance component that did not exist in the already-flashed web.4 image. For a Pi that has no SSH/admin login, **web.5 is the one final SD-card reflash**. After web.5 is installed, normal website releases are updated from the browser and the SD card should not need reflashing.
+
+After pushing web.5:
+
+1. Open **Actions** → **Build KEMS Pi headless image**.
+2. Run the workflow if it has not already started automatically.
+3. Wait for it to finish.
+4. Open the generated GitHub Release `pi-image-v0.7.0-alpha5-web.5`.
+5. Download `KEMS-Pi-0.7.0-alpha5-web.5-headless.img.xz`.
+6. In Raspberry Pi Imager choose **Use custom** and select the `.img.xz`.
 7. Write it to the SD card.
-8. Put the SD card in the Pi 4B, connect Ethernet and power it on.
+8. Insert the card, connect Ethernet and power on the Pi.
 
-The Pi needs no keyboard, monitor or SSH session. On first boot the embedded
-bootstrapper downloads `main/install.sh` from GitHub and installs the current
-KEMS website. It then reboots and serves KEMS at:
+No keyboard, monitor or SSH session is needed. Open:
 
-`http://kems-pi.local:4173`
+```text
+http://kems-pi.local:4173
+```
 
-The first installation can take several minutes because the Pi updates package
-metadata and installs the current Node.js ARM64 runtime.
+The first-boot status page shows progress. When setup completes it becomes the normal KEMS dashboard.
 
-## Website release assets
+## First KEMS connection
 
-Open **Actions** → **Publish KEMS Web release** and run it with the version from
-`package.json`. The release workflow publishes the checksum-verified Pi website
-archive used by `kems-update`.
+Enter the Home Assistant URL reachable from the Pi and the long-lived access token in the KEMS connection page. Those credentials are stored on the Pi, not in GitHub or in the SD-card image.
 
-## Future updates
+## Future updates — browser only
 
-The SD card image does not need rebuilding for normal website updates.
-Publish a new KEMS Web GitHub Release, then run `sudo kems-update` on the Pi (or
-use the web-based update UI when added). Persistent KEMS data remains under
-`/var/lib/kems-web`.
+After web.5:
+
+1. publish the next GitHub KEMS Web release;
+2. open KEMS locally;
+3. open **Settings → KEMS Pi server**;
+4. choose **Check now**;
+5. choose **Install update**.
+
+KEMS downloads the release and SHA-256 checksum, tests it, switches atomically and rolls back automatically if the new version does not become healthy.
+
+Persistent connection/history data under `/var/lib/kems-web` is not replaced by updates or rollbacks.

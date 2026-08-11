@@ -1,9 +1,9 @@
-const CACHE_NAME = "kems-alpha5-web2-shell-v1";
+const CACHE_NAME = "kems-alpha5-web5-shell-v1";
 const APP_SHELL = [
   "/",
   "/index.html",
-  "/styles.css?v=alpha5web2",
-  "/app.js?v=alpha5web2",
+  "/styles.css?v=alpha5web5",
+  "/app.js?v=alpha5web5",
   "/logo.svg",
   "/site.webmanifest",
   "/icons/kems-192.png",

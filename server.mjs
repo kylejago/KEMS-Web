@@ -2,6 +2,7 @@ import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
+import zlib from "node:zlib";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -17,6 +18,9 @@ const CONNECTION_FILE = path.join(DATA_DIR, "connection.enc.json");
 const SECRET_FILE = path.join(DATA_DIR, ".connection-key");
 const DAILY_LEDGER_FILE = path.join(DATA_DIR, "energy-ledger.json");
 const POWER_HISTORY_FILE = path.join(DATA_DIR, "power-history.json");
+const MANAGER_URL = process.env.KEMS_MANAGER_URL || "http://127.0.0.1:4174";
+const BACKUP_MAGIC = Buffer.from("KEMSBK01", "ascii");
+const BACKUP_FILES = ["connection.enc.json", ".connection-key", "energy-ledger.json", "power-history.json"];
 fs.mkdirSync(DATA_DIR, { recursive: true });
 try { fs.chmodSync(DATA_DIR, 0o700); } catch {}
 
@@ -144,7 +148,10 @@ function snapshotHistoryPoint(snapshot) {
     desiredBatteryExport: currentNumberForKey("desired_battery_export_power"),
     epsUtilisation: currentNumberForKey("eps_utilisation"),
     learningConfidence: snapshot.metrics?.modelConfidence ?? null,
-    dataQuality: snapshot.metrics?.dataQuality ?? null
+    dataQuality: snapshot.metrics?.dataQuality ?? null,
+    simulationStrategy: snapshot.simulation?.strategy ?? null,
+    exportTariffStatus: snapshot.simulation?.exportTariffStatus ?? snapshot.alpha5?.exportTariffStatus ?? null,
+    noExportModeActive: snapshot.simulation?.noExportModeActive ?? snapshot.alpha5?.noExportModeActive ?? null
   };
 }
 
@@ -472,6 +479,123 @@ function sameOriginWrite(request) {
   const origin = request.headers.origin;
   if (!origin) return true;
   try { return new URL(origin).host === request.headers.host; } catch { return false; }
+}
+
+function privateIpv4(value) {
+  const match = String(value || "").match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (!match) return false;
+  const parts = match.slice(1).map(Number);
+  if (parts.some((part) => part < 0 || part > 255)) return false;
+  return parts[0] === 10 || parts[0] === 127 || (parts[0] === 192 && parts[1] === 168) || (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) || (parts[0] === 169 && parts[1] === 254);
+}
+
+function directLanManagementRequest(request) {
+  if (!sameOriginWrite(request)) return false;
+  if (request.headers["cf-connecting-ip"] || request.headers["x-forwarded-for"] || request.headers["x-forwarded-host"] || request.headers.forwarded) return false;
+  try {
+    const hostname = new URL(`http://${request.headers.host || ""}`).hostname.toLowerCase();
+    return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1" || hostname.endsWith(".local") || privateIpv4(hostname);
+  } catch {
+    return false;
+  }
+}
+
+async function managerRequest(pathname, options = {}) {
+  const response = await fetch(`${MANAGER_URL}${pathname}`, {
+    ...options,
+    headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+    signal: AbortSignal.timeout(options.timeout || 12_000)
+  });
+  let body = {};
+  try { body = await response.json(); } catch {}
+  if (!response.ok) throw new Error(body.error || `Pi manager returned ${response.status}.`);
+  return body;
+}
+
+function createEncryptedBackup(password) {
+  const secret = String(password || "");
+  if (secret.length < 8) throw new Error("Use a backup password of at least 8 characters.");
+  const files = {};
+  for (const name of BACKUP_FILES) {
+    const file = path.join(DATA_DIR, name);
+    if (!fs.existsSync(file) || !fs.statSync(file).isFile()) continue;
+    const data = fs.readFileSync(file);
+    if (data.length > 20_000_000) throw new Error(`${name} is too large to include in a browser backup.`);
+    files[name] = data.toString("base64");
+  }
+  const payload = Buffer.from(JSON.stringify({
+    format: "kems-web-backup",
+    version: 1,
+    createdAt: new Date().toISOString(),
+    kemsWebVersion: project.version,
+    files
+  }), "utf8");
+  const compressed = zlib.gzipSync(payload, { level: 9 });
+  const salt = crypto.randomBytes(16);
+  const iv = crypto.randomBytes(12);
+  const key = crypto.scryptSync(secret, salt, 32);
+  const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
+  const encrypted = Buffer.concat([cipher.update(compressed), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  return Buffer.concat([BACKUP_MAGIC, salt, iv, tag, encrypted]);
+}
+
+function restoreEncryptedBackup(buffer, password) {
+  const secret = String(password || "");
+  if (secret.length < 8) throw new Error("Enter the password used when the backup was created.");
+  if (!Buffer.isBuffer(buffer) || buffer.length < BACKUP_MAGIC.length + 16 + 12 + 16 + 1) throw new Error("This does not look like a KEMS Web backup.");
+  if (!buffer.subarray(0, BACKUP_MAGIC.length).equals(BACKUP_MAGIC)) throw new Error("Unsupported KEMS Web backup format.");
+  let offset = BACKUP_MAGIC.length;
+  const salt = buffer.subarray(offset, offset += 16);
+  const iv = buffer.subarray(offset, offset += 12);
+  const tag = buffer.subarray(offset, offset += 16);
+  const encrypted = buffer.subarray(offset);
+  let decoded;
+  try {
+    const key = crypto.scryptSync(secret, salt, 32);
+    const decipher = crypto.createDecipheriv("aes-256-gcm", key, iv);
+    decipher.setAuthTag(tag);
+    decoded = zlib.gunzipSync(Buffer.concat([decipher.update(encrypted), decipher.final()]));
+  } catch {
+    throw new Error("The backup password is incorrect or the backup file is damaged.");
+  }
+  let payload;
+  try { payload = JSON.parse(decoded.toString("utf8")); } catch { throw new Error("The backup contents are invalid."); }
+  if (payload?.format !== "kems-web-backup" || payload.version !== 1 || !payload.files || typeof payload.files !== "object") throw new Error("Unsupported KEMS Web backup contents.");
+  for (const name of Object.keys(payload.files)) if (!BACKUP_FILES.includes(name)) throw new Error(`Backup contains an unexpected file: ${name}`);
+  if (payload.files["connection.enc.json"] && !payload.files[".connection-key"]) throw new Error("Backup connection data is missing its encryption key.");
+  const decodedFiles = {};
+  for (const name of BACKUP_FILES) {
+    if (!(name in payload.files)) continue;
+    const data = Buffer.from(String(payload.files[name]), "base64");
+    if (data.length > 20_000_000) throw new Error(`${name} is too large to restore.`);
+    if (name.endsWith(".json")) { try { JSON.parse(data.toString("utf8")); } catch { throw new Error(`${name} is not valid JSON.`); } }
+    if (name === ".connection-key") {
+      const key = Buffer.from(data.toString("utf8").trim(), "base64url");
+      if (key.length !== 32) throw new Error("Backup connection key is invalid.");
+    }
+    decodedFiles[name] = data;
+  }
+  for (const name of BACKUP_FILES) {
+    const file = path.join(DATA_DIR, name);
+    if (!(name in decodedFiles)) { try { fs.rmSync(file, { force: true }); } catch {} continue; }
+    const temporary = `${file}.restore-${process.pid}`;
+    fs.writeFileSync(temporary, decodedFiles[name], { mode: 0o600 });
+    fs.renameSync(temporary, file);
+    try { fs.chmodSync(file, 0o600); } catch {}
+  }
+  return { restored: Object.keys(decodedFiles), createdAt: payload.createdAt || null, kemsWebVersion: payload.kemsWebVersion || null };
+}
+
+async function readRawBody(request, limit = 25_000_000) {
+  const chunks = [];
+  let total = 0;
+  for await (const chunk of request) {
+    total += chunk.length;
+    if (total > limit) throw new Error("Backup file is too large.");
+    chunks.push(chunk);
+  }
+  return Buffer.concat(chunks);
 }
 
 function clamp(value, min, max) {
@@ -979,6 +1103,91 @@ function localDayStart(date = new Date()) {
   const copy = new Date(date);
   copy.setHours(0, 0, 0, 0);
   return copy;
+}
+
+async function policyEventsForToday() {
+  if (!isConfigured()) return [];
+  const cacheKey = "policy-events:today";
+  const cached = historyCache.get(cacheKey);
+  if (cached && Date.now() - cached.at < 5 * 60_000) return cached.events || [];
+  const start = localDayStart();
+  const end = new Date();
+  const definitions = [
+    ["simulation_strategy", "Simulation strategy", (state) => titleCase(String(state).replace(/_/g, " "))],
+    ["export_tariff_status", "Export tariff", (state) => titleCase(String(state).replace(/_/g, " "))],
+    ["no_export_mode_active", "No-export policy", (state) => isOn(state) ? "On" : "Off"]
+  ];
+  const idToDefinition = new Map();
+  for (const [key, label, formatter] of definitions) {
+    const entityId = resolvedEntities[key] || entities[key];
+    if (entityId) idToDefinition.set(entityId, { key, label, formatter });
+  }
+  const ids = [...idToDefinition.keys()];
+  if (!ids.length) return [];
+  const url = new URL(`${connection.url}/api/history/period/${encodeURIComponent(start.toISOString())}`);
+  url.searchParams.set("end_time", end.toISOString());
+  url.searchParams.set("filter_entity_id", ids.join(","));
+  url.searchParams.set("minimal_response", "");
+  url.searchParams.set("no_attributes", "");
+  try {
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${connection.token}`, "Content-Type": "application/json" },
+      signal: AbortSignal.timeout(20_000)
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const raw = await response.json();
+    if (!Array.isArray(raw)) throw new Error("History response was not an array");
+    const events = [];
+    raw.forEach((list, listIndex) => {
+      if (!Array.isArray(list) || !list.length) return;
+      const entityId = list.find((item) => item?.entity_id)?.entity_id || ids[listIndex];
+      const definition = idToDefinition.get(entityId);
+      if (!definition) return;
+      const entries = list.map((item) => ({
+        at: new Date(item.last_changed || item.last_updated || start).getTime(),
+        state: String(item.state ?? "unknown")
+      })).filter((item) => Number.isFinite(item.at)).sort((a, b) => a.at - b.at);
+      let previous = null;
+      for (const entry of entries) {
+        if (previous === null) { previous = entry.state; continue; }
+        if (entry.state === previous) continue;
+        if (entry.at >= start.getTime() && entry.at <= end.getTime()) {
+          events.push({
+            at: new Date(entry.at).toISOString(),
+            key: definition.key,
+            label: `${definition.label} → ${definition.formatter(entry.state)}`,
+            state: entry.state
+          });
+        }
+        previous = entry.state;
+      }
+    });
+    events.sort((a, b) => new Date(a.at) - new Date(b.at));
+    const grouped = [];
+    for (const event of events) {
+      const prior = grouped.at(-1);
+      if (prior && Math.abs(new Date(event.at) - new Date(prior.at)) <= 90_000) {
+        prior.labels.push(event.label);
+        prior.keys.push(event.key);
+      } else {
+        grouped.push({ at: event.at, labels: [event.label], keys: [event.key] });
+      }
+    }
+    const result = grouped.map((event) => ({ at: event.at, label: event.labels.join(" · "), keys: event.keys }));
+    historyCache.set(cacheKey, { at: Date.now(), events: result });
+    return result;
+  } catch (error) {
+    console.warn("Home Assistant policy history unavailable:", error.message);
+    return [];
+  }
+}
+
+function filterSeriesToNativePeriod(series, native) {
+  if (!native?.startDate || !native?.endDate) return series || [];
+  return (series || []).filter((row) => {
+    const date = row.date || localDateKey(row.at);
+    return Boolean(date && date >= native.startDate && date <= native.endDate);
+  });
 }
 
 async function historyForToday() {
@@ -1994,7 +2203,7 @@ async function analyticsFor(range = "day") {
   const economics = economicsSnapshot();
   let payload;
   if (validRange === "day") {
-    const history = await historyForToday();
+    const [history, policyEvents] = await Promise.all([historyForToday(), policyEventsForToday()]);
     const live = integrateEnergyWindow(history, "live");
     const simulated = integrateEnergyWindow(history, "simulated");
     const actualTotals = {
@@ -2045,6 +2254,7 @@ async function analyticsFor(range = "day") {
       source: native ? `${native.source} plus recorder power history` : "KEMS current-day entities plus recorder power history",
       coverage: history.length,
       history,
+      policyEvents,
       nativePeriod: native,
       actual: { totals: actualTotals, breakdowns: buildBreakdowns(actualTotals) },
       simulated: { totals: simulatedTotals, breakdowns: simulatedBreakdowns },
@@ -2060,7 +2270,7 @@ async function analyticsFor(range = "day") {
     if (native) {
       for (const [key, value] of Object.entries(native.actual)) if (Number.isFinite(value)) totals[key] = round(value, 3);
     }
-    let series = statistics.series || [];
+    let series = filterSeriesToNativePeriod(statistics.series || [], native);
     if (!series.length && native) {
       series = [{
         at: new Date().toISOString(),
@@ -2133,11 +2343,11 @@ function sendJson(response, status, value) {
   response.end(JSON.stringify(value));
 }
 
-async function readBody(request) {
+async function readBody(request, limit = 1_000_000) {
   let raw = "";
   for await (const chunk of request) {
     raw += chunk;
-    if (raw.length > 1_000_000) throw new Error("Request body too large");
+    if (raw.length > limit) throw new Error("Request body too large");
   }
   return raw ? JSON.parse(raw) : {};
 }
@@ -2228,6 +2438,66 @@ const server = http.createServer(async (request, response) => {
     current = buildUnconfiguredSnapshot(new Date());
     broadcast(current);
     return sendJson(response, 200, safeConnectionSummary());
+  }
+
+  if (url.pathname === "/api/system/status" && request.method === "GET") {
+    if (!directLanManagementRequest(request)) return sendJson(response, 403, { error: "Pi management is available only over a direct local-network KEMS address." });
+    try {
+      return sendJson(response, 200, await managerRequest(`/status${url.searchParams.get("refresh") === "1" ? "?refresh=1" : ""}`));
+    } catch (error) {
+      return sendJson(response, 200, { available: false, error: error.message, installedVersion: project.version });
+    }
+  }
+
+  if (url.pathname === "/api/system/logs" && request.method === "GET") {
+    if (!directLanManagementRequest(request)) return sendJson(response, 403, { error: "Pi management logs are available only on the local network." });
+    try { return sendJson(response, 200, await managerRequest("/logs")); }
+    catch (error) { return sendJson(response, 503, { error: error.message }); }
+  }
+
+  if (url.pathname === "/api/system/action" && request.method === "POST") {
+    if (!directLanManagementRequest(request)) return sendJson(response, 403, { error: "Pi maintenance actions are available only over a direct local-network KEMS address." });
+    try {
+      const body = await readBody(request);
+      const action = String(body.action || "");
+      if (!["update", "rollback", "restart", "reboot"].includes(action)) return sendJson(response, 400, { error: "Unsupported maintenance action." });
+      const result = await managerRequest("/action", { method: "POST", body: JSON.stringify({ action }), timeout: 5000 });
+      return sendJson(response, 202, result);
+    } catch (error) {
+      return sendJson(response, 503, { error: error.message });
+    }
+  }
+
+  if (url.pathname === "/api/system/backup" && request.method === "POST") {
+    if (!directLanManagementRequest(request)) return sendJson(response, 403, { error: "Backups can be created only over a direct local-network KEMS address." });
+    try {
+      const body = await readBody(request);
+      const backup = createEncryptedBackup(body.password);
+      const date = localDateKey() || "backup";
+      response.writeHead(200, {
+        "Content-Type": "application/octet-stream",
+        "Content-Disposition": `attachment; filename=\"KEMS-Web-backup-${date}.kemsbackup\"`,
+        "Content-Length": String(backup.length),
+        "Cache-Control": "no-store",
+        "X-Content-Type-Options": "nosniff"
+      });
+      response.end(backup);
+      return;
+    } catch (error) {
+      return sendJson(response, 400, { error: error.message });
+    }
+  }
+
+  if (url.pathname === "/api/system/restore" && request.method === "POST") {
+    if (!directLanManagementRequest(request)) return sendJson(response, 403, { error: "Backups can be restored only over a direct local-network KEMS address." });
+    try {
+      const password = decodeURIComponent(String(request.headers["x-kems-backup-password"] || ""));
+      const backup = await readRawBody(request);
+      const restored = restoreEncryptedBackup(backup, password);
+      return sendJson(response, 200, { ok: true, ...restored, restartRequired: true });
+    } catch (error) {
+      return sendJson(response, 400, { error: error.message });
+    }
   }
 
   if (url.pathname === "/api/config") {

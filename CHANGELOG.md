@@ -1,5 +1,36 @@
 # Changelog
 
+## 0.7.0-alpha5-web.5
+
+### Browser-managed Raspberry Pi appliance
+
+- Adds a local-only KEMS Pi management panel under Settings for appliance health, Pi uptime, memory/storage, installed/latest GitHub release, persistent-data size and rollback availability.
+- Adds browser actions for Check for update, Install update, manual rollback, Restart KEMS Web and Reboot Pi.
+- Adds a root-owned management helper bound only to `127.0.0.1:4174`; the public KEMS process proxies a small allow-listed API rather than gaining root privileges itself.
+- Blocks Pi administration routes when the request is arriving through forwarded/reverse-proxy headers or a non-local host, keeping future internet-facing KEMS access separate from appliance administration by default.
+- Extends the checksum-verified GitHub updater with progress reporting, health checking, automatic rollback and safe self-replacement of updater/helper files.
+- Includes `deploy/` in GitHub release assets so later releases can update the appliance helper without another SD-card reflash.
+
+### Encrypted backup and recovery
+
+- Adds password-protected browser backup and restore for KEMS Web persistent configuration/history.
+- Backups are gzip-compressed and encrypted with AES-256-GCM using a key derived with scrypt; Home Assistant credentials are never exported as plaintext.
+- Restore validates the archive and only permits the known KEMS persistent-data files before writing them atomically.
+
+### Dashboard history refinements
+
+- Adds policy-change markers to simulated and comparison charts for changes such as export-tariff status, no-export mode and simulation strategy. Historical simulation is preserved rather than retrospectively rewritten when policy changes later in the day.
+- Keeps long-term-statistics baseline buckets for calculations but clips displayed Week/Month/Year/All-time chart data to the native KEMS period dates, preventing prior-month baseline days appearing in the selected period.
+
+### Migration note
+
+- An existing completely headless web.4 Pi has no privileged management helper and no SSH/admin path. Installing web.5 therefore requires one final SD-card reflash with the web.5 headless image. After web.5, normal website releases can be installed and rolled back from the browser without reflashing.
+
+### Validation
+
+- `npm test` passes the setup smoke suite, the 236-entity KEMS alpha5 fixture, native Day/Week/Month/Year/All-time period checks, policy marker checks, encrypted backup/restore checks and Pi deployment checks.
+- Shell deployment scripts pass `bash -n` syntax validation.
+
 ## 0.7.0-alpha5-web.4
 
 ### Resilient headless Raspberry Pi bootstrap
