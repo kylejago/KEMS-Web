@@ -9,7 +9,7 @@ const port=4197;
 const dataDir=fs.mkdtempSync(path.join(os.tmpdir(),"kems-alpha5-smoke-"));
 const child=spawn(process.execPath,["server.mjs"],{
   cwd:new URL("..",import.meta.url),
-  env:{...process.env,PORT:String(port),HOST:"127.0.0.1",DATA_DIR:dataDir,HA_URL:"",HA_TOKEN:""},
+  env:{...process.env,PORT:String(port),HOST:"127.0.0.1",DATA_DIR:dataDir,HA_URL:"",HA_TOKEN:"",KEMS_MANAGER_URL:"http://127.0.0.1:42997"},
   stdio:["ignore","pipe","pipe"]
 });
 let output="";child.stdout.on("data",c=>output+=c);child.stderr.on("data",c=>output+=c);
@@ -33,7 +33,7 @@ try{
   ]);
   const shellResponse=await fetch(`http://127.0.0.1:${port}/`);
   const csp=shellResponse.headers.get("content-security-policy")||"";
-  if(!health.ok || health.version!=="0.7.0-alpha5-web.6")throw new Error("Health/version failed.");
+  if(!health.ok || health.version!=="0.7.0-alpha5-web.6.1")throw new Error("Health/version failed.");
   if(config.dataMode!=="unconfigured" || setup.configured)throw new Error("Fresh setup state failed.");
   if(site.homeAssistantMode!=="external" || site.siteId!=="home" || !manifest.name.includes(site.name))throw new Error("Site identity/manifest failed.");
   const changedSite=await fetch(`http://127.0.0.1:${port}/api/site`,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:"Mike Home",siteId:"mike",homeAssistantMode:"built-in",remoteHostname:"home.kems.co"})}).then(r=>r.json());

@@ -1,6 +1,6 @@
 # KEMS Web multi-site Home Hub
 
-KEMS Web 0.7.0-alpha5-web.6 keeps each property independent. A Site Identity contains a display name, site ID and future remote hostname such as `kyle.kems.co` or `mike.kems.co`. No central KEMS server stores another property's Home Assistant token.
+KEMS Web 0.7.0-alpha5-web.6.1 keeps each property independent. A Site Identity contains a display name, site ID and future remote hostname such as `kyle.kems.co` or `mike.kems.co`. No central KEMS server stores another property's Home Assistant token.
 
 ## Home Assistant modes
 

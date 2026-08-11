@@ -1,6 +1,6 @@
 {
   "name": "kems-web-companion",
-  "version": "0.7.0-alpha5-web.6",
+  "version": "0.7.0-alpha5-web.6.1",
   "private": true,
   "type": "module",
   "description": "Focused KEMS 0.7.0-alpha5 dashboard with multi-site identity, optional built-in Home Assistant Container, headless Pi management, GitHub updates and PWA support",
