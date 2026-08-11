@@ -18,9 +18,10 @@ const CONNECTION_FILE = path.join(DATA_DIR, "connection.enc.json");
 const SECRET_FILE = path.join(DATA_DIR, ".connection-key");
 const DAILY_LEDGER_FILE = path.join(DATA_DIR, "energy-ledger.json");
 const POWER_HISTORY_FILE = path.join(DATA_DIR, "power-history.json");
+const SITE_FILE = path.join(DATA_DIR, "site.json");
 const MANAGER_URL = process.env.KEMS_MANAGER_URL || "http://127.0.0.1:4174";
 const BACKUP_MAGIC = Buffer.from("KEMSBK01", "ascii");
-const BACKUP_FILES = ["connection.enc.json", ".connection-key", "energy-ledger.json", "power-history.json"];
+const BACKUP_FILES = ["connection.enc.json", ".connection-key", "energy-ledger.json", "power-history.json", "site.json"];
 fs.mkdirSync(DATA_DIR, { recursive: true });
 try { fs.chmodSync(DATA_DIR, 0o700); } catch {}
 
@@ -97,6 +98,33 @@ function atomicWriteJson(filePath, value) {
   fs.writeFileSync(temporary, JSON.stringify(value, null, 2), { mode: 0o600 });
   fs.renameSync(temporary, filePath);
   try { fs.chmodSync(filePath, 0o600); } catch {}
+}
+
+function slugifySiteId(value) {
+  const slug = String(value || "").toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40);
+  return slug || "home";
+}
+
+function normaliseSite(input = {}) {
+  const name = String(input.name || "KEMS Home").trim().slice(0, 80) || "KEMS Home";
+  const siteId = slugifySiteId(input.siteId || name);
+  const homeAssistantMode = input.homeAssistantMode === "built-in" ? "built-in" : "external";
+  const suppliedHost = String(input.remoteHostname || "").trim().toLowerCase();
+  const remoteHostname = /^[a-z0-9.-]+$/.test(suppliedHost) && suppliedHost.includes(".") ? suppliedHost.slice(0, 120) : `${siteId}.kems.co`;
+  return { version: 1, name, siteId, homeAssistantMode, remoteHostname, updatedAt: new Date().toISOString() };
+}
+
+let site = normaliseSite(readJsonIfExists(SITE_FILE, { name: "KEMS Home", siteId: "home", homeAssistantMode: "external" }));
+
+function saveSite(next) {
+  const merged = { ...site, ...next };
+  const nextSiteId = slugifySiteId(merged.siteId || merged.name);
+  if (String(site.remoteHostname || "") === `${site.siteId}.kems.co` && String(next.remoteHostname || site.remoteHostname) === String(site.remoteHostname || "")) {
+    merged.remoteHostname = `${nextSiteId}.kems.co`;
+  }
+  site = normaliseSite(merged);
+  atomicWriteJson(SITE_FILE, site);
+  return site;
 }
 
 function localDateKey(value = new Date()) {
@@ -309,7 +337,10 @@ function safeConnectionSummary() {
     connected: Boolean(current?.connected),
     lastError: current?.error || null,
     discoveredKemsEntityCount: kemsEntityCatalog.length,
-    updatedAt: current?.updatedAt || null
+    updatedAt: current?.updatedAt || null,
+    homeAssistantMode: site.homeAssistantMode,
+    siteName: site.name,
+    siteId: site.siteId
   };
 }
 
@@ -2392,6 +2423,65 @@ function serveStatic(request, response, pathname) {
 const server = http.createServer(async (request, response) => {
   const url = new URL(request.url, `http://${request.headers.host || "localhost"}`);
 
+  if (url.pathname === "/site.webmanifest" && request.method === "GET") {
+    const manifest = {
+      id: "/",
+      name: `KEMS — ${site.name}`,
+      short_name: site.siteId === "home" ? "KEMS" : `KEMS ${site.siteId}`.slice(0, 24),
+      description: `KEMS energy dashboard for ${site.name}.`,
+      start_url: "/#live", scope: "/", display: "standalone", orientation: "any",
+      background_color: "#071117", theme_color: "#071117", categories: ["utilities", "productivity"],
+      icons: [
+        { src: "icons/kems-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+        { src: "icons/kems-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+        { src: "icons/kems-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" }
+      ],
+      shortcuts: [
+        { name: "Live today", short_name: "Live", url: "/#live", icons: [{ src: "icons/kems-192.png", sizes: "192x192" }] },
+        { name: "Simulated today", short_name: "Simulated", url: "/#simulation", icons: [{ src: "icons/kems-192.png", sizes: "192x192" }] },
+        { name: "Performance & ROI", short_name: "Performance", url: "/#performance", icons: [{ src: "icons/kems-192.png", sizes: "192x192" }] }
+      ]
+    };
+    response.writeHead(200, { "Content-Type": "application/manifest+json; charset=utf-8", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" });
+    response.end(JSON.stringify(manifest));
+    return;
+  }
+
+  if (url.pathname === "/api/site" && request.method === "GET") {
+    return sendJson(response, 200, site);
+  }
+
+  if (url.pathname === "/api/site" && request.method === "PUT") {
+    if (!directLanManagementRequest(request)) return sendJson(response, 403, { error: "Site identity can be changed only over a direct local-network KEMS address." });
+    if (!sameOriginWrite(request)) return sendJson(response, 403, { error: "Cross-origin site changes are not allowed." });
+    try {
+      const body = await readBody(request);
+      return sendJson(response, 200, saveSite(body));
+    } catch (error) {
+      return sendJson(response, 400, { error: error.message });
+    }
+  }
+
+  if (url.pathname === "/api/home-assistant/status" && request.method === "GET") {
+    if (!directLanManagementRequest(request)) return sendJson(response, 403, { error: "Built-in Home Assistant management is available only over the direct local-network KEMS address." });
+    try { return sendJson(response, 200, await managerRequest("/home-assistant/status")); }
+    catch (error) { return sendJson(response, 200, { available: false, error: error.message }); }
+  }
+
+  if (url.pathname === "/api/home-assistant/action" && request.method === "POST") {
+    if (!directLanManagementRequest(request)) return sendJson(response, 403, { error: "Built-in Home Assistant actions are available only over the direct local-network KEMS address." });
+    if (!sameOriginWrite(request)) return sendJson(response, 403, { error: "Cross-origin Home Assistant actions are not allowed." });
+    try {
+      const body = await readBody(request);
+      const action = String(body.action || "");
+      if (!["install", "update", "restart", "start", "stop"].includes(action)) return sendJson(response, 400, { error: "Unsupported Home Assistant action." });
+      const result = await managerRequest("/home-assistant/action", { method: "POST", body: JSON.stringify({ action }), timeout: 5000 });
+      return sendJson(response, 202, result);
+    } catch (error) {
+      return sendJson(response, 503, { error: error.message });
+    }
+  }
+
   if (url.pathname === "/api/health") {
     return sendJson(response, 200, { ok: true, source: current.source, connected: current.connected, updatedAt: current.updatedAt, version: project.version });
   }
@@ -2503,6 +2593,7 @@ const server = http.createServer(async (request, response) => {
   if (url.pathname === "/api/config") {
     return sendJson(response, 200, {
       project,
+      site,
       dataMode: isConfigured() ? "home-assistant" : "unconfigured",
       pollIntervalMs: POLL_INTERVAL_MS,
       controlsEnabled: false,

@@ -18,10 +18,12 @@ try{
   let ready=false;
   for(let i=0;i<35;i+=1){await sleep(150);try{if((await fetch(`http://127.0.0.1:${port}/api/health`)).ok){ready=true;break;}}catch{}}
   if(!ready)throw new Error(`Server did not start.\n${output}`);
-  const [health,config,setup,live,history,html,js,css,system]=await Promise.all([
+  const [health,config,setup,site,manifest,live,history,html,js,css,system]=await Promise.all([
     fetch(`http://127.0.0.1:${port}/api/health`).then(r=>r.json()),
     fetch(`http://127.0.0.1:${port}/api/config`).then(r=>r.json()),
     fetch(`http://127.0.0.1:${port}/api/setup/status`).then(r=>r.json()),
+    fetch(`http://127.0.0.1:${port}/api/site`).then(r=>r.json()),
+    fetch(`http://127.0.0.1:${port}/site.webmanifest`).then(r=>r.json()),
     fetch(`http://127.0.0.1:${port}/api/live`).then(r=>r.json()),
     fetch(`http://127.0.0.1:${port}/api/history?hours=24`).then(r=>r.json()),
     fetch(`http://127.0.0.1:${port}/`).then(r=>r.text()),
@@ -31,8 +33,11 @@ try{
   ]);
   const shellResponse=await fetch(`http://127.0.0.1:${port}/`);
   const csp=shellResponse.headers.get("content-security-policy")||"";
-  if(!health.ok || health.version!=="0.7.0-alpha5-web.5")throw new Error("Health/version failed.");
+  if(!health.ok || health.version!=="0.7.0-alpha5-web.6")throw new Error("Health/version failed.");
   if(config.dataMode!=="unconfigured" || setup.configured)throw new Error("Fresh setup state failed.");
+  if(site.homeAssistantMode!=="external" || site.siteId!=="home" || !manifest.name.includes(site.name))throw new Error("Site identity/manifest failed.");
+  const changedSite=await fetch(`http://127.0.0.1:${port}/api/site`,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:"Mike Home",siteId:"mike",homeAssistantMode:"built-in",remoteHostname:"home.kems.co"})}).then(r=>r.json());
+  if(changedSite.siteId!=="mike" || changedSite.homeAssistantMode!=="built-in" || changedSite.remoteHostname!=="mike.kems.co")throw new Error("Site identity write failed.");
   if(live.source!=="unconfigured" || live.connected)throw new Error("Unconfigured snapshot failed.");
   if(history.length)throw new Error("Unconfigured history should be empty.");
   if(!html.includes("alpha5 energy dashboard"))throw new Error("HTML shell incomplete.");

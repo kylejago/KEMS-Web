@@ -108,3 +108,11 @@ If SSH is ever deliberately enabled on a recovery Pi, KEMS can still be installe
 ```bash
 curl -fsSL https://raw.githubusercontent.com/kylejago/KEMS-Web/main/install.sh | sudo bash
 ```
+
+## Multi-site and optional built-in Home Assistant (web.6)
+
+Settings now contains **Site identity** and **Home Assistant** mode. Existing installations should use **Existing Home Assistant**. A new property can select **Host on this KEMS Pi** and install the official Home Assistant Container through the local-only Pi manager.
+
+The local Home Assistant configuration is stored outside KEMS Web releases at `/var/lib/kems-homeassistant/config`. The container uses host networking and is available on port 8123. After normal Home Assistant onboarding, create a long-lived access token and connect KEMS Web to `http://127.0.0.1:8123`.
+
+Home Assistant Container is distinct from Home Assistant OS and does not include the Apps/Add-on system.

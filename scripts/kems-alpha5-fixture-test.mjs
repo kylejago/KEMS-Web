@@ -123,7 +123,7 @@ try {
     });
     if (outOfRange) throw new Error(`${result.range} chart leaked a baseline bucket outside the native alpha5 period.`);
   }
-  if (!js.includes("Awaiting export tariff") || !js.includes("solarBatteryCurve") || !js.includes("Alpha5 period ledger") || !js.includes("chart-event-list") || !js.includes("KEMS Pi server")) throw new Error("Alpha5/web.5 frontend features missing.");
+  if (!js.includes("Awaiting export tariff") || !js.includes("solarBatteryCurve") || !js.includes("Alpha5 period ledger") || !js.includes("chart-event-list") || !js.includes("KEMS Pi server")) throw new Error("Alpha5/web.6 frontend features missing.");
   if (!css.includes(".alpha5-status-strip") || !css.includes(".alpha5-solar-battery")) throw new Error("Alpha5 styling missing.");
   const saved = fs.readFileSync(path.join(dataDir, "connection.enc.json"), "utf8");
   if (saved.includes(token)) throw new Error("Token was stored in plaintext.");

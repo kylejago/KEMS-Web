@@ -15,7 +15,10 @@ const MANAGER_DIR = "/var/lib/kems-web-management";
 const STATUS_FILE = path.join(MANAGER_DIR, "status.json");
 const LOG_FILE = path.join(MANAGER_DIR, "action.log");
 const REPO_FILE = path.join(LIB_DIR, "github-repo");
-const MANAGER_VERSION = "0.7.0-alpha5-web.5";
+const MANAGER_VERSION = "0.7.0-alpha5-web.6";
+const HA_CONFIG_DIR = "/var/lib/kems-homeassistant/config";
+const HA_CONTAINER = "homeassistant";
+const HA_IMAGE = "ghcr.io/home-assistant/home-assistant:stable";
 
 fs.mkdirSync(MANAGER_DIR, { recursive: true, mode: 0o750 });
 
@@ -185,8 +188,105 @@ function journal(unit, maxLines = 80) {
   return String(result.stdout || result.stderr || "").trim().split(/\r?\n/).filter(Boolean).slice(-maxLines);
 }
 
+function dockerVersion() {
+  const result = spawnSync("docker", ["version", "--format", "{{.Server.Version}}"], { encoding: "utf8", timeout: 4000 });
+  return result.status === 0 ? String(result.stdout || "").trim() || null : null;
+}
+
+function dockerContainerState() {
+  const result = spawnSync("docker", ["inspect", "--format", "{{.State.Status}}", HA_CONTAINER], { encoding: "utf8", timeout: 4000 });
+  return result.status === 0 ? String(result.stdout || "").trim() || "unknown" : "not-installed";
+}
+
+function homeAssistantLogs(maxLines = 80) {
+  const result = spawnSync("docker", ["logs", "--tail", String(maxLines), HA_CONTAINER], { encoding: "utf8", timeout: 5000 });
+  return String(result.stdout || result.stderr || "").trim().split(/\r?\n/).filter(Boolean).slice(-maxLines);
+}
+
+async function homeAssistantStatus() {
+  const version = dockerVersion();
+  const containerState = version ? dockerContainerState() : "not-installed";
+  let responding = false;
+  if (containerState === "running") {
+    try {
+      const response = await fetch("http://127.0.0.1:8123/", { signal: AbortSignal.timeout(2500) });
+      responding = response.status >= 200 && response.status < 500;
+    } catch {}
+  }
+  return {
+    available: true,
+    dockerInstalled: Boolean(version),
+    dockerVersion: version,
+    dockerService: serviceState("docker.service"),
+    installed: containerState !== "not-installed",
+    containerState,
+    responding,
+    version: safeRead(path.join(HA_CONFIG_DIR, ".HA_VERSION"), null),
+    image: HA_IMAGE,
+    configDirectory: HA_CONFIG_DIR,
+    localUrl: "http://127.0.0.1:8123",
+    lanUrl: primaryIpv4() ? `http://${primaryIpv4()}:8123` : null,
+    note: "Home Assistant Container does not include Home Assistant OS apps/add-ons."
+  };
+}
+
+function homeAssistantShell(action) {
+  const common = [
+    "set -euo pipefail",
+    "export DEBIAN_FRONTEND=noninteractive",
+    `HA_CONFIG=${JSON.stringify(HA_CONFIG_DIR)}`,
+    `HA_IMAGE=${JSON.stringify(HA_IMAGE)}`,
+    `HA_CONTAINER=${JSON.stringify(HA_CONTAINER)}`,
+    "ensure_docker() {",
+    "  if command -v docker >/dev/null 2>&1 && docker version --format '{{.Server.Version}}' >/dev/null 2>&1; then",
+    "    major=$(docker version --format '{{.Server.Version}}' | cut -d. -f1)",
+    "    if [ \"${major:-0}\" -ge 23 ]; then systemctl enable --now docker.service >/dev/null 2>&1 || true; return; fi",
+    "    echo 'Existing Docker Engine is older than Home Assistant requires (23.0+).' >&2; exit 20",
+    "  fi",
+    "  echo 'Installing Docker Engine from the official Debian repository...'",
+    "  apt-get update",
+    "  apt-get install -y --no-install-recommends ca-certificates curl",
+    "  install -m 0755 -d /etc/apt/keyrings",
+    "  curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc",
+    "  chmod a+r /etc/apt/keyrings/docker.asc",
+    "  . /etc/os-release",
+    "  CODENAME=${VERSION_CODENAME:-trixie}",
+    "  ARCH=$(dpkg --print-architecture)",
+    "  cat > /etc/apt/sources.list.d/docker.sources <<EOF",
+    "Types: deb",
+    "URIs: https://download.docker.com/linux/debian",
+    "Suites: ${CODENAME}",
+    "Components: stable",
+    "Architectures: ${ARCH}",
+    "Signed-By: /etc/apt/keyrings/docker.asc",
+    "EOF",
+    "  apt-get update",
+    "  apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin",
+    "  systemctl enable --now docker.service",
+    "}",
+    "run_ha() {",
+    "  mkdir -p \"$HA_CONFIG\"",
+    "  docker rm -f \"$HA_CONTAINER\" >/dev/null 2>&1 || true",
+    "  docker run -d --name \"$HA_CONTAINER\" --privileged --restart=unless-stopped -e TZ=Europe/London -v \"$HA_CONFIG:/config\" -v /run/dbus:/run/dbus:ro --network=host \"$HA_IMAGE\"",
+    "}"
+  ];
+  const actions = {
+    install: ["echo 'Preparing Docker Engine...'", "ensure_docker", "echo 'Downloading Home Assistant stable container...'", "docker pull \"$HA_IMAGE\"", "echo 'Starting Home Assistant Container...'", "run_ha", "echo 'Home Assistant Container started. Initial onboarding may take several minutes.'"],
+    update: ["ensure_docker", "echo 'Downloading latest Home Assistant stable container...'", "docker pull \"$HA_IMAGE\"", "echo 'Recreating Home Assistant Container...'", "run_ha", "echo 'Home Assistant update complete.'"],
+    restart: ["ensure_docker", "echo 'Restarting Home Assistant...'", "docker restart \"$HA_CONTAINER\"", "echo 'Home Assistant restarted.'"],
+    start: ["ensure_docker", "echo 'Starting Home Assistant...'", "docker start \"$HA_CONTAINER\"", "echo 'Home Assistant started.'"],
+    stop: ["ensure_docker", "echo 'Stopping Home Assistant...'", "docker stop \"$HA_CONTAINER\"", "echo 'Home Assistant stopped.'"]
+  };
+  return [...common, ...(actions[action] || ["echo 'Unsupported Home Assistant action' >&2", "exit 2"])].join("\n");
+}
+
 function progressFromOutput(text, current) {
   const lower = text.toLowerCase();
+  if (lower.includes("preparing docker")) return Math.max(current, 10);
+  if (lower.includes("installing docker engine")) return Math.max(current, 20);
+  if (lower.includes("downloading home assistant")) return Math.max(current, 55);
+  if (lower.includes("starting home assistant") || lower.includes("recreating home assistant")) return Math.max(current, 82);
+  if (lower.includes("home assistant") && (lower.includes("complete") || lower.includes("started") || lower.includes("restarted") || lower.includes("stopped"))) return Math.max(current, 98);
   if (lower.includes("checking github")) return Math.max(current, 10);
   if (lower.includes("downloading release")) return Math.max(current, 25);
   if (lower.includes("verifying release")) return Math.max(current, 40);
@@ -203,6 +303,7 @@ function commandFor(action) {
   if (action === "rollback") return ["/usr/local/sbin/kems-rollback", []];
   if (action === "restart") return ["systemctl", ["restart", "kems-web.service"]];
   if (action === "reboot") return ["systemctl", ["reboot"]];
+  if (["ha-install", "ha-update", "ha-restart", "ha-start", "ha-stop"].includes(action)) return ["bash", ["-lc", homeAssistantShell(action.replace(/^ha-/, ""))]];
   return null;
 }
 
@@ -285,6 +386,8 @@ async function systemStatus(forceLatest = false) {
     releases,
     rollbackAvailable: releases.some((item) => !item.active),
     action: actionState,
+    homeAssistant: await homeAssistantStatus(),
+    applianceActivationRequired: MANAGER_VERSION !== installed,
     checkedAt: new Date().toISOString()
   };
 }
@@ -318,7 +421,8 @@ const server = http.createServer(async (request, response) => {
       return sendJson(response, 200, {
         action: readRecentActionLog(),
         web: journal("kems-web.service"),
-        manager: journal("kems-web-manager.service", 40)
+        manager: journal("kems-web-manager.service", 40),
+        homeAssistant: homeAssistantLogs()
       });
     }
     if (url.pathname === "/action" && request.method === "POST") {
@@ -326,6 +430,14 @@ const server = http.createServer(async (request, response) => {
       const action = String(body.action || "");
       if (!new Set(["update", "rollback", "restart", "reboot"]).has(action)) return sendJson(response, 400, { error: "Unsupported maintenance action." });
       startAction(action);
+      return sendJson(response, 202, { accepted: true, action, status: actionState });
+    }
+    if (url.pathname === "/home-assistant/status" && request.method === "GET") return sendJson(response, 200, await homeAssistantStatus());
+    if (url.pathname === "/home-assistant/action" && request.method === "POST") {
+      const body = await readBody(request);
+      const action = String(body.action || "");
+      if (!new Set(["install", "update", "restart", "start", "stop"]).has(action)) return sendJson(response, 400, { error: "Unsupported Home Assistant action." });
+      startAction(`ha-${action}`);
       return sendJson(response, 202, { accepted: true, action, status: actionState });
     }
     return sendJson(response, 404, { error: "Not found" });

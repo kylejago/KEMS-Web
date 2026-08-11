@@ -1,4 +1,4 @@
-# KEMS Web — 0.7.0-alpha5-web.5
+# KEMS Web — 0.7.0-alpha5-web.6
 
 Focused local companion website for **KEMS 0.7.0-alpha5**.
 
@@ -104,3 +104,10 @@ npm start
 ```
 
 Default dashboard port: `4173`.
+
+
+## web.6 multi-site / Home Hub foundation
+
+Each KEMS Pi now has a local Site Identity (site name, site ID and future remote hostname). The same appliance can either use an existing Home Assistant or, on a Raspberry Pi, install the official Home Assistant Container locally through Settings. Built-in Home Assistant is managed by the local-only privileged Pi helper and stores its configuration under `/var/lib/kems-homeassistant/config`. Home Assistant Container does not provide Home Assistant OS apps/add-ons.
+
+The first update from web.5 to web.6 replaces the Pi manager on disk but does not interrupt the manager process performing the update. Reboot the Pi once from Settings after web.6 installs; subsequent web.6 Home Assistant controls will then be active.

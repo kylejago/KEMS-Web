@@ -1,9 +1,9 @@
 {
   "name": "kems-web-companion",
-  "version": "0.7.0-alpha5-web.5",
+  "version": "0.7.0-alpha5-web.6",
   "private": true,
   "type": "module",
-  "description": "Focused four-view KEMS 0.7.0-alpha5 energy dashboard with headless Raspberry Pi management, GitHub updates, backup/restore and PWA support",
+  "description": "Focused KEMS 0.7.0-alpha5 dashboard with multi-site identity, optional built-in Home Assistant Container, headless Pi management, GitHub updates and PWA support",
   "scripts": {
     "start": "node server.mjs",
     "dev": "node --watch server.mjs",

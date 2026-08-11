@@ -41,6 +41,13 @@ function pwaStatus() {
   return { label: "Browser install", detail: "Use your browser's Install app / Add to Home screen option if it is available." };
 }
 
+function applySiteIdentity() {
+  const name = state.site?.name || state.config?.site?.name || "KEMS Home";
+  document.title = `KEMS — ${name}`;
+  const small = document.querySelector(".brand small");
+  if (small) small.textContent = `${name} · alpha5`;
+}
+
 async function installPwa() {
   if (!deferredInstallPrompt) return;
   const prompt = deferredInstallPrompt;
@@ -89,6 +96,7 @@ const state = {
   catalogQuery: "",
   diagnostics: null,
   system: null,
+  site: null,
   systemPolling: null
 };
 
@@ -308,10 +316,12 @@ async function initialise() {
   bindShell();
   updateNavigation();
   try {
-    [state.config, state.setup] = await Promise.all([
+    [state.config, state.setup, state.site] = await Promise.all([
       getJson("/api/config"),
-      getJson("/api/setup/status")
+      getJson("/api/setup/status"),
+      getJson("/api/site")
     ]);
+    applySiteIdentity();
     if (!state.setup.configured) {
       renderConnectionPage();
       return;
@@ -1049,6 +1059,8 @@ function systemSectionContent() {
     ? `<div class="update-banner"><div><span>Update available</span><strong>${escapeHtml(latest.version || "New release")}</strong></div><button class="button primary" id="install-update" type="button" ${actionRunning ? "disabled" : ""}>Install update</button></div>`
     : `<div class="update-banner current"><div><span>Software</span><strong>${latest.available ? "Up to date" : "Installed"}</strong><small>${latest.error ? escapeHtml(latest.error) : "Latest GitHub release checked"}</small></div><button class="button secondary" id="check-update" type="button" ${actionRunning ? "disabled" : ""}>Check now</button></div>`;
   const actionPanel = action.state && action.state !== "idle" ? `<div class="maintenance-progress ${escapeHtml(systemTone(action.state))}"><div><span>${escapeHtml(action.action || "Maintenance")}</span><strong>${escapeHtml(action.state)}</strong></div><div class="maintenance-track"><i style="width:${clamp(Number(action.progress) || 0, 0, 100)}%"></i></div><p>${escapeHtml(action.message || "")}</p></div>` : "";
+  const managerActivationRequired = Boolean(system.applianceActivationRequired || (system.managerVersion && system.installedVersion && system.managerVersion !== system.installedVersion));
+  const activationPanel = managerActivationRequired ? `<div class="update-banner activation"><div><span>Appliance services updated</span><strong>Reboot required</strong><small>web.6 is installed, but the Pi manager is still ${escapeHtml(system.managerVersion || "an older version")}.</small></div><button class="button primary" id="reboot-pi-activation" type="button">Reboot Pi</button></div>` : "";
   return `<h3>KEMS Pi server</h3>
     <div class="system-status-line"><span class="system-dot ${escapeHtml(systemTone(system.service))}"></span><strong>${system.service === "active" ? "Healthy" : escapeHtml(system.service || "Unknown")}</strong><span>${escapeHtml(system.hostname || "kems-pi")}${system.ip ? ` · ${escapeHtml(system.ip)}` : ""}</span></div>
     <div class="system-grid">
@@ -1061,7 +1073,7 @@ function systemSectionContent() {
       <div><span>Node.js</span><strong>${escapeHtml(system.nodeVersion || "Unknown")}</strong></div>
       <div><span>Rollback</span><strong>${system.rollbackAvailable ? "Available" : "No older release"}</strong></div>
     </div>
-    ${updateCopy}${actionPanel}
+    ${activationPanel}${updateCopy}${actionPanel}
     <div class="drawer-actions system-actions">
       ${system.updateAvailable ? `<button class="button secondary" id="check-update" type="button" ${actionRunning ? "disabled" : ""}>Re-check</button>` : ""}
       <button class="button secondary" id="view-system-logs" type="button">View logs</button>
@@ -1080,6 +1092,7 @@ function bindSystemControls() {
   document.querySelector("#rollback-kems")?.addEventListener("click", () => runSystemAction("rollback"));
   document.querySelector("#restart-kems")?.addEventListener("click", () => runSystemAction("restart"));
   document.querySelector("#reboot-pi")?.addEventListener("click", () => runSystemAction("reboot"));
+  document.querySelector("#reboot-pi-activation")?.addEventListener("click", () => runSystemAction("reboot"));
   document.querySelector("#view-system-logs")?.addEventListener("click", showSystemLogs);
   document.querySelector("#backup-kems")?.addEventListener("click", showBackupModal);
   document.querySelector("#restore-kems")?.addEventListener("click", showRestoreModal);
@@ -1092,11 +1105,21 @@ function updateSystemSection() {
   bindSystemControls();
 }
 
+function updateHomeAssistantSection() {
+  const section = document.querySelector("#home-assistant-section");
+  if (!section) return;
+  section.innerHTML = homeAssistantSectionContent();
+  bindSiteAndHomeAssistantControls();
+  document.querySelector("#change-connection")?.addEventListener("click", () => { drawerRoot.innerHTML = ""; renderChangeConnectionModal(); });
+  document.querySelector("#remove-connection")?.addEventListener("click", removeConnection);
+}
+
 async function refreshSystemStatus(force = false) {
   try {
     const priorVersion = state.system?.installedVersion || state.config?.project?.version;
     state.system = await getJson(`/api/system/status${force ? "?refresh=1" : ""}`);
     updateSystemSection();
+    updateHomeAssistantSection();
     const action = state.system?.action;
     if (state.system?.installedVersion && priorVersion && state.system.installedVersion !== priorVersion) toast(`KEMS Web ${state.system.installedVersion} is now installed.`, "good");
     if (state.system?.installedVersion && state.config?.project?.version && state.system.installedVersion !== state.config.project.version && action?.state !== "running") {
@@ -1165,7 +1188,7 @@ async function showSystemLogs() {
   try {
     const logs = await getJson("/api/system/logs");
     const block = (title, lines) => `<h3 class="log-title">${escapeHtml(title)}</h3><pre>${escapeHtml((lines || []).join("\n") || "No recent entries.")}</pre>`;
-    document.querySelector(".modal-body").innerHTML = `${block("Maintenance", logs.action)}${block("KEMS Web", logs.web)}${block("Pi manager", logs.manager)}`;
+    document.querySelector(".modal-body").innerHTML = `${block("Maintenance", logs.action)}${block("KEMS Web", logs.web)}${block("Pi manager", logs.manager)}${block("Home Assistant Container", logs.homeAssistant)}`;
   } catch (error) {
     document.querySelector(".modal-body").innerHTML = `<div class="error-panel">${escapeHtml(error.message)}</div>`;
   }
@@ -1231,13 +1254,74 @@ async function openSettingsDrawer() {
   renderSettingsDrawer();
 }
 
+function siteSectionContent() {
+  const site = state.site || state.config?.site || { name: "KEMS Home", siteId: "home", remoteHostname: "home.kems.co", homeAssistantMode: "external" };
+  return `<h3>Site identity</h3>
+    <form id="site-form" class="site-form">
+      <label><span>Site name</span><input class="input" id="site-name" maxlength="80" value="${escapeHtml(site.name || "KEMS Home")}" /></label>
+      <label><span>Site ID</span><input class="input" id="site-id" maxlength="40" pattern="[a-z0-9-]+" value="${escapeHtml(site.siteId || "home")}" /><small>Used for this property's app identity and future subdomain.</small></label>
+      <label><span>Future remote hostname</span><input class="input" id="site-hostname" maxlength="120" value="${escapeHtml(site.remoteHostname || `${site.siteId || "home"}.kems.co`)}" /></label>
+      <div class="form-result" id="site-result"></div>
+      <button class="button secondary" type="submit">Save site identity</button>
+    </form>`;
+}
+
+function homeAssistantSectionContent() {
+  const site = state.site || { homeAssistantMode: "external" };
+  const ha = state.system?.homeAssistant || null;
+  const builtIn = site.homeAssistantMode === "built-in";
+  const managerReady = state.system?.available && !state.system?.applianceActivationRequired && state.system?.managerVersion === state.system?.installedVersion;
+  const modeButtons = `<div class="ha-mode-switch"><button type="button" class="${!builtIn ? "active" : ""}" data-ha-mode="external">Existing Home Assistant</button><button type="button" class="${builtIn ? "active" : ""}" data-ha-mode="built-in">Host on this KEMS Pi</button></div>`;
+  if (!builtIn) return `<h3>Home Assistant</h3>${modeButtons}<p class="drawer-note">KEMS uses the Home Assistant instance you already run elsewhere. Nothing is installed on this Pi.</p><div class="connection-summary"><span>Address</span><strong>${escapeHtml(state.setup?.homeAssistantUrl || "Not configured")}</strong><span>Status</span><strong>${state.snapshot?.connected ? "Connected" : "Offline"}</strong><span>KEMS entities</span><strong>${escapeHtml(String(state.snapshot?.discovery?.totalKemsEntities || 0))}</strong></div><div class="drawer-actions"><button class="button secondary" id="change-connection" type="button">Change connection</button><button class="button danger" id="remove-connection" type="button">Remove saved connection</button></div>`;
+  if (!managerReady) return `<h3>Home Assistant</h3>${modeButtons}<div class="system-unavailable"><strong>Pi manager activation required</strong><p>Reboot the Pi once after the web.6 update, then built-in Home Assistant can be installed from this page.</p></div>`;
+  if (!ha?.installed) return `<h3>Home Assistant</h3>${modeButtons}<div class="home-assistant-card"><div class="system-status-line"><span class="system-dot neutral"></span><strong>Not installed</strong><span>Home Assistant Container</span></div><p class="drawer-note">This installs the official Home Assistant Container using Docker Engine. Home Assistant OS apps/add-ons are not included in Container installations.</p><div class="drawer-actions"><button class="button primary" id="ha-install" type="button">Install Home Assistant</button></div></div>`;
+  const running = ha.containerState === "running";
+  const openUrl = ha.lanUrl || `http://${state.system?.ip || "kems-pi.local"}:8123`;
+  return `<h3>Home Assistant</h3>${modeButtons}<div class="home-assistant-card"><div class="system-status-line"><span class="system-dot ${ha.responding ? "good" : running ? "neutral" : "bad"}"></span><strong>${ha.responding ? "Ready" : running ? "Starting" : escapeHtml(ha.containerState || "Stopped")}</strong><span>${escapeHtml(ha.version || "Home Assistant Container")}</span></div><div class="system-grid"><div><span>Home Assistant</span><strong>${escapeHtml(ha.version || "Installed")}</strong></div><div><span>Docker Engine</span><strong>${escapeHtml(ha.dockerVersion || "Unknown")}</strong></div><div><span>Container</span><strong>${escapeHtml(ha.containerState || "Unknown")}</strong></div><div><span>KEMS connection</span><strong>${state.snapshot?.connected && String(state.setup?.homeAssistantUrl || "").includes("127.0.0.1") ? "Connected locally" : "Needs token / connection"}</strong></div></div><div class="drawer-actions"><a class="button primary button-link" href="${escapeHtml(openUrl)}" target="_blank" rel="noopener">Open Home Assistant</a>${running ? `<button class="button secondary" id="ha-restart" type="button">Restart HA</button><button class="button secondary" id="ha-update" type="button">Update HA</button><button class="button danger" id="ha-stop" type="button">Stop HA</button>` : `<button class="button primary" id="ha-start" type="button">Start HA</button>`}<button class="button secondary" id="connect-local-ha" type="button">Connect KEMS to local HA</button></div><p class="drawer-note">After Home Assistant onboarding, create a long-lived access token in the Home Assistant user profile, then use “Connect KEMS to local HA”.</p></div>`;
+}
+
+async function saveSiteFromForm(event) {
+  event.preventDefault();
+  const result = document.querySelector("#site-result");
+  try {
+    state.site = await getJson("/api/site", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: document.querySelector("#site-name")?.value, siteId: document.querySelector("#site-id")?.value, remoteHostname: document.querySelector("#site-hostname")?.value, homeAssistantMode: state.site?.homeAssistantMode || "external" }) });
+    applySiteIdentity();
+    result.className = "form-result good"; result.textContent = "Site identity saved.";
+  } catch (error) { result.className = "form-result danger"; result.textContent = error.message; }
+}
+
+async function setHomeAssistantMode(mode) {
+  try {
+    state.site = await getJson("/api/site", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...(state.site || {}), homeAssistantMode: mode }) });
+    renderSettingsDrawer();
+  } catch (error) { toast(error.message, "danger"); }
+}
+
+async function runHomeAssistantAction(action) {
+  const words = { install: "Install Docker Engine and the official Home Assistant Container on this KEMS Pi?", update: "Pull the latest stable Home Assistant Container and recreate it using the existing configuration?", restart: "Restart Home Assistant now?", start: "Start Home Assistant now?", stop: "Stop Home Assistant? KEMS will lose its local Home Assistant connection until it is started again." };
+  if (!window.confirm(words[action] || "Continue?")) return;
+  try {
+    const result = await getJson("/api/home-assistant/action", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action }) });
+    state.system = { ...(state.system || {}), action: result.status || { action: `ha-${action}`, state: "running", progress: 3, message: `Home Assistant ${action} started.` } };
+    renderSettingsDrawer(); startSystemPolling();
+  } catch (error) { toast(error.message, "danger"); }
+}
+
+function bindSiteAndHomeAssistantControls() {
+  document.querySelector("#site-form")?.addEventListener("submit", saveSiteFromForm);
+  document.querySelectorAll("[data-ha-mode]").forEach((button) => button.addEventListener("click", () => setHomeAssistantMode(button.dataset.haMode)));
+  for (const action of ["install", "update", "restart", "start", "stop"]) document.querySelector(`#ha-${action}`)?.addEventListener("click", () => runHomeAssistantAction(action));
+  document.querySelector("#connect-local-ha")?.addEventListener("click", () => { drawerRoot.innerHTML = ""; renderChangeConnectionModal("http://127.0.0.1:8123"); });
+}
+
 function renderSettingsDrawer() {
   const query = state.catalogQuery.toLowerCase();
   const items = state.catalog.filter((item) => !query || item.entityId.toLowerCase().includes(query) || String(item.attributes?.friendly_name || "").toLowerCase().includes(query)).slice(0, 100);
   drawerRoot.innerHTML = `<div class="drawer-backdrop"><aside class="drawer" aria-label="KEMS settings">
     <header><div><p class="eyebrow">Dashboard settings</p><h2>KEMS settings &amp; Pi</h2></div><button id="close-drawer" class="icon-button" type="button" aria-label="Close settings">×</button></header>
     <div class="drawer-content">
-      <section class="drawer-section"><h3>Home Assistant connection</h3><div class="connection-summary"><span>Address</span><strong>${escapeHtml(state.setup?.homeAssistantUrl || "Not configured")}</strong><span>Status</span><strong>${state.snapshot?.connected ? "Connected" : "Offline"}</strong><span>KEMS entities</span><strong>${escapeHtml(String(state.snapshot?.discovery?.totalKemsEntities || 0))}</strong></div><div class="drawer-actions"><button class="button secondary" id="change-connection" type="button">Change connection</button><button class="button danger" id="remove-connection" type="button">Remove saved connection</button></div></section>
+      <section class="drawer-section site-identity">${siteSectionContent()}</section>
+      <section class="drawer-section home-assistant-management" id="home-assistant-section">${homeAssistantSectionContent()}</section>
       <section class="drawer-section"><h3>Data classification</h3><div class="badge-guide">${sourceBadge("live")}${sourceBadge("observed")}${sourceBadge("simulated")}${sourceBadge("calculated")}${sourceBadge("forecast")}</div></section>
       <section class="drawer-section"><h3>KEMS app</h3><div class="connection-summary"><span>Status</span><strong>${escapeHtml(pwaStatus().label)}</strong><span>Mode</span><strong>${isStandaloneApp() ? "Installed app" : "Website"}</strong></div><p class="drawer-note">${escapeHtml(pwaStatus().detail)}</p>${deferredInstallPrompt ? `<div class="drawer-actions"><button class="button primary" id="install-pwa" type="button">Install KEMS app</button></div>` : ""}</section>
       <section class="drawer-section system-management" id="system-section">${systemSectionContent()}</section>
@@ -1255,6 +1339,7 @@ function renderSettingsDrawer() {
   });
   document.querySelector("#remove-connection")?.addEventListener("click", removeConnection);
   document.querySelector("#install-pwa")?.addEventListener("click", installPwa);
+  bindSiteAndHomeAssistantControls();
   bindSystemControls();
   if (state.system?.action?.state === "running") startSystemPolling();
 }
@@ -1266,8 +1351,8 @@ function showEntity(entityId) {
   document.querySelector("#close-modal")?.addEventListener("click", () => modalRoot.innerHTML = "");
 }
 
-function renderChangeConnectionModal() {
-  modalRoot.innerHTML = `<div class="modal-backdrop"><section class="modal connection-modal"><header><div><p class="eyebrow">Connection</p><h2>Change Home Assistant</h2></div><button id="close-modal" class="icon-button" type="button">×</button></header><div class="modal-body"><form id="change-connection-form"><label><span>Home Assistant address</span><input id="change-ha-url" class="input" type="url" value="${escapeHtml(state.setup?.homeAssistantUrl || "")}" required /></label><label><span>New long-lived access token</span><input id="change-ha-token" class="input" type="password" required /></label><label class="remember-row"><input id="change-remember" type="checkbox" checked /><span>Remember this connection</span></label><div id="change-result" class="form-result"></div><button class="button primary" type="submit">Save and reconnect</button></form></div></section></div>`;
+function renderChangeConnectionModal(urlOverride = null) {
+  modalRoot.innerHTML = `<div class="modal-backdrop"><section class="modal connection-modal"><header><div><p class="eyebrow">Connection</p><h2>Change Home Assistant</h2></div><button id="close-modal" class="icon-button" type="button">×</button></header><div class="modal-body"><form id="change-connection-form"><label><span>Home Assistant address</span><input id="change-ha-url" class="input" type="url" value="${escapeHtml(urlOverride || state.setup?.homeAssistantUrl || "")}" required /></label><label><span>New long-lived access token</span><input id="change-ha-token" class="input" type="password" required /></label><label class="remember-row"><input id="change-remember" type="checkbox" checked /><span>Remember this connection</span></label><div id="change-result" class="form-result"></div><button class="button primary" type="submit">Save and reconnect</button></form></div></section></div>`;
   document.querySelector("#close-modal")?.addEventListener("click", () => modalRoot.innerHTML = "");
   document.querySelector("#change-connection-form")?.addEventListener("submit", async (event) => {
     event.preventDefault();

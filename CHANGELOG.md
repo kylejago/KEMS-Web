@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.7.0-alpha5-web.6 — Multi-site Home Hub foundation
+
+- Adds per-property Site Identity: site name, slug/site ID and future `*.kems.co` hostname.
+- Adds External Home Assistant vs Built-in Home Assistant mode.
+- Adds browser-driven installation of official Home Assistant Container and Docker Engine on the KEMS Pi.
+- Adds Home Assistant Container start/stop/restart/update/status and logs to the headless appliance manager.
+- Keeps all privileged Home Assistant and Pi controls local-LAN-only.
+- Adds per-site PWA manifest identity.
+- Includes site identity in encrypted KEMS Web backups.
+- Detects the web.5 → web.6 manager-version transition and asks for one browser-triggered reboot to activate the new manager.
+- Retains alpha5 historical policy changes rather than rewriting earlier simulated decisions.
+- Retains period-chart baseline filtering introduced in web.5.
+
+
 ## 0.7.0-alpha5-web.5
 
 ### Browser-managed Raspberry Pi appliance
