@@ -2,7 +2,7 @@
   "id": "/",
   "name": "KEMS Energy",
   "short_name": "KEMS",
-  "description": "Live, simulated, comparison and long-term energy performance for KEMS 0.7.0-alpha5.",
+  "description": "Live, simulated, comparison and long-term energy performance for KEMS 0.7.0-alpha6.",
   "start_url": "/#live",
   "scope": "/",
   "display": "standalone",
@@ -49,6 +49,17 @@
       "name": "Simulated today",
       "short_name": "Simulated",
       "url": "/#simulation",
+      "icons": [
+        {
+          "src": "icons/kems-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Compare scenarios",
+      "short_name": "Compare",
+      "url": "/#scenarios",
       "icons": [
         {
           "src": "icons/kems-192.png",

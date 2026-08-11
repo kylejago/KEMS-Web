@@ -6,34 +6,34 @@ Repository: `kylejago/KEMS-Web`
 
 Use the existing **Public** `KEMS-Web` repository. The package includes its own README, `.gitignore` and MIT licence.
 
-Copy the contents of the web.5 package into the repository root, commit and push.
+Copy the contents of the GitHub-ready package into the repository root, commit and push.
 
-## Publish the web.5 website release
+## Publish the web.7 website release
 
 1. Open **Actions**.
 2. Select **Publish KEMS Web release**.
 3. Choose **Run workflow**.
-4. Enter `0.7.0-alpha5-web.5`.
+4. Enter `0.7.0-alpha6-web.7`.
 5. Run the workflow.
 
 The workflow tests the complete site and publishes:
 
-- `kems-web-0.7.0-alpha5-web.5-pi.tar.gz`
-- `kems-web-0.7.0-alpha5-web.5-pi.tar.gz.sha256`
+- `kems-web-0.7.0-alpha6-web.7-pi.tar.gz`
+- `kems-web-0.7.0-alpha6-web.7-pi.tar.gz.sha256`
 
 These are what the browser/CLI updater uses for future installs.
 
-## Build the web.5 headless Pi image
+## Headless Pi image (new installations only)
 
-The web.5 management helper requires one privileged appliance component that did not exist in the already-flashed web.4 image. For a Pi that has no SSH/admin login, **web.5 is the one final SD-card reflash**. After web.5 is installed, normal website releases are updated from the browser and the SD card should not need reflashing.
+Existing web.5+ appliances update to web.7 from the browser and do not need reflashing. Build the headless Pi image only for a new installation or disaster recovery.
 
-After pushing web.5:
+For a fresh Pi image after pushing web.7:
 
 1. Open **Actions** → **Build KEMS Pi headless image**.
 2. Run the workflow if it has not already started automatically.
 3. Wait for it to finish.
-4. Open the generated GitHub Release `pi-image-v0.7.0-alpha5-web.5`.
-5. Download `KEMS-Pi-0.7.0-alpha5-web.5-headless.img.xz`.
+4. Open the generated GitHub Release `pi-image-v0.7.0-alpha6-web.7`.
+5. Download `KEMS-Pi-0.7.0-alpha6-web.7-headless.img.xz`.
 6. In Raspberry Pi Imager choose **Use custom** and select the `.img.xz`.
 7. Write it to the SD card.
 8. Insert the card, connect Ethernet and power on the Pi.
@@ -52,7 +52,7 @@ Enter the Home Assistant URL reachable from the Pi and the long-lived access tok
 
 ## Future updates — browser only
 
-After web.5:
+On an existing web.5+ appliance:
 
 1. publish the next GitHub KEMS Web release;
 2. open KEMS locally;

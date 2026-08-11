@@ -731,6 +731,108 @@ function mappedEntity(map, key) {
   };
 }
 
+
+const SCENARIO_PERIOD_ENTITIES = {
+  today: "sensor.kems_scenario_comparison_today",
+  yesterday: "sensor.kems_scenario_comparison_yesterday",
+  "7_days": "sensor.kems_scenario_comparison_7_days",
+  "30_days": "sensor.kems_scenario_comparison_30_days"
+};
+
+const SCENARIO_COST_ENTITIES = {
+  no_system: "sensor.kems_compare_no_system_cost_today",
+  solar_only: "sensor.kems_compare_solar_only_cost_today",
+  solar_battery: "sensor.kems_compare_solar_and_battery_cost_today",
+  kems_no_export: "sensor.kems_compare_kems_no_export_cost_today",
+  kems_full: "sensor.kems_compare_full_kems_cost_today"
+};
+
+function kemsCatalogEntity(entityId) {
+  return kemsEntityCatalog.find((item) => item.entityId === entityId) || null;
+}
+
+function normaliseScenarioSummary(item = {}, fallbackKey = null) {
+  const key = String(item.key || fallbackKey || "");
+  if (!key) return null;
+  const labelFallbacks = {
+    no_system: "No system",
+    solar_only: "Solar only",
+    solar_battery: "Solar + battery",
+    kems_no_export: "KEMS no-export",
+    kems_full: "Full KEMS"
+  };
+  return {
+    ...item,
+    key,
+    label: String(item.label || labelFallbacks[key] || titleCase(key)),
+    ready: item.ready !== false,
+    samples: integer(item.samples, 0),
+    data_coverage: numeric(item.data_coverage, 0)
+  };
+}
+
+function normaliseScenarioPeriod(key, raw = {}) {
+  const scenarios = Array.isArray(raw.scenarios)
+    ? raw.scenarios.map((item) => normaliseScenarioSummary(item)).filter(Boolean)
+    : [];
+  const ready = scenarios.filter((item) => item.ready && Number.isFinite(numeric(item.total_cost_pence, null)));
+  const cheapest = raw.cheapest_scenario || (ready.length
+    ? [...ready].sort((a, b) => numeric(a.total_cost_pence, Infinity) - numeric(b.total_cost_pence, Infinity))[0].key
+    : null);
+  const coverageValues = scenarios.map((item) => numeric(item.data_coverage, null)).filter(Number.isFinite);
+  return {
+    ...raw,
+    key: String(raw.key || key),
+    label: String(raw.label || ({ today: "Today", yesterday: "Yesterday", "7_days": "Last 7 days", "30_days": "Last 30 days" }[key] || titleCase(key))),
+    days_included: integer(raw.days_included, key === "today" || key === "yesterday" ? 1 : 0),
+    cheapest_scenario: cheapest,
+    data_coverage: Number.isFinite(numeric(raw.data_coverage, null))
+      ? numeric(raw.data_coverage, null)
+      : coverageValues.length ? coverageValues.reduce((sum, value) => sum + value, 0) / coverageValues.length : null,
+    scenarios
+  };
+}
+
+function scenarioComparisonPayload() {
+  const master = kemsCatalogEntity(SCENARIO_PERIOD_ENTITIES.today);
+  const masterAttributes = master?.attributes || {};
+  const rawPeriods = masterAttributes.periods && typeof masterAttributes.periods === "object" ? masterAttributes.periods : {};
+  const periods = {};
+
+  for (const [key, entityId] of Object.entries(SCENARIO_PERIOD_ENTITIES)) {
+    const entity = kemsCatalogEntity(entityId);
+    let raw = rawPeriods[key] || entity?.attributes || {};
+    if (key === "today" && (!Array.isArray(raw.scenarios) || !raw.scenarios.length)) {
+      const scenarios = Object.entries(SCENARIO_COST_ENTITIES).flatMap(([scenarioKey, costEntityId]) => {
+        const costEntity = kemsCatalogEntity(costEntityId);
+        if (!costEntity) return [];
+        return [{ ...costEntity.attributes, key: costEntity.attributes?.key || scenarioKey, total_cost_pence: numeric(costEntity.state, costEntity.attributes?.total_cost_pence ?? 0) }];
+      });
+      if (scenarios.length) raw = { ...raw, key: "today", label: "Today", days_included: 1, scenarios };
+    }
+    const period = normaliseScenarioPeriod(key, raw);
+    if (period.scenarios.length) periods[key] = period;
+  }
+
+  const timelineRaw = Array.isArray(masterAttributes.timeline)
+    ? masterAttributes.timeline
+    : Array.isArray(rawPeriods.today?.timeline) ? rawPeriods.today.timeline : [];
+  const timeline = timelineRaw
+    .filter((point) => point && point.timestamp)
+    .map((point) => ({ ...point, timestamp: String(point.timestamp) }));
+  return {
+    available: Object.keys(periods).length > 0,
+    source: "KEMS 0.7.0-alpha6 scenario replay",
+    generatedAt: masterAttributes.generated_at || master?.changedAt || current.updatedAt || null,
+    periods,
+    timeline,
+    entityIds: {
+      periods: SCENARIO_PERIOD_ENTITIES,
+      todayCosts: SCENARIO_COST_ENTITIES
+    }
+  };
+}
+
 function optionalNumber(map, key, fallback = null) {
   return mappedEntity(map, key).available ? entityNumber(map, key, fallback) : fallback;
 }
@@ -2144,7 +2246,7 @@ function nativePeriodSummary(range) {
   simulated.wholeHomeSaving = Number.isFinite(actual.wholeHomeCost) && Number.isFinite(simulated.wholeHomeCost) ? actual.wholeHomeCost - simulated.wholeHomeCost : null;
   return {
     range,
-    source: "KEMS 0.7.0-alpha5 native period ledger",
+    source: "KEMS 0.7.0-alpha6 native period ledger",
     startDate: a.start_date || null,
     endDate: a.end_date || null,
     daysIncluded: number("days_included"),
@@ -2606,6 +2708,8 @@ const server = http.createServer(async (request, response) => {
   }
 
   if (url.pathname === "/api/live") return sendJson(response, 200, current);
+
+  if (url.pathname === "/api/scenarios") return sendJson(response, 200, scenarioComparisonPayload());
 
   if (url.pathname === "/api/history") {
     if (url.searchParams.get("range") === "today") return sendJson(response, 200, await historyForToday());

@@ -8,7 +8,8 @@ const drawerRoot = document.querySelector("#drawer-root");
 const modalRoot = document.querySelector("#modal-root");
 const toastRoot = document.querySelector("#toast-root");
 
-const ROUTES = new Set(["live", "simulation", "compare", "performance"]);
+const ROUTES = new Set(["live", "simulation", "compare", "scenarios", "performance"]);
+const SCENARIO_RANGES = new Set(["today", "yesterday", "7_days", "30_days"]);
 const RANGES = new Set(["day", "week", "month", "year", "all"]);
 const COLOURS = {
   live: "#55d9e6",
@@ -45,7 +46,7 @@ function applySiteIdentity() {
   const name = state.site?.name || state.config?.site?.name || "KEMS Home";
   document.title = `KEMS — ${name}`;
   const small = document.querySelector(".brand small");
-  if (small) small.textContent = `${name} · alpha5`;
+  if (small) small.textContent = `${name} · alpha6`;
 }
 
 async function installPwa() {
@@ -97,7 +98,11 @@ const state = {
   diagnostics: null,
   system: null,
   site: null,
-  systemPolling: null
+  systemPolling: null,
+  scenarios: null,
+  scenarioRange: "today",
+  selectedScenario: "kems_full",
+  lastScenarioLoad: 0
 };
 
 function routeFromHash() {
@@ -250,7 +255,7 @@ function metricCard(label, value, detail = "", tone = "live", icon = "") {
 
 function pageHeader(title, subtitle, badges = "") {
   return `<header class="page-heading">
-    <div><p class="eyebrow">KEMS 0.7.0-alpha5</p><h1>${escapeHtml(title)}</h1><p>${escapeHtml(subtitle)}</p></div>
+    <div><p class="eyebrow">KEMS 0.7.0-alpha6</p><h1>${escapeHtml(title)}</h1><p>${escapeHtml(subtitle)}</p></div>
     <div class="heading-badges">${badges}</div>
   </header>`;
 }
@@ -338,13 +343,16 @@ async function refreshAll(showToast = false) {
   state.loading = true;
   refreshButton.classList.add("spinning");
   try {
-    const [snapshot, today] = await Promise.all([
+    const [snapshot, today, scenarios] = await Promise.all([
       getJson("/api/live"),
-      getJson("/api/analytics?range=day")
+      getJson("/api/analytics?range=day"),
+      getJson("/api/scenarios").catch((error) => ({ available: false, error: error.message, periods: {}, timeline: [] }))
     ]);
     state.snapshot = snapshot;
     state.today = today;
+    state.scenarios = scenarios;
     state.lastAnalyticsLoad = Date.now();
+    state.lastScenarioLoad = Date.now();
     state.setup = await getJson("/api/setup/status");
     if (state.route === "performance") await ensurePerformance(state.range, true);
     render();
@@ -386,6 +394,13 @@ function connectStream() {
           render();
         }).catch(() => {});
       }
+      if (state.route === "scenarios" && Date.now() - state.lastScenarioLoad > 30_000) {
+        getJson("/api/scenarios").then((scenarios) => {
+          state.scenarios = scenarios;
+          state.lastScenarioLoad = Date.now();
+          render();
+        }).catch(() => {});
+      }
     } catch {}
   });
   stream.onerror = () => setConnectionPill();
@@ -400,6 +415,7 @@ function render() {
     live: liveView,
     simulation: simulationView,
     compare: compareView,
+    scenarios: scenarioView,
     performance: performanceView
   };
   app.innerHTML = `${views[state.route]()}${footer()}`;
@@ -752,10 +768,10 @@ function simulationView() {
   const snapshot = state.snapshot;
   const totals = simulatedTotals();
   const breakdowns = state.today?.simulated?.breakdowns || {};
-  const strategy = state.snapshot.simulation?.strategy || entityState("sensor.kems_simulation_strategy", "KEMS alpha5 model");
+  const strategy = state.snapshot.simulation?.strategy || entityState("sensor.kems_simulation_strategy", "KEMS alpha6 model");
   const noExport = Boolean(state.snapshot.simulation?.noExportModeActive);
   const exportStatus = state.snapshot.simulation?.exportTariffStatus || "unknown";
-  return `${pageHeader("Simulated today", "How KEMS alpha5 estimates today with the proposed solar, battery and current tariff policy.", `${sourceBadge("simulated")}${sourceBadge("calculated")}${noExport ? statusPill("Awaiting export tariff · no export", "attention") : statusPill("Export tariff active", "good")}`)}
+  return `${pageHeader("Simulated today", "How KEMS alpha6 estimates today with the proposed solar, battery and current tariff policy.", `${sourceBadge("simulated")}${sourceBadge("calculated")}${noExport ? statusPill("Awaiting export tariff · no export", "attention") : statusPill("Export tariff active", "good")}`)}
     <div class="metric-grid six">
       ${metricCard("Modelled home load", formatNumber(entityNumber("sensor.kems_simulated_house_load_power") ?? snapshot.metrics.housePower, "kW", 2), "Uses today’s demand profile", "simulated", "⌂")}
       ${metricCard("Simulated SOC", formatPercent(snapshot.simulation.batterySoc, 1), "Virtual battery", "simulated", "▰")}
@@ -769,7 +785,7 @@ function simulationView() {
       ${card("Simulation strategy", `<div class="strategy-content">
         ${sourceBadge("simulated")}
         <h3>${escapeHtml(strategy)}</h3>
-        <p>KEMS replays today’s real demand against the alpha5 proposal model. Alpha5 also understands whether paid export is active; while awaiting an export tariff it switches to self-use-first planning and deliberately keeps grid/battery export at zero.</p>
+        <p>KEMS replays today’s real demand against the alpha6 proposal model. Alpha6 also understands whether paid export is active; while awaiting an export tariff it switches to self-use-first planning and deliberately keeps grid/battery export at zero.</p>
         <div class="fact-grid">
           <div><span>Export tariff</span><strong>${escapeHtml(exportStatus)}</strong></div>
           <div><span>Solar → battery now</span><strong>${formatNumber(state.snapshot.simulation?.solarToBatteryPower, "kW", 2)}</strong></div>
@@ -855,6 +871,160 @@ function compareView() {
         <div><span>Battery export</span><strong>${formatNumber(simulated.batteryExport, "kWh", 2)}</strong><small>Modelled export after home reserve and safeguards.</small></div>
       </div>`, { className: "difference-panel" })}
     </div>`;
+}
+
+
+const SCENARIO_META = {
+  no_system: { label: "No system", icon: "↯", colour: COLOURS.grid, description: "Grid supplies the whole home." },
+  solar_only: { label: "Solar only", icon: "☀", colour: COLOURS.solar, description: "Solar self-use with paid surplus export and no battery." },
+  solar_battery: { label: "Solar + battery", icon: "▰", colour: COLOURS.battery, description: "Conventional self-use without tariff-aware grid charging." },
+  kems_no_export: { label: "KEMS no-export", icon: "⌂", colour: COLOURS.simulated, description: "Solar-aware cheap charging and self-use with deliberate export disabled." },
+  kems_full: { label: "Full KEMS", icon: "K", colour: COLOURS.positive, description: "Paid export, cheap charging, home reserve, paced export and Power Down optimisation." }
+};
+
+function penceToMoney(value) {
+  const pence = numeric(value);
+  return Number.isFinite(pence) ? pence / 100 : null;
+}
+
+function scenarioCoverage(value) {
+  const coverage = numeric(value);
+  if (!Number.isFinite(coverage)) return null;
+  return coverage <= 1.0001 ? coverage * 100 : coverage;
+}
+
+function selectedScenarioPeriod() {
+  return state.scenarios?.periods?.[state.scenarioRange] || null;
+}
+
+function scenarioRangeControls() {
+  const labels = { today: "Today", yesterday: "Yesterday", "7_days": "7 days", "30_days": "30 days" };
+  return `<div class="range-control scenario-range-control" role="group" aria-label="Scenario comparison period">${Object.entries(labels).map(([range, label]) => `<button type="button" data-scenario-range="${range}" class="${state.scenarioRange === range ? "active" : ""}">${label}</button>`).join("")}</div>`;
+}
+
+function scenarioSummaryCards(period) {
+  const scenarios = period?.scenarios || [];
+  if (!scenarios.length) return chartEmpty("KEMS alpha6 scenario replay data is not available yet.");
+  return `<div class="scenario-card-grid">${scenarios.map((scenario) => {
+    const meta = SCENARIO_META[scenario.key] || { label: scenario.label || scenario.key, icon: "◇", colour: COLOURS.muted, description: scenario.description || "" };
+    const saving = penceToMoney(scenario.saving_vs_no_system_pence);
+    const selected = state.selectedScenario === scenario.key;
+    const cheapest = period.cheapest_scenario === scenario.key;
+    const coverage = scenarioCoverage(scenario.data_coverage);
+    return `<button type="button" class="scenario-card ${selected ? "selected" : ""}" data-scenario-key="${escapeHtml(scenario.key)}" style="--scenario-colour:${meta.colour}">
+      <header><span class="scenario-icon">${escapeHtml(meta.icon)}</span><span>${escapeHtml(meta.label)}</span>${cheapest ? `<b>CHEAPEST</b>` : ""}</header>
+      <strong>${escapeHtml(formatMoney(penceToMoney(scenario.total_cost_pence)))}</strong>
+      <div class="scenario-saving ${Number.isFinite(saving) && saving > 0 ? "good" : ""}">${scenario.key === "no_system" ? "Baseline" : `${escapeHtml(formatMoney(saving))} saving`}</div>
+      <small>${escapeHtml(meta.description)}</small>
+      <footer><span>${escapeHtml(formatNumber(scenario.grid_import_kwh, "kWh", 1))} import</span><span>${Number.isFinite(coverage) ? `${escapeHtml(formatPercent(coverage, 1))} coverage` : "Coverage —"}</span></footer>
+    </button>`;
+  }).join("")}</div>`;
+}
+
+function scenarioCostTimeline() {
+  const timeline = state.scenarios?.timeline || [];
+  if (!timeline.length) return chartEmpty("The cumulative replay timeline is available for Today once KEMS has retained observations.");
+  const points = timeline.map((point) => ({ ...point, at: point.timestamp }));
+  return lineChart(points, Object.entries(SCENARIO_META).map(([key, meta]) => {
+    const fields = {
+      no_system: "no_system_cost_pence",
+      solar_only: "solar_only_cost_pence",
+      solar_battery: "solar_battery_cost_pence",
+      kems_no_export: "kems_no_export_cost_pence",
+      kems_full: "kems_full_cost_pence"
+    };
+    return { label: meta.label, colour: meta.colour, value: (point) => penceToMoney(point[fields[key]]) };
+  }), { unit: "GBP", label: "Cumulative scenario cost today", minimum: 0 });
+}
+
+function scenarioCategoryBarChart(scenarios, definitions, options = {}) {
+  const usable = (scenarios || []).filter((scenario) => definitions.some((definition) => Number.isFinite(definition.value(scenario))));
+  if (!usable.length) return chartEmpty();
+  const width = 960, height = options.height || 310;
+  const padding = { left: 62, right: 20, top: 24, bottom: 66 };
+  const maximum = Math.max(1, ...usable.flatMap((scenario) => definitions.map((definition) => Math.max(0, definition.value(scenario) || 0))));
+  const plotWidth = width - padding.left - padding.right;
+  const groupWidth = plotWidth / usable.length;
+  const barWidth = Math.max(8, Math.min(34, groupWidth * 0.7 / definitions.length));
+  const y = (value) => padding.top + (1 - value / maximum) * (height - padding.top - padding.bottom);
+  const grid = Array.from({ length: 5 }, (_, index) => {
+    const value = maximum - maximum * index / 4;
+    const py = y(value);
+    return `<line class="chart-gridline" x1="${padding.left}" y1="${py}" x2="${width - padding.right}" y2="${py}"></line><text class="chart-axis" x="${padding.left - 9}" y="${py + 4}" text-anchor="end">${escapeHtml(formatNumber(value, options.unit || "", 1))}</text>`;
+  }).join("");
+  const bars = usable.map((scenario, pointIndex) => {
+    const groupX = padding.left + pointIndex * groupWidth + groupWidth / 2;
+    const rects = definitions.map((definition, definitionIndex) => {
+      const value = Math.max(0, definition.value(scenario) || 0);
+      const barHeight = value === 0 ? 1.5 : Math.max(2, height - padding.bottom - y(value));
+      const barY = value === 0 ? height - padding.bottom - barHeight : y(value);
+      const bx = groupX - definitions.length * barWidth / 2 + definitionIndex * barWidth;
+      return `<rect class="chart-bar" x="${bx}" y="${barY}" width="${Math.max(3, barWidth - 3)}" height="${barHeight}" rx="3" style="fill:${definition.colour}"><title>${escapeHtml(`${definition.label}: ${formatNumber(value, options.unit || "", 2)}`)}</title></rect>`;
+    }).join("");
+    const label = SCENARIO_META[scenario.key]?.label || scenario.label || scenario.key;
+    return `${rects}<text class="chart-axis scenario-axis" x="${groupX}" y="${height - 27}" text-anchor="middle">${escapeHtml(label)}</text>`;
+  }).join("");
+  const legend = `<div class="chart-legend">${definitions.map((definition) => `<span><i style="background:${definition.colour}"></i>${escapeHtml(definition.label)}</span>`).join("")}</div>`;
+  return `<div class="chart-wrap"><svg class="chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(options.label || "Scenario comparison chart")}">${grid}${bars}</svg>${legend}</div>`;
+}
+
+function scenarioTable(period) {
+  const scenarios = period?.scenarios || [];
+  return `<div class="table-scroll"><table class="comparison-table scenario-table"><thead><tr><th>Scenario</th><th>Cost</th><th>Saving</th><th>Import</th><th>Export</th><th>Solar</th><th>Battery → home</th><th>End SOC</th></tr></thead><tbody>${scenarios.map((scenario) => {
+    const meta = SCENARIO_META[scenario.key] || { label: scenario.label || scenario.key };
+    const saving = penceToMoney(scenario.saving_vs_no_system_pence);
+    return `<tr class="${period.cheapest_scenario === scenario.key ? "cheapest-row" : ""}"><th>${escapeHtml(meta.label)}${period.cheapest_scenario === scenario.key ? ` <span class="table-best">cheapest</span>` : ""}</th><td>${escapeHtml(formatMoney(penceToMoney(scenario.total_cost_pence)))}</td><td class="${Number.isFinite(saving) && saving > 0 ? "good" : ""}">${escapeHtml(formatMoney(saving))}</td><td>${escapeHtml(formatNumber(scenario.grid_import_kwh, "kWh", 2))}</td><td>${escapeHtml(formatNumber(scenario.grid_export_kwh, "kWh", 2))}</td><td>${escapeHtml(formatNumber(scenario.solar_generation_kwh, "kWh", 2))}</td><td>${escapeHtml(formatNumber(scenario.battery_to_home_kwh, "kWh", 2))}</td><td>${Number.isFinite(numeric(scenario.ending_soc_percent)) ? escapeHtml(formatPercent(numeric(scenario.ending_soc_percent), 1)) : "—"}</td></tr>`;
+  }).join("")}</tbody></table></div>`;
+}
+
+function scenarioDetail(period) {
+  const scenario = (period?.scenarios || []).find((item) => item.key === state.selectedScenario) || period?.scenarios?.at(-1);
+  if (!scenario) return chartEmpty("Select a ready KEMS scenario to inspect its savings and energy routing.");
+  const meta = SCENARIO_META[scenario.key] || { label: scenario.label || scenario.key, colour: COLOURS.muted };
+  const savingComponents = [
+    ["Reduced day-rate import", penceToMoney(scenario.day_rate_import_reduction_pence)],
+    ["Change in cheap-rate import", penceToMoney(scenario.cheap_rate_import_change_pence)],
+    ["Export income", penceToMoney(scenario.export_income_pence)],
+    ["Power Down income", penceToMoney(scenario.power_down_income_pence)]
+  ];
+  const routing = [
+    ["Solar → home", scenario.solar_to_home_kwh], ["Solar → battery", scenario.solar_to_battery_kwh], ["Solar → grid", scenario.solar_export_kwh],
+    ["Grid → battery", scenario.battery_grid_charge_kwh], ["Battery → home", scenario.battery_to_home_kwh], ["Battery → grid", scenario.battery_export_kwh]
+  ];
+  return `<div class="scenario-detail-grid">
+    <section class="scenario-detail-panel" style="--scenario-colour:${meta.colour}"><header><div><span>Saving breakdown</span><h3>${escapeHtml(meta.label)}</h3></div>${sourceBadge("simulated", "KEMS WHAT-IF")}</header><div class="scenario-detail-list">${savingComponents.map(([label, value]) => `<div><span>${escapeHtml(label)}</span><strong class="${Number.isFinite(value) && value < 0 ? "bad" : ""}">${escapeHtml(formatMoney(value))}</strong></div>`).join("")}<div class="total"><span>Total saving vs no system</span><strong>${escapeHtml(formatMoney(penceToMoney(scenario.saving_vs_no_system_pence)))}</strong></div></div><p class="scenario-note">A negative cheap-rate import change represents extra low-cost electricity bought for battery charging; KEMS recovers it through avoided day-rate import and available export/reward income.</p></section>
+    <section class="scenario-detail-panel" style="--scenario-colour:${meta.colour}"><header><div><span>Energy routing</span><h3>${escapeHtml(meta.label)}</h3></div>${Number.isFinite(numeric(scenario.ending_soc_percent)) ? statusPill(`End SOC ${formatPercent(numeric(scenario.ending_soc_percent), 1)}`, "neutral") : ""}</header><div class="scenario-detail-list routing">${routing.map(([label, value]) => `<div><span>${escapeHtml(label)}</span><strong>${escapeHtml(formatNumber(value, "kWh", 2))}</strong></div>`).join("")}</div></section>
+  </div>`;
+}
+
+function scenarioView() {
+  const data = state.scenarios;
+  if (!data?.available) {
+    return `${pageHeader("Compare scenarios", "What would the same home demand and tariff observations have looked like under five different system designs?", sourceBadge("simulated", "KEMS WHAT-IF"))}${card("Scenario replay unavailable", `<div class="scenario-unavailable"><h3>KEMS alpha6 comparison data is not available yet.</h3><p>${escapeHtml(data?.error || "Install/run KEMS 0.7.0-alpha6 and allow it to retain observations. The existing Live vs simulated page remains unchanged.")}</p></div>`, { header: false })}`;
+  }
+  const period = selectedScenarioPeriod() || data.periods?.today;
+  if (!period) return `${pageHeader("Compare scenarios", "KEMS alpha6 What-if replay.", sourceBadge("simulated", "KEMS WHAT-IF"))}${chartEmpty("No scenario period is ready yet.")}`;
+  const coverage = scenarioCoverage(period.data_coverage);
+  const dateText = period.start_date && period.end_date ? `${formatDate(period.start_date)} → ${formatDate(period.end_date)}` : period.label;
+  const cheapest = period.cheapest_scenario ? SCENARIO_META[period.cheapest_scenario]?.label || period.cheapest_scenario : "Unavailable";
+  const scenarios = period.scenarios || [];
+  return `${pageHeader("Compare scenarios", "What would the same retained demand and tariff data have looked like under five independent KEMS system designs?", `${sourceBadge("simulated", "KEMS WHAT-IF")}${statusPill(`Cheapest: ${cheapest}`, "good")}`)}
+    <div class="scenario-toolbar"><div><strong>${escapeHtml(period.label)}</strong><span>${escapeHtml(dateText)}${Number.isFinite(coverage) ? ` · ${escapeHtml(formatPercent(coverage, 1))} replay coverage` : ""}${period.days_included ? ` · ${escapeHtml(String(period.days_included))} day${period.days_included === 1 ? "" : "s"}` : ""}</span></div>${scenarioRangeControls()}</div>
+    ${scenarioSummaryCards(period)}
+    ${state.scenarioRange === "today" ? card("Cumulative cost today", scenarioCostTimeline(), { subtitle: "All five replays use the same retained observations; lines show running whole-home electricity cost including standing charge.", className: "chart-panel scenario-cost-chart" }) : ""}
+    <div class="scenario-chart-grid">
+      ${card("Grid import & export", scenarioCategoryBarChart(scenarios, [
+        { label: "Grid import", colour: COLOURS.negative, value: (scenario) => numeric(scenario.grid_import_kwh, 0) },
+        { label: "Grid export", colour: COLOURS.positive, value: (scenario) => numeric(scenario.grid_export_kwh, 0) }
+      ], { unit: "kWh", label: "Grid import and export by scenario" }), { subtitle: "Direct comparison of energy crossing the grid boundary.", className: "chart-panel" })}
+      ${card("Cheap vs day-rate import", scenarioCategoryBarChart(scenarios, [
+        { label: "Cheap import", colour: COLOURS.ev, value: (scenario) => numeric(scenario.cheap_grid_import_kwh, 0) },
+        { label: "Day import", colour: COLOURS.negative, value: (scenario) => numeric(scenario.day_grid_import_kwh, 0) }
+      ], { unit: "kWh", label: "Cheap and day-rate grid import by scenario" }), { subtitle: "Shows when each design buys its grid energy.", className: "chart-panel" })}
+    </div>
+    ${card("Scenario comparison", scenarioTable(period), { subtitle: "Cost includes standing charge. Savings are always measured against No system.", className: "comparison-table-panel" })}
+    ${scenarioDetail(period)}
+    <div class="data-note"><strong>Read-only replay:</strong> this page does not change the active KEMS strategy. KEMS no-export and Full KEMS remain independent parallel scenarios using the same retained observations.</div>`;
 }
 
 function rangeControls() {
@@ -962,7 +1132,7 @@ function performanceView() {
 }
 
 function footer() {
-  return `<footer class="site-footer"><div><strong>KEMS alpha5</strong><span>Read-only Home Assistant companion · ${escapeHtml(state.config?.project?.version || "web")}</span></div><div><span>${escapeHtml(state.snapshot?.discovery?.totalKemsEntities || 0)} KEMS entities</span><span>Updated ${escapeHtml(formatTime(state.snapshot?.updatedAt))}</span></div></footer>`;
+  return `<footer class="site-footer"><div><strong>KEMS alpha6</strong><span>Read-only Home Assistant companion · ${escapeHtml(state.config?.project?.version || "web")}</span></div><div><span>${escapeHtml(state.snapshot?.discovery?.totalKemsEntities || 0)} KEMS entities</span><span>Updated ${escapeHtml(formatTime(state.snapshot?.updatedAt))}</span></div></footer>`;
 }
 
 function bindViewEvents() {
@@ -976,6 +1146,22 @@ function bindViewEvents() {
       render();
     });
   });
+  document.querySelectorAll("[data-scenario-range]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const range = button.dataset.scenarioRange;
+      if (!SCENARIO_RANGES.has(range)) return;
+      state.scenarioRange = range;
+      const period = state.scenarios?.periods?.[range];
+      if (period?.scenarios?.length && !period.scenarios.some((item) => item.key === state.selectedScenario)) state.selectedScenario = period.cheapest_scenario || period.scenarios.at(-1).key;
+      render();
+    });
+  });
+  document.querySelectorAll("[data-scenario-key]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.selectedScenario = button.dataset.scenarioKey;
+      render();
+    });
+  });
 }
 
 function renderConnectionPage() {
@@ -983,10 +1169,10 @@ function renderConnectionPage() {
   app.innerHTML = `<section class="connection-layout">
     <div class="connection-intro">
       <img src="logo.svg" alt="" />
-      <p class="eyebrow">KEMS alpha5 web dashboard</p>
+      <p class="eyebrow">KEMS alpha6 web dashboard</p>
       <h1>Your existing KEMS data, presented clearly.</h1>
       <p>Enter your Home Assistant address and long-lived access token. The website discovers the existing KEMS entities and remains completely read-only.</p>
-      <div class="connection-points"><div><strong>4 focused views</strong><span>No duplicated dashboards</span></div><div><strong>Secure backend</strong><span>Token never enters chart code</span></div><div><strong>No HA changes</strong><span>Nothing to install in Home Assistant</span></div></div>
+      <div class="connection-points"><div><strong>5 focused views</strong><span>No duplicated dashboards</span></div><div><strong>Secure backend</strong><span>Token never enters chart code</span></div><div><strong>No HA changes</strong><span>Nothing to install in Home Assistant</span></div></div>
     </div>
     <form class="connection-form" id="connection-form">
       <h2>Connect Home Assistant</h2>
@@ -1060,7 +1246,7 @@ function systemSectionContent() {
     : `<div class="update-banner current"><div><span>Software</span><strong>${latest.available ? "Up to date" : "Installed"}</strong><small>${latest.error ? escapeHtml(latest.error) : "Latest GitHub release checked"}</small></div><button class="button secondary" id="check-update" type="button" ${actionRunning ? "disabled" : ""}>Check now</button></div>`;
   const actionPanel = action.state && action.state !== "idle" ? `<div class="maintenance-progress ${escapeHtml(systemTone(action.state))}"><div><span>${escapeHtml(action.action || "Maintenance")}</span><strong>${escapeHtml(action.state)}</strong></div><div class="maintenance-track"><i style="width:${clamp(Number(action.progress) || 0, 0, 100)}%"></i></div><p>${escapeHtml(action.message || "")}</p></div>` : "";
   const managerActivationRequired = Boolean(system.applianceActivationRequired || (system.managerVersion && system.installedVersion && system.managerVersion !== system.installedVersion));
-  const activationPanel = managerActivationRequired ? `<div class="update-banner activation"><div><span>Appliance services updated</span><strong>Reboot required</strong><small>web.6 is installed, but the Pi manager is still ${escapeHtml(system.managerVersion || "an older version")}.</small></div><button class="button primary" id="reboot-pi-activation" type="button">Reboot Pi</button></div>` : "";
+  const activationPanel = managerActivationRequired ? `<div class="update-banner activation"><div><span>Appliance services updated</span><strong>Reboot required</strong><small>The website update is installed, but the Pi manager is still ${escapeHtml(system.managerVersion || "an older version")}.</small></div><button class="button primary" id="reboot-pi-activation" type="button">Reboot Pi</button></div>` : "";
   return `<h3>KEMS Pi server</h3>
     <div class="system-status-line"><span class="system-dot ${escapeHtml(systemTone(system.service))}"></span><strong>${system.service === "active" ? "Healthy" : escapeHtml(system.service || "Unknown")}</strong><span>${escapeHtml(system.hostname || "kems-pi")}${system.ip ? ` · ${escapeHtml(system.ip)}` : ""}</span></div>
     <div class="system-grid">

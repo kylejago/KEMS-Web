@@ -4,24 +4,25 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#071217" />
-  <meta name="description" content="Focused live, simulated, comparison and ROI dashboard for KEMS 0.7.0-alpha5." />
-  <title>KEMS Alpha5 — Energy Dashboard</title>
+  <meta name="description" content="Focused live, simulated, comparison and ROI dashboard for KEMS 0.7.0-alpha6." />
+  <title>KEMS Alpha6 — Energy Dashboard</title>
   <link rel="icon" href="logo.svg" type="image/svg+xml" />
   <link rel="manifest" href="site.webmanifest" />
   <link rel="apple-touch-icon" href="icons/kems-192.png" />
-  <link rel="stylesheet" href="styles.css?v=alpha5web6" />
+  <link rel="stylesheet" href="styles.css?v=alpha6web7" />
 </head>
 <body>
   <div class="ambient" aria-hidden="true"><span></span><span></span><span></span></div>
   <header class="topbar">
     <a class="brand" href="#live" aria-label="KEMS live dashboard">
       <img src="logo.svg" alt="" />
-      <span><strong>KEMS</strong><small>alpha5 energy dashboard</small></span>
+      <span><strong>KEMS</strong><small>alpha6 energy dashboard</small></span>
     </a>
     <nav class="primary-nav" aria-label="Primary navigation">
       <a href="#live" data-route="live">Live today</a>
       <a href="#simulation" data-route="simulation">Simulated today</a>
       <a href="#compare" data-route="compare">Live vs simulated</a>
+      <a href="#scenarios" data-route="scenarios">Compare scenarios</a>
       <a href="#performance" data-route="performance">Performance &amp; ROI</a>
     </nav>
     <div class="top-actions">
@@ -35,6 +36,7 @@
     <a href="#live" data-route="live">Live today</a>
     <a href="#simulation" data-route="simulation">Simulated today</a>
     <a href="#compare" data-route="compare">Live vs simulated</a>
+    <a href="#scenarios" data-route="scenarios">Compare scenarios</a>
     <a href="#performance" data-route="performance">Performance &amp; ROI</a>
   </nav>
   <main id="app" class="app" tabindex="-1">
@@ -43,6 +45,6 @@
   <div id="drawer-root"></div>
   <div id="modal-root"></div>
   <div id="toast-root" class="toast-root" aria-live="polite"></div>
-  <script type="module" src="app.js?v=alpha5web6"></script>
+  <script type="module" src="app.js?v=alpha6web7"></script>
 </body>
 </html>

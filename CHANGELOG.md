@@ -1,3 +1,16 @@
+# Changelog
+
+## 0.7.0-alpha6-web.7 — Compare scenarios
+
+- Added a dedicated **Compare scenarios** page driven directly by KEMS 0.7.0-alpha6 parallel replay entities.
+- Compares **No system**, **Solar only**, **Solar + battery**, **KEMS no-export**, and **Full KEMS** against the same retained demand/tariff observations.
+- Added Today / Yesterday / 7 days / 30 days period controls, cheapest-scenario highlighting and replay coverage.
+- Added five scenario cost cards, the full cumulative-cost timeline for Today, grid import/export comparison, cheap/day-rate import comparison and a detailed energy/cost table.
+- Added selectable per-scenario saving decomposition and solar/battery/grid routing detail.
+- The new page is strictly read-only: comparison replay never changes the active KEMS operating strategy.
+- Preserves the existing Live vs simulated page as a separate physical-vs-modelled comparison.
+- Adds an alpha6 scenario API and regression test while retaining alpha5 compatibility if scenario entities are not present.
+
 ## 0.7.0-alpha5-web.6.1 — Pi updater smoke-test hotfix
 
 - Isolates the release smoke test from the live appliance manager on port 4174.

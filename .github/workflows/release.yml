@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Website version from package.json, e.g. 0.7.0-alpha5-web.6.1'
+        description: 'Website version from package.json, e.g. 0.7.0-alpha6-web.7'
         required: true
         type: string
 
