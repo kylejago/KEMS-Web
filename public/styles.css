@@ -96,3 +96,14 @@ button{color:inherit}
 @media(max-width:900px){.scenario-chart-grid,.scenario-detail-grid{grid-template-columns:1fr}.scenario-toolbar{align-items:flex-start;flex-direction:column}.scenario-range-control{width:100%}}
 @media(max-width:760px){.scenario-card-grid{grid-template-columns:1fr 1fr}.scenario-card:last-child{grid-column:1/-1}.scenario-card>small{min-height:0}.scenario-card footer{flex-direction:column}.scenario-range-control{display:grid;grid-template-columns:1fr 1fr}.scenario-table{min-width:860px}}
 @media(max-width:430px){.scenario-card-grid{grid-template-columns:1fr}.scenario-card:last-child{grid-column:auto}}
+
+
+/* Coordinated KEMS updates / maintenance */
+.global-maintenance{display:flex;justify-content:space-between;gap:18px;align-items:center;margin:0 0 18px;padding:14px 16px;border:1px solid rgba(243,199,108,.24);border-radius:17px;background:rgba(243,199,108,.055)}
+.global-maintenance.good{border-color:rgba(139,227,162,.28);background:rgba(139,227,162,.055)}
+.global-maintenance.bad{border-color:rgba(255,143,157,.3);background:rgba(255,143,157,.06)}
+.global-maintenance>div{display:grid;gap:3px}.global-maintenance span{color:var(--muted);font-size:.58rem;font-weight:750;letter-spacing:.08em;text-transform:uppercase}.global-maintenance strong{font-size:.78rem}.global-maintenance small{color:var(--muted);font-size:.61rem}.global-maintenance>b{padding:6px 9px;border:1px solid var(--line);border-radius:999px;font-size:.58rem;text-transform:uppercase;white-space:nowrap}
+.coordinated-update-panel{display:grid;gap:12px;margin:14px 0;padding:14px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.02)}
+.component-grid{margin:0}.component-grid div{min-width:0}.component-grid small{word-break:break-word}
+.update-policy-form{display:grid;gap:10px;padding-top:3px}.update-policy-form label:not(.remember-row){display:grid;gap:5px;color:var(--muted);font-size:.61rem}.maintenance-time-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.maintenance-time-grid label{display:grid;gap:5px}
+@media(max-width:720px){.global-maintenance{align-items:flex-start;flex-direction:column}.maintenance-time-grid{grid-template-columns:1fr}}

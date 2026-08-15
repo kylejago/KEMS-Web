@@ -1,9 +1,9 @@
 {
   "name": "kems-web-companion",
-  "version": "0.7.0-alpha6-web.7",
+  "version": "0.7.0-alpha6-web.8",
   "private": true,
   "type": "module",
-  "description": "Focused KEMS 0.7.0-alpha6 dashboard with five-scenario What-if comparison, multi-site Home Hub, headless Pi management, GitHub updates and PWA support",
+  "description": "KEMS property dashboard with coordinated automatic updates, maintenance windows, Pi management, scenario comparison and PWA support",
   "scripts": {
     "start": "node server.mjs",
     "dev": "node --watch server.mjs",
