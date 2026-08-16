@@ -16,7 +16,17 @@ mustContain("deploy/systemd/kems-web-bundle-agent.service", ["User=root", "bundl
 mustContain("deploy/bundle-agent.mjs", ["kems-bundle.json", "sha256", "automaticUpdates", "maintenanceStart", "public_web", "kems-update"]);
 mustContain("deploy/manager.mjs", ["127.0.0.1", "kems-update", "kems-rollback", "systemctl", "latestRelease", "home-assistant", "ghcr.io/home-assistant/home-assistant:stable", "download.docker.com/linux/debian"]);
 mustContain("install.sh", ["kems-web-manager.service", "kems-web-bundle-agent.service", "bundle-agent.mjs", "manager.mjs", "/var/lib/kems-web-management"]);
-mustContain("deploy/bin/kems-update", ["TARGET_VERSION", "Verifying release checksum", "deploy/manager.mjs", "bundle-agent.mjs", "kems-web-bundle-agent.service", "Rolling back automatically"]);
+mustContain("deploy/bin/kems-update", [
+  "TARGET_VERSION",
+  "Verifying release checksum",
+  "deploy/manager.mjs",
+  "bundle-agent.mjs",
+  "kems-web-bundle-agent.service",
+  "Rolling back automatically",
+  "already installed; refreshing appliance helpers",
+  "Refreshed KEMS Web",
+  "systemctl enable kems-web-bundle-agent.service"
+]);
 mustContain(".github/workflows/release.yml", ["public config scripts deploy README.md", "sha256sum"]);
 mustContain(".github/workflows/build-pi-image.yml", ["latest-v22.x/SHASUMS256.txt", "kems-setup-status.mjs", "KEMS-Pi-${VERSION}-headless.img.xz"]);
 console.log("Pi deployment checks passed.");

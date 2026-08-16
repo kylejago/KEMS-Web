@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.0-alpha6-web.9 — Pi coordinated-update bootstrap repair
+
+- Adds a browser-deliverable repair release for Pis where web.8 was installed by the previous updater before the coordinated bundle-agent service existed on the appliance.
+- Makes `kems-update` refresh deployment helpers and systemd service definitions even when the requested website version is already installed, so future helper/service repairs do not require SSH or an SD-card reflash.
+- Ensures the verified release can install and enable `kems-web-bundle-agent.service` from the normal browser update path.
+- Keeps the existing checksum verification, smoke test, health check and automatic rollback protections unchanged.
+
 ## 0.7.0-alpha6-web.7 — Compare scenarios
 
 - Added a dedicated **Compare scenarios** page driven directly by KEMS 0.7.0-alpha6 parallel replay entities.
