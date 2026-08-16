@@ -1,13 +1,13 @@
 {
   "name": "kems-web-companion",
-  "version": "0.7.0-alpha6-web.7",
+  "version": "0.7.0-alpha6-web.8",
   "private": true,
   "type": "module",
-  "description": "Focused KEMS 0.7.0-alpha6 dashboard with five-scenario What-if comparison, multi-site Home Hub, headless Pi management, GitHub updates and PWA support",
+  "description": "KEMS property dashboard with coordinated automatic updates, maintenance windows, Pi management, scenario comparison and PWA support",
   "scripts": {
     "start": "node server.mjs",
     "dev": "node --watch server.mjs",
-    "check": "node --check server.mjs && node --check public/app.js && node --check scripts/smoke-test.mjs && node --check scripts/kems-alpha5-fixture-test.mjs && node --check scripts/kems-alpha6-scenario-web-test.mjs && node --check image/kems-setup-status.mjs && node --check deploy/manager.mjs && node --check scripts/pi-deployment-test.mjs",
+    "check": "node --check server.mjs && node --check public/app.js && node --check scripts/smoke-test.mjs && node --check scripts/kems-alpha5-fixture-test.mjs && node --check scripts/kems-alpha6-scenario-web-test.mjs && node --check image/kems-setup-status.mjs && node --check deploy/manager.mjs && node --check deploy/bundle-agent.mjs && node --check scripts/pi-deployment-test.mjs",
     "test": "npm run check && node scripts/smoke-test.mjs && node scripts/kems-alpha5-fixture-test.mjs && node scripts/kems-alpha6-scenario-web-test.mjs && node scripts/pi-deployment-test.mjs"
   },
   "engines": {

@@ -12,18 +12,31 @@ trap 'rm -rf "$TMP"' EXIT
 
 CURRENT_VERSION=""
 [[ -f "$CURRENT/package.json" ]] && CURRENT_VERSION="$(node -e 'const p=require(process.argv[1]);process.stdout.write(String(p.version||""))' "$CURRENT/package.json")"
+TARGET_VERSION="${1:-}"
 
 echo "Checking GitHub for KEMS Web releases..."
 curl -fsSL --retry 4 -H 'Accept: application/vnd.github+json' -H 'User-Agent: KEMS-Web-Updater' \
   "https://api.github.com/repos/${REPO}/releases?per_page=30" -o "$TMP/releases.json"
 
-node - "$TMP/releases.json" "$TMP/selection.env" <<'NODE'
+node - "$TMP/releases.json" "$TMP/selection.env" "$TARGET_VERSION" <<'NODE'
 const fs = require('node:fs');
-const [source, output] = process.argv.slice(2);
+const [source, output, requested] = process.argv.slice(2);
 const releases = JSON.parse(fs.readFileSync(source, 'utf8'));
-const selected = releases.find((release) => !release.draft && Array.isArray(release.assets) && release.assets.some((asset) => /^kems-web-.+-pi\.tar\.gz$/.test(asset.name)));
-if (!selected) process.exit(2);
-const archive = selected.assets.find((asset) => /^kems-web-.+-pi\.tar\.gz$/.test(asset.name));
+const archiveFor = (release) => Array.isArray(release.assets) ? release.assets.find((asset) => /^kems-web-.+-pi\.tar\.gz$/.test(asset.name)) : null;
+const versionFor = (archive) => archive?.name?.replace(/^kems-web-/, '').replace(/-pi\.tar\.gz$/, '') || '';
+const selected = releases.find((release) => {
+  if (release.draft) return false;
+  const archive = archiveFor(release);
+  if (!archive) return false;
+  if (!requested) return true;
+  const clean = String(requested).replace(/^v(?=\d)/, '');
+  return versionFor(archive) === clean || String(release.tag_name || '') === requested || String(release.tag_name || '').replace(/^v(?=\d)/, '') === clean;
+});
+if (!selected) {
+  console.error(requested ? `No KEMS Web Pi release matches exact target ${requested}.` : 'No KEMS Web Pi release was found.');
+  process.exit(2);
+}
+const archive = archiveFor(selected);
 const checksum = selected.assets.find((asset) => asset.name === `${archive.name}.sha256`);
 const lines = [
   `TAG=${JSON.stringify(selected.tag_name)}`,
@@ -104,14 +117,20 @@ if [[ -d "$DEST/deploy" ]]; then
   if [[ -f "$DEST/deploy/bin/kems-status" ]]; then install -m 0755 "$DEST/deploy/bin/kems-status" /usr/local/sbin/kems-status.new && mv -f /usr/local/sbin/kems-status.new /usr/local/sbin/kems-status; fi
   [[ -f "$DEST/deploy/healthcheck.mjs" ]] && install -m 0644 "$DEST/deploy/healthcheck.mjs" "$LIB/healthcheck.mjs"
   [[ -f "$DEST/deploy/manager.mjs" ]] && install -m 0644 "$DEST/deploy/manager.mjs" "$LIB/manager.mjs"
+  [[ -f "$DEST/deploy/bundle-agent.mjs" ]] && install -m 0644 "$DEST/deploy/bundle-agent.mjs" "$LIB/bundle-agent.mjs"
   [[ -f "$DEST/deploy/systemd/kems-web.service" ]] && install -m 0644 "$DEST/deploy/systemd/kems-web.service" /etc/systemd/system/kems-web.service
   [[ -f "$DEST/deploy/systemd/kems-web-manager.service" ]] && install -m 0644 "$DEST/deploy/systemd/kems-web-manager.service" /etc/systemd/system/kems-web-manager.service
+  [[ -f "$DEST/deploy/systemd/kems-web-bundle-agent.service" ]] && install -m 0644 "$DEST/deploy/systemd/kems-web-bundle-agent.service" /etc/systemd/system/kems-web-bundle-agent.service
   mkdir -p /var/lib/kems-web-management
   chown root:kemsweb /var/lib/kems-web-management 2>/dev/null || true
   chmod 750 /var/lib/kems-web-management 2>/dev/null || true
   systemctl daemon-reload
   systemctl enable kems-web-manager.service >/dev/null 2>&1 || true
   systemctl is-active --quiet kems-web-manager.service || systemctl start kems-web-manager.service || true
+  if [[ -f /etc/systemd/system/kems-web-bundle-agent.service && -f "$LIB/bundle-agent.mjs" ]]; then
+    systemctl enable kems-web-bundle-agent.service >/dev/null 2>&1 || true
+    systemctl is-active --quiet kems-web-bundle-agent.service || systemctl start kems-web-bundle-agent.service || true
+  fi
 fi
 
 # Keep the active release plus the two most recently modified older versions.

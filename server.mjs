@@ -2632,6 +2632,25 @@ const server = http.createServer(async (request, response) => {
     return sendJson(response, 200, safeConnectionSummary());
   }
 
+  if (url.pathname === "/api/maintenance" && request.method === "GET") {
+    try {
+      const system = await managerRequest("/status");
+      const agent = system.bundleAgent || {};
+      return sendJson(response, 200, {
+        available: agent.available !== false,
+        overallStatus: agent.overallStatus || "starting",
+        bundle: agent.bundle?.bundle || null,
+        release: agent.bundle?.release || null,
+        maintenance: agent.maintenance || { status: "none" },
+        components: agent.components || [],
+        lastResult: agent.lastResult || null,
+        checkedAt: agent.checkedAt || null
+      });
+    } catch (error) {
+      return sendJson(response, 200, { available: false, overallStatus: "unavailable", maintenance: { status: "none" }, components: [], error: error.message });
+    }
+  }
+
   if (url.pathname === "/api/system/status" && request.method === "GET") {
     if (!directLanManagementRequest(request)) return sendJson(response, 403, { error: "Pi management is available only over a direct local-network KEMS address." });
     try {
@@ -2639,6 +2658,21 @@ const server = http.createServer(async (request, response) => {
     } catch (error) {
       return sendJson(response, 200, { available: false, error: error.message, installedVersion: project.version });
     }
+  }
+
+  if (url.pathname === "/api/system/update-policy" && request.method === "GET") {
+    if (!directLanManagementRequest(request)) return sendJson(response, 403, { error: "Update policy is available only over a direct local-network KEMS address." });
+    try { return sendJson(response, 200, await managerRequest("/policy")); }
+    catch (error) { return sendJson(response, 503, { error: error.message }); }
+  }
+
+  if (url.pathname === "/api/system/update-policy" && request.method === "PUT") {
+    if (!directLanManagementRequest(request)) return sendJson(response, 403, { error: "Update policy can be changed only over a direct local-network KEMS address." });
+    if (!sameOriginWrite(request)) return sendJson(response, 403, { error: "Cross-origin update-policy changes are not allowed." });
+    try {
+      const body = await readBody(request);
+      return sendJson(response, 200, await managerRequest("/policy", { method: "PUT", body: JSON.stringify(body), timeout: 5000 }));
+    } catch (error) { return sendJson(response, 503, { error: error.message }); }
   }
 
   if (url.pathname === "/api/system/logs" && request.method === "GET") {
@@ -2653,7 +2687,7 @@ const server = http.createServer(async (request, response) => {
       const body = await readBody(request);
       const action = String(body.action || "");
       if (!["update", "rollback", "restart", "reboot"].includes(action)) return sendJson(response, 400, { error: "Unsupported maintenance action." });
-      const result = await managerRequest("/action", { method: "POST", body: JSON.stringify({ action }), timeout: 5000 });
+      const result = await managerRequest("/action", { method: "POST", body: JSON.stringify({ action, targetVersion: body.targetVersion || null }), timeout: 5000 });
       return sendJson(response, 202, result);
     } catch (error) {
       return sendJson(response, 503, { error: error.message });

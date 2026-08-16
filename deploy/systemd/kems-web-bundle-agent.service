@@ -1,0 +1,26 @@
+[Unit]
+Description=KEMS coordinated update bundle agent
+Wants=network-online.target kems-web-manager.service
+After=network-online.target kems-web-manager.service
+
+[Service]
+Type=simple
+User=root
+Group=root
+Environment=NODE_ENV=production
+ExecStart=/usr/local/bin/node /usr/local/lib/kems-web/bundle-agent.mjs
+Restart=on-failure
+RestartSec=10
+TimeoutStopSec=15
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+RestrictRealtime=yes
+
+[Install]
+WantedBy=multi-user.target

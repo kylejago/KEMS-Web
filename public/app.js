@@ -97,6 +97,7 @@ const state = {
   catalogQuery: "",
   diagnostics: null,
   system: null,
+  maintenance: null,
   site: null,
   systemPolling: null,
   scenarios: null,
@@ -343,14 +344,16 @@ async function refreshAll(showToast = false) {
   state.loading = true;
   refreshButton.classList.add("spinning");
   try {
-    const [snapshot, today, scenarios] = await Promise.all([
+    const [snapshot, today, scenarios, maintenance] = await Promise.all([
       getJson("/api/live"),
       getJson("/api/analytics?range=day"),
-      getJson("/api/scenarios").catch((error) => ({ available: false, error: error.message, periods: {}, timeline: [] }))
+      getJson("/api/scenarios").catch((error) => ({ available: false, error: error.message, periods: {}, timeline: [] })),
+      getJson("/api/maintenance").catch(() => ({ available: false, overallStatus: "unavailable", maintenance: { status: "none" }, components: [] }))
     ]);
     state.snapshot = snapshot;
     state.today = today;
     state.scenarios = scenarios;
+    state.maintenance = maintenance;
     state.lastAnalyticsLoad = Date.now();
     state.lastScenarioLoad = Date.now();
     state.setup = await getJson("/api/setup/status");
@@ -407,6 +410,20 @@ function connectStream() {
   state.stream = stream;
 }
 
+function maintenanceBanner() {
+  const feed = state.maintenance;
+  const notice = feed?.maintenance || {};
+  const status = String(notice.status || "none");
+  if (["none", ""].includes(status)) return "";
+  const tone = ["failed", "attention-required"].includes(status) ? "bad" : ["completed", "success"].includes(status) ? "good" : "warning";
+  const scheduled = notice.scheduled_for ? formatDate(notice.scheduled_for, { time: true, year: true }) : null;
+  const affected = Array.isArray(notice.affected_components) && notice.affected_components.length ? notice.affected_components.join(", ") : "KEMS services";
+  const title = status === "completed" ? "KEMS maintenance complete" : status === "failed" ? "KEMS maintenance needs attention" : status === "in_progress" ? "KEMS maintenance in progress" : status === "restart-required" ? "KEMS restart required" : "Planned KEMS maintenance";
+  const timing = scheduled ? ` · ${scheduled}` : "";
+  const downtime = notice.expected_downtime_minutes ? ` · about ${notice.expected_downtime_minutes} min` : "";
+  return `<section class="global-maintenance ${tone}"><div><span>${escapeHtml(title)}</span><strong>${escapeHtml(notice.reason || feed.overallStatus || "Coordinated KEMS update")}</strong><small>${escapeHtml(`Affected: ${affected}${timing}${downtime}`)}</small></div><b>${escapeHtml(status.replace(/-/g, " "))}</b></section>`;
+}
+
 function render() {
   if (!state.snapshot) return;
   updateNavigation();
@@ -418,7 +435,7 @@ function render() {
     scenarios: scenarioView,
     performance: performanceView
   };
-  app.innerHTML = `${views[state.route]()}${footer()}`;
+  app.innerHTML = `${maintenanceBanner()}${views[state.route]()}${footer()}`;
   bindViewEvents();
 }
 
@@ -1246,6 +1263,10 @@ function systemSectionContent() {
     : `<div class="update-banner current"><div><span>Software</span><strong>${latest.available ? "Up to date" : "Installed"}</strong><small>${latest.error ? escapeHtml(latest.error) : "Latest GitHub release checked"}</small></div><button class="button secondary" id="check-update" type="button" ${actionRunning ? "disabled" : ""}>Check now</button></div>`;
   const actionPanel = action.state && action.state !== "idle" ? `<div class="maintenance-progress ${escapeHtml(systemTone(action.state))}"><div><span>${escapeHtml(action.action || "Maintenance")}</span><strong>${escapeHtml(action.state)}</strong></div><div class="maintenance-track"><i style="width:${clamp(Number(action.progress) || 0, 0, 100)}%"></i></div><p>${escapeHtml(action.message || "")}</p></div>` : "";
   const managerActivationRequired = Boolean(system.applianceActivationRequired || (system.managerVersion && system.installedVersion && system.managerVersion !== system.installedVersion));
+  const agent = system.bundleAgent || {};
+  const policy = system.updatePolicy || agent.policy || {};
+  const componentRows = (agent.components || []).map((item) => `<div><span>${escapeHtml(item.key)}</span><strong>${escapeHtml(item.status || "unknown")}</strong><small>${escapeHtml(`${item.installed || "—"} → ${item.target || "—"}`)}</small></div>`).join("");
+  const coordinatedPanel = `<div class="coordinated-update-panel"><div class="system-status-line"><span class="system-dot ${escapeHtml(systemTone(agent.overallStatus === "up-to-date" ? "healthy" : agent.overallStatus))}"></span><strong>${escapeHtml(agent.overallStatus === "up-to-date" ? "Everything up to date" : agent.overallStatus || "Starting")}</strong><span>${escapeHtml(agent.bundle?.bundle || "Waiting for first KEMS bundle")}</span></div>${componentRows ? `<div class="system-grid component-grid">${componentRows}</div>` : ""}<form id="update-policy-form" class="update-policy-form"><label class="remember-row"><input id="automatic-updates" type="checkbox" ${policy.automaticUpdates ? "checked" : ""}/><span>Automatic coordinated updates</span></label><label><span>Update mode</span><select class="input" id="update-mode"><option value="safe-first" ${policy.mode !== "window-only" ? "selected" : ""}>Safe updates immediately; disruption in window</option><option value="window-only" ${policy.mode === "window-only" ? "selected" : ""}>All updates in maintenance window</option></select></label><div class="maintenance-time-grid"><label><span>Maintenance starts</span><input class="input" id="maintenance-start" type="time" value="${escapeHtml(policy.maintenanceStart || "03:00")}" /></label><label><span>Maintenance ends</span><input class="input" id="maintenance-end" type="time" value="${escapeHtml(policy.maintenanceEnd || "04:00")}" /></label></div><label class="remember-row"><input id="automatic-reboot" type="checkbox" ${policy.automaticReboot ? "checked" : ""}/><span>Allow automatic Pi reboot inside maintenance window</span></label><label class="remember-row"><input id="maintenance-notices" type="checkbox" ${policy.notifyMaintenance !== false ? "checked" : ""}/><span>Show maintenance notices in user areas</span></label><button class="button secondary" type="submit">Save automatic update policy</button><div id="update-policy-result" class="form-result"></div></form></div>`;
   const activationPanel = managerActivationRequired ? `<div class="update-banner activation"><div><span>Appliance services updated</span><strong>Reboot required</strong><small>The website update is installed, but the Pi manager is still ${escapeHtml(system.managerVersion || "an older version")}.</small></div><button class="button primary" id="reboot-pi-activation" type="button">Reboot Pi</button></div>` : "";
   return `<h3>KEMS Pi server</h3>
     <div class="system-status-line"><span class="system-dot ${escapeHtml(systemTone(system.service))}"></span><strong>${system.service === "active" ? "Healthy" : escapeHtml(system.service || "Unknown")}</strong><span>${escapeHtml(system.hostname || "kems-pi")}${system.ip ? ` · ${escapeHtml(system.ip)}` : ""}</span></div>
@@ -1259,7 +1280,7 @@ function systemSectionContent() {
       <div><span>Node.js</span><strong>${escapeHtml(system.nodeVersion || "Unknown")}</strong></div>
       <div><span>Rollback</span><strong>${system.rollbackAvailable ? "Available" : "No older release"}</strong></div>
     </div>
-    ${activationPanel}${updateCopy}${actionPanel}
+    ${coordinatedPanel}${activationPanel}${updateCopy}${actionPanel}
     <div class="drawer-actions system-actions">
       ${system.updateAvailable ? `<button class="button secondary" id="check-update" type="button" ${actionRunning ? "disabled" : ""}>Re-check</button>` : ""}
       <button class="button secondary" id="view-system-logs" type="button">View logs</button>
@@ -1282,6 +1303,34 @@ function bindSystemControls() {
   document.querySelector("#view-system-logs")?.addEventListener("click", showSystemLogs);
   document.querySelector("#backup-kems")?.addEventListener("click", showBackupModal);
   document.querySelector("#restore-kems")?.addEventListener("click", showRestoreModal);
+  document.querySelector("#update-policy-form")?.addEventListener("submit", saveUpdatePolicy);
+}
+
+async function saveUpdatePolicy(event) {
+  event.preventDefault();
+  const result = document.querySelector("#update-policy-result");
+  if (result) { result.className = "form-result"; result.textContent = "Saving update policy…"; }
+  try {
+    const policy = await getJson("/api/system/update-policy", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        automaticUpdates: document.querySelector("#automatic-updates")?.checked,
+        coordinatedUpdates: true,
+        mode: document.querySelector("#update-mode")?.value || "safe-first",
+        maintenanceStart: document.querySelector("#maintenance-start")?.value || "03:00",
+        maintenanceEnd: document.querySelector("#maintenance-end")?.value || "04:00",
+        automaticReboot: document.querySelector("#automatic-reboot")?.checked,
+        notifyMaintenance: document.querySelector("#maintenance-notices")?.checked,
+        channel: "alpha"
+      })
+    });
+    state.system = { ...(state.system || {}), updatePolicy: policy };
+    if (result) { result.className = "form-result good"; result.textContent = "Automatic update policy saved."; }
+    setTimeout(() => refreshSystemStatus(true), 500);
+  } catch (error) {
+    if (result) { result.className = "form-result danger"; result.textContent = error.message; }
+  }
 }
 
 function updateSystemSection() {
@@ -1374,7 +1423,7 @@ async function showSystemLogs() {
   try {
     const logs = await getJson("/api/system/logs");
     const block = (title, lines) => `<h3 class="log-title">${escapeHtml(title)}</h3><pre>${escapeHtml((lines || []).join("\n") || "No recent entries.")}</pre>`;
-    document.querySelector(".modal-body").innerHTML = `${block("Maintenance", logs.action)}${block("KEMS Web", logs.web)}${block("Pi manager", logs.manager)}${block("Home Assistant Container", logs.homeAssistant)}`;
+    document.querySelector(".modal-body").innerHTML = `${block("Maintenance", logs.action)}${block("Coordinated update agent", logs.bundleAgent)}${block("KEMS Web", logs.web)}${block("Pi manager", logs.manager)}${block("Home Assistant Container", logs.homeAssistant)}`;
   } catch (error) {
     document.querySelector(".modal-body").innerHTML = `<div class="error-panel">${escapeHtml(error.message)}</div>`;
   }

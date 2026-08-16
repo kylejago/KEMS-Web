@@ -14,8 +14,11 @@ const LIB_DIR = "/usr/local/lib/kems-web";
 const MANAGER_DIR = "/var/lib/kems-web-management";
 const STATUS_FILE = path.join(MANAGER_DIR, "status.json");
 const LOG_FILE = path.join(MANAGER_DIR, "action.log");
+const UPDATE_POLICY_FILE = path.join(MANAGER_DIR, "update-policy.json");
+const BUNDLE_STATUS_FILE = path.join(MANAGER_DIR, "bundle-status.json");
+const BUNDLE_AGENT_LOG_FILE = path.join(MANAGER_DIR, "bundle-agent.log");
 const REPO_FILE = path.join(LIB_DIR, "github-repo");
-const MANAGER_VERSION = "0.7.0-alpha6-web.7";
+const MANAGER_VERSION = "0.7.0-alpha6-web.8";
 const HA_CONFIG_DIR = "/var/lib/kems-homeassistant/config";
 const HA_CONTAINER = "homeassistant";
 const HA_IMAGE = "ghcr.io/home-assistant/home-assistant:stable";
@@ -60,6 +63,32 @@ function atomicJson(file, value) {
 
 function persistState() {
   atomicJson(STATUS_FILE, actionState);
+}
+
+function normaliseUpdatePolicy(raw = {}) {
+  const clock = (value, fallback) => /^([01]\d|2[0-3]):[0-5]\d$/.test(String(value || "")) ? String(value) : fallback;
+  return {
+    automaticUpdates: Boolean(raw.automaticUpdates),
+    coordinatedUpdates: raw.coordinatedUpdates !== false,
+    mode: raw.mode === "window-only" ? "window-only" : "safe-first",
+    maintenanceStart: clock(raw.maintenanceStart, "03:00"),
+    maintenanceEnd: clock(raw.maintenanceEnd, "04:00"),
+    automaticReboot: Boolean(raw.automaticReboot),
+    notifyMaintenance: raw.notifyMaintenance !== false,
+    channel: raw.channel === "stable" ? "stable" : "alpha"
+  };
+}
+
+function updatePolicy() {
+  const value = normaliseUpdatePolicy(readJson(UPDATE_POLICY_FILE, {}));
+  if (!fs.existsSync(UPDATE_POLICY_FILE)) atomicJson(UPDATE_POLICY_FILE, value);
+  return value;
+}
+
+function saveUpdatePolicy(raw) {
+  const value = normaliseUpdatePolicy(raw);
+  atomicJson(UPDATE_POLICY_FILE, value);
+  return value;
 }
 
 function updateAction(patch) {
@@ -298,8 +327,8 @@ function progressFromOutput(text, current) {
   return current;
 }
 
-function commandFor(action) {
-  if (action === "update") return ["/usr/local/sbin/kems-update", []];
+function commandFor(action, options = {}) {
+  if (action === "update") return ["/usr/local/sbin/kems-update", options.targetVersion ? [String(options.targetVersion)] : []];
   if (action === "rollback") return ["/usr/local/sbin/kems-rollback", []];
   if (action === "restart") return ["systemctl", ["restart", "kems-web.service"]];
   if (action === "reboot") return ["systemctl", ["reboot"]];
@@ -307,9 +336,9 @@ function commandFor(action) {
   return null;
 }
 
-function startAction(action) {
+function startAction(action, options = {}) {
   if (busy) throw new Error(`A ${actionState.action || "maintenance"} action is already running.`);
-  const command = commandFor(action);
+  const command = commandFor(action, options);
   if (!command) throw new Error("Unsupported maintenance action.");
   busy = true;
   fs.writeFileSync(LOG_FILE, `[${new Date().toISOString()}] Starting ${action}\n`, { mode: 0o640 });
@@ -349,7 +378,12 @@ function startAction(action) {
       });
       appendLog(`[${new Date().toISOString()}] ${action} finished with exit code ${code}\n`);
       busy = false;
-      if (action === "update") latestCache = { at: 0, value: null };
+      if (action === "update") {
+        latestCache = { at: 0, value: null };
+        setTimeout(() => {
+          try { spawn("systemctl", ["restart", "kems-web-manager.service"], { detached: true, stdio: "ignore" }).unref(); } catch {}
+        }, 800);
+      }
     });
   }, 300);
 }
@@ -380,12 +414,15 @@ async function systemStatus(forceLatest = false) {
     repository: repoName(),
     service: serviceState("kems-web.service"),
     managerService: "active",
+    bundleAgentService: serviceState("kems-web-bundle-agent.service"),
     installedVersion: installed,
     latestRelease: latest,
     updateAvailable: Boolean(latest.available && latest.version && latest.version !== installed),
     releases,
     rollbackAvailable: releases.some((item) => !item.active),
     action: actionState,
+    updatePolicy: updatePolicy(),
+    bundleAgent: readJson(BUNDLE_STATUS_FILE, { available: false, overallStatus: "starting", components: [], maintenance: { status: "none" } }),
     homeAssistant: await homeAssistantStatus(),
     applianceActivationRequired: MANAGER_VERSION !== installed,
     checkedAt: new Date().toISOString()
@@ -416,12 +453,18 @@ const server = http.createServer(async (request, response) => {
   const url = new URL(request.url, `http://${HOST}:${PORT}`);
   try {
     if (url.pathname === "/health") return sendJson(response, 200, { ok: true, version: MANAGER_VERSION });
+    if (url.pathname === "/policy" && request.method === "GET") return sendJson(response, 200, updatePolicy());
+    if (url.pathname === "/policy" && request.method === "PUT") {
+      const body = await readBody(request);
+      return sendJson(response, 200, saveUpdatePolicy(body));
+    }
     if (url.pathname === "/status" && request.method === "GET") return sendJson(response, 200, await systemStatus(url.searchParams.get("refresh") === "1"));
     if (url.pathname === "/logs" && request.method === "GET") {
       return sendJson(response, 200, {
         action: readRecentActionLog(),
         web: journal("kems-web.service"),
         manager: journal("kems-web-manager.service", 40),
+        bundleAgent: safeRead(BUNDLE_AGENT_LOG_FILE, "").split(/\r?\n/).filter(Boolean).slice(-80),
         homeAssistant: homeAssistantLogs()
       });
     }
@@ -429,8 +472,8 @@ const server = http.createServer(async (request, response) => {
       const body = await readBody(request);
       const action = String(body.action || "");
       if (!new Set(["update", "rollback", "restart", "reboot"]).has(action)) return sendJson(response, 400, { error: "Unsupported maintenance action." });
-      startAction(action);
-      return sendJson(response, 202, { accepted: true, action, status: actionState });
+      startAction(action, { targetVersion: body.targetVersion });
+      return sendJson(response, 202, { accepted: true, action, targetVersion: body.targetVersion || null, status: actionState });
     }
     if (url.pathname === "/home-assistant/status" && request.method === "GET") return sendJson(response, 200, await homeAssistantStatus());
     if (url.pathname === "/home-assistant/action" && request.method === "POST") {
