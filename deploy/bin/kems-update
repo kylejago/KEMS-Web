@@ -66,61 +66,63 @@ ROOT="$(find "$TMP" -mindepth 1 -maxdepth 2 -type f -name package.json -printf '
 VERSION="$(node -e 'const p=require(process.argv[1]);process.stdout.write(String(p.version||""))' "$ROOT/package.json")"
 [[ -n "$VERSION" ]] || { echo "Release has no package version." >&2; exit 5; }
 
+SAME_VERSION=0
 if [[ "$VERSION" == "$CURRENT_VERSION" ]]; then
-  echo "KEMS Web ${VERSION} is already installed."
-  exit 0
-fi
-
-DEST="$RELEASES/$VERSION"
-rm -rf "$DEST"
-cp -a "$ROOT" "$DEST"
-rm -rf "$DEST/data"
-mkdir -p "$DEST/data"
-node --check "$DEST/server.mjs"
-node --check "$DEST/public/app.js"
-if [[ -f "$DEST/scripts/smoke-test.mjs" ]]; then
-  (cd "$DEST" && node scripts/smoke-test.mjs >/dev/null)
-fi
-
-PREVIOUS="$(readlink -f "$CURRENT" 2>/dev/null || true)"
-echo "Switching active release to ${VERSION}..."
-ln -sfn "$DEST" "$BASE/current.new"
-mv -Tf "$BASE/current.new" "$CURRENT"
-echo "Restarting KEMS Web..."
-systemctl restart kems-web.service
-
-echo "Waiting for KEMS Web health check..."
-OK=0
-for _ in $(seq 1 30); do
-  if node "$LIB/healthcheck.mjs" http://127.0.0.1:4173/api/health >/dev/null 2>&1; then OK=1; break; fi
-  sleep 1
-done
-if [[ "$OK" != 1 ]]; then
-  echo "KEMS Web ${VERSION} failed its health check." >&2
-  if [[ -n "$PREVIOUS" && -d "$PREVIOUS" ]]; then
-    echo "Rolling back automatically..."
-    ln -sfn "$PREVIOUS" "$BASE/current.rollback"
-    mv -Tf "$BASE/current.rollback" "$CURRENT"
-    systemctl restart kems-web.service
+  SAME_VERSION=1
+  echo "KEMS Web ${VERSION} is already installed; refreshing appliance helpers."
+else
+  DEST="$RELEASES/$VERSION"
+  rm -rf "$DEST"
+  cp -a "$ROOT" "$DEST"
+  rm -rf "$DEST/data"
+  mkdir -p "$DEST/data"
+  node --check "$DEST/server.mjs"
+  node --check "$DEST/public/app.js"
+  if [[ -f "$DEST/scripts/smoke-test.mjs" ]]; then
+    (cd "$DEST" && node scripts/smoke-test.mjs >/dev/null)
   fi
-  exit 6
+
+  PREVIOUS="$(readlink -f "$CURRENT" 2>/dev/null || true)"
+  echo "Switching active release to ${VERSION}..."
+  ln -sfn "$DEST" "$BASE/current.new"
+  mv -Tf "$BASE/current.new" "$CURRENT"
+  echo "Restarting KEMS Web..."
+  systemctl restart kems-web.service
+
+  echo "Waiting for KEMS Web health check..."
+  OK=0
+  for _ in $(seq 1 30); do
+    if node "$LIB/healthcheck.mjs" http://127.0.0.1:4173/api/health >/dev/null 2>&1; then OK=1; break; fi
+    sleep 1
+  done
+  if [[ "$OK" != 1 ]]; then
+    echo "KEMS Web ${VERSION} failed its health check." >&2
+    if [[ -n "$PREVIOUS" && -d "$PREVIOUS" ]]; then
+      echo "Rolling back automatically..."
+      ln -sfn "$PREVIOUS" "$BASE/current.rollback"
+      mv -Tf "$BASE/current.rollback" "$CURRENT"
+      systemctl restart kems-web.service
+    fi
+    exit 6
+  fi
+
+  sha256sum "$TMP/$ARCHIVE_NAME" > "$DEST/INSTALLED_SHA256"
+  echo "Updated KEMS Web: ${CURRENT_VERSION:-none} -> ${VERSION} (${TAG})"
 fi
 
-sha256sum "$TMP/$ARCHIVE_NAME" > "$DEST/INSTALLED_SHA256"
-echo "Updated KEMS Web: ${CURRENT_VERSION:-none} -> ${VERSION} (${TAG})"
-
-# A release can update the appliance helper files too. Replace command files by
-# inode so an updater that is currently executing never truncates itself.
-if [[ -d "$DEST/deploy" ]]; then
-  if [[ -f "$DEST/deploy/bin/kems-update" ]]; then install -m 0755 "$DEST/deploy/bin/kems-update" /usr/local/sbin/kems-update.new && mv -f /usr/local/sbin/kems-update.new /usr/local/sbin/kems-update; fi
-  if [[ -f "$DEST/deploy/bin/kems-rollback" ]]; then install -m 0755 "$DEST/deploy/bin/kems-rollback" /usr/local/sbin/kems-rollback.new && mv -f /usr/local/sbin/kems-rollback.new /usr/local/sbin/kems-rollback; fi
-  if [[ -f "$DEST/deploy/bin/kems-status" ]]; then install -m 0755 "$DEST/deploy/bin/kems-status" /usr/local/sbin/kems-status.new && mv -f /usr/local/sbin/kems-status.new /usr/local/sbin/kems-status; fi
-  [[ -f "$DEST/deploy/healthcheck.mjs" ]] && install -m 0644 "$DEST/deploy/healthcheck.mjs" "$LIB/healthcheck.mjs"
-  [[ -f "$DEST/deploy/manager.mjs" ]] && install -m 0644 "$DEST/deploy/manager.mjs" "$LIB/manager.mjs"
-  [[ -f "$DEST/deploy/bundle-agent.mjs" ]] && install -m 0644 "$DEST/deploy/bundle-agent.mjs" "$LIB/bundle-agent.mjs"
-  [[ -f "$DEST/deploy/systemd/kems-web.service" ]] && install -m 0644 "$DEST/deploy/systemd/kems-web.service" /etc/systemd/system/kems-web.service
-  [[ -f "$DEST/deploy/systemd/kems-web-manager.service" ]] && install -m 0644 "$DEST/deploy/systemd/kems-web-manager.service" /etc/systemd/system/kems-web-manager.service
-  [[ -f "$DEST/deploy/systemd/kems-web-bundle-agent.service" ]] && install -m 0644 "$DEST/deploy/systemd/kems-web-bundle-agent.service" /etc/systemd/system/kems-web-bundle-agent.service
+# Always refresh appliance helper files from the verified release, even when the
+# website version is already installed. This makes browser-driven repair possible
+# when a previous updater installed the site before a new helper/service existed.
+if [[ -d "$ROOT/deploy" ]]; then
+  if [[ -f "$ROOT/deploy/bin/kems-update" ]]; then install -m 0755 "$ROOT/deploy/bin/kems-update" /usr/local/sbin/kems-update.new && mv -f /usr/local/sbin/kems-update.new /usr/local/sbin/kems-update; fi
+  if [[ -f "$ROOT/deploy/bin/kems-rollback" ]]; then install -m 0755 "$ROOT/deploy/bin/kems-rollback" /usr/local/sbin/kems-rollback.new && mv -f /usr/local/sbin/kems-rollback.new /usr/local/sbin/kems-rollback; fi
+  if [[ -f "$ROOT/deploy/bin/kems-status" ]]; then install -m 0755 "$ROOT/deploy/bin/kems-status" /usr/local/sbin/kems-status.new && mv -f /usr/local/sbin/kems-status.new /usr/local/sbin/kems-status; fi
+  [[ -f "$ROOT/deploy/healthcheck.mjs" ]] && install -m 0644 "$ROOT/deploy/healthcheck.mjs" "$LIB/healthcheck.mjs"
+  [[ -f "$ROOT/deploy/manager.mjs" ]] && install -m 0644 "$ROOT/deploy/manager.mjs" "$LIB/manager.mjs"
+  [[ -f "$ROOT/deploy/bundle-agent.mjs" ]] && install -m 0644 "$ROOT/deploy/bundle-agent.mjs" "$LIB/bundle-agent.mjs"
+  [[ -f "$ROOT/deploy/systemd/kems-web.service" ]] && install -m 0644 "$ROOT/deploy/systemd/kems-web.service" /etc/systemd/system/kems-web.service
+  [[ -f "$ROOT/deploy/systemd/kems-web-manager.service" ]] && install -m 0644 "$ROOT/deploy/systemd/kems-web-manager.service" /etc/systemd/system/kems-web-manager.service
+  [[ -f "$ROOT/deploy/systemd/kems-web-bundle-agent.service" ]] && install -m 0644 "$ROOT/deploy/systemd/kems-web-bundle-agent.service" /etc/systemd/system/kems-web-bundle-agent.service
   mkdir -p /var/lib/kems-web-management
   chown root:kemsweb /var/lib/kems-web-management 2>/dev/null || true
   chmod 750 /var/lib/kems-web-management 2>/dev/null || true
@@ -131,6 +133,10 @@ if [[ -d "$DEST/deploy" ]]; then
     systemctl enable kems-web-bundle-agent.service >/dev/null 2>&1 || true
     systemctl is-active --quiet kems-web-bundle-agent.service || systemctl start kems-web-bundle-agent.service || true
   fi
+fi
+
+if [[ "$SAME_VERSION" == 1 ]]; then
+  echo "Refreshed KEMS Web ${VERSION} appliance helpers and service definitions."
 fi
 
 # Keep the active release plus the two most recently modified older versions.
