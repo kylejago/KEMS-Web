@@ -13,7 +13,19 @@ mustContain("image/kems-firstboot.sh", ["write_status", "getent ahostsv4 raw.git
 mustContain("deploy/systemd/kems-web.service", ["User=kemsweb", "ReadWritePaths=/var/lib/kems-web", "HOST=0.0.0.0", "PORT=4173"]);
 mustContain("deploy/systemd/kems-web-manager.service", ["User=root", "KEMS_MANAGER_PORT=4174", "manager.mjs"]);
 mustContain("deploy/systemd/kems-web-bundle-agent.service", ["User=root", "bundle-agent.mjs", "network-online.target"]);
-mustContain("deploy/bundle-agent.mjs", ["kems-bundle.json", "sha256", "automaticUpdates", "maintenanceStart", "public_web", "kems-update"]);
+mustContain("deploy/bundle-agent.mjs", [
+  "kems-bundle.json",
+  "sha256",
+  "automaticUpdates",
+  "maintenanceStart",
+  "public_web",
+  "kems-update",
+  "applianceVersionRelation",
+  "ahead-of-target",
+  "downgrade blocked",
+  "automatic change blocked",
+  "const AGENT_VERSION = \"0.7.0-alpha6-web.10\""
+]);
 mustContain("deploy/manager.mjs", ["127.0.0.1", "kems-update", "kems-rollback", "systemctl", "latestRelease", "home-assistant", "ghcr.io/home-assistant/home-assistant:stable", "download.docker.com/linux/debian"]);
 mustContain("install.sh", ["kems-web-manager.service", "kems-web-bundle-agent.service", "bundle-agent.mjs", "manager.mjs", "/var/lib/kems-web-management"]);
 mustContain("deploy/bin/kems-update", [
