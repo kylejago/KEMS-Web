@@ -1,9 +1,12 @@
-const CACHE_NAME = "kems-alpha6-web7-shell-v1";
+const CACHE_NAME = "kems-alpha6-web12-shell-v1";
 const APP_SHELL = [
   "/",
   "/index.html",
-  "/styles.css?v=alpha6web7",
-  "/app.js?v=alpha6web7",
+  "/compare.html",
+  "/styles.css?v=alpha6web12",
+  "/compare.css?v=alpha6web12",
+  "/app.js?v=alpha6web12",
+  "/compare-page.js?v=alpha6web12",
   "/logo.svg",
   "/icons/kems-192.png",
   "/icons/kems-512.png",
@@ -38,11 +41,13 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put("/", copy));
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(url.pathname, copy));
+          }
           return response;
         })
-        .catch(() => caches.match("/"))
+        .catch(async () => (await caches.match(url.pathname)) || caches.match("/"))
     );
     return;
   }
