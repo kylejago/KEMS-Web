@@ -53,6 +53,11 @@ jobs:
 
           test_path = Path('scripts/pi-deployment-test.mjs')
           test = test_path.read_text()
+          old_agent_test = '"const AGENT_VERSION = \\"0.7.0-alpha6-web.10\\""'
+          new_agent_test = '"const AGENT_VERSION = \\"0.7.0-alpha6-web.11\\""'
+          if old_agent_test not in test:
+              raise SystemExit('Expected web.10 agent assertion was not found')
+          test = test.replace(old_agent_test, new_agent_test, 1)
           old_test = 'mustContain("deploy/manager.mjs", ["127.0.0.1", "kems-update", "kems-rollback", "systemctl", "latestRelease", "home-assistant", "ghcr.io/home-assistant/home-assistant:stable", "download.docker.com/linux/debian"]);'
           new_test = 'mustContain("deploy/manager.mjs", ["127.0.0.1", "kems-update", "kems-rollback", "systemctl", "latestRelease", "const MANAGER_VERSION = installedVersion()", "applianceActivationRequired: MANAGER_VERSION !== installed", "home-assistant", "ghcr.io/home-assistant/home-assistant:stable", "download.docker.com/linux/debian"]);'
           if old_test not in test:
