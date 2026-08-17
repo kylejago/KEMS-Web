@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.0-alpha6-web.11 — Reliable appliance activation state
+
+- Fixes the stale “Reboot required” banner after KEMS Web updates by capturing the active appliance version when the Pi manager process starts instead of keeping a release-specific hard-coded manager version.
+- Preserves the activation check across future updates: the old manager process keeps reporting the version it started on until the service restarts, then the new manager reports the newly active website version.
+- Keeps coordinated Pi downgrade protection introduced in web.10 unchanged.
+- Prepared for the first fully automatic coordinated Pi website update test.
+
 ## 0.7.0-alpha6-web.9 — Pi coordinated-update bootstrap repair
 
 - Adds a browser-deliverable repair release for Pis where web.8 was installed by the previous updater before the coordinated bundle-agent service existed on the appliance.
