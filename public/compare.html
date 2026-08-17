@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#071217" />
+  <meta name="description" content="Compare actual home energy performance with the KEMS simulation across day, week, month, year and all-time periods." />
+  <title>KEMS — Actual vs KEMS</title>
+  <link rel="icon" href="logo.svg" type="image/svg+xml" />
+  <link rel="manifest" href="site.webmanifest" />
+  <link rel="apple-touch-icon" href="icons/kems-192.png" />
+  <link rel="stylesheet" href="styles.css?v=alpha6web12" />
+  <link rel="stylesheet" href="compare.css?v=alpha6web12" />
+</head>
+<body>
+  <div class="ambient" aria-hidden="true"><span></span><span></span><span></span></div>
+  <header class="topbar">
+    <a class="brand" href="/#live" aria-label="KEMS live dashboard">
+      <img src="logo.svg" alt="" />
+      <span><strong>KEMS</strong><small id="site-label">actual vs KEMS</small></span>
+    </a>
+    <nav class="primary-nav" aria-label="Primary navigation">
+      <a href="/#live">Live today</a>
+      <a href="/#simulation">Simulated today</a>
+      <a href="/compare.html" class="active" aria-current="page">Actual vs KEMS</a>
+      <a href="/#scenarios">Compare scenarios</a>
+      <a href="/#performance">Performance &amp; ROI</a>
+    </nav>
+    <div class="top-actions">
+      <span class="connection-pill" id="connection-pill"><i></i><span>Starting</span></span>
+      <button class="icon-button" id="refresh-button" type="button" title="Refresh comparison" aria-label="Refresh comparison">↻</button>
+      <a class="settings-button compare-dashboard-link" href="/#live">Dashboard</a>
+      <button class="icon-button mobile-menu" id="menu-button" type="button" aria-label="Open navigation" aria-expanded="false">☰</button>
+    </div>
+  </header>
+  <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile navigation">
+    <a href="/#live">Live today</a>
+    <a href="/#simulation">Simulated today</a>
+    <a href="/compare.html" class="active" aria-current="page">Actual vs KEMS</a>
+    <a href="/#scenarios">Compare scenarios</a>
+    <a href="/#performance">Performance &amp; ROI</a>
+  </nav>
+  <main id="compare-app" class="app" tabindex="-1">
+    <section class="loading-screen"><img src="logo.svg" alt="" /><h1>Loading comparison</h1><p>Preparing actual and simulated KEMS performance…</p></section>
+  </main>
+  <div id="toast-root" class="toast-root" aria-live="polite"></div>
+  <script type="module" src="compare-page.js?v=alpha6web12"></script>
+</body>
+</html>
