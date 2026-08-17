@@ -10,13 +10,12 @@ const STATUS_FILE = `${MANAGER_DIR}/bundle-status.json`;
 const HISTORY_FILE = `${MANAGER_DIR}/update-history.json`;
 const ACTION_STATUS_FILE = `${MANAGER_DIR}/status.json`;
 const LOG_FILE = `${MANAGER_DIR}/bundle-agent.log`;
-const MANAGER_FILE = "/usr/local/lib/kems-web/manager.mjs";
 const REPOSITORY = process.env.KEMS_BUNDLE_REPOSITORY || "kylejago/KEMS";
 const MANIFEST_NAME = "kems-bundle.json";
 const CHECKSUM_NAME = `${MANIFEST_NAME}.sha256`;
 const CHECK_INTERVAL_MS = Math.max(60_000, Number.parseInt(process.env.KEMS_BUNDLE_CHECK_MS || "300000", 10) || 300000);
 const INITIAL_DELAY_MS = Math.max(5_000, Number.parseInt(process.env.KEMS_BUNDLE_INITIAL_DELAY_MS || "30000", 10) || 30000);
-const AGENT_VERSION = "0.7.0-alpha6-web.8";
+const AGENT_VERSION = "0.7.0-alpha6-web.10";
 
 const DEFAULT_POLICY = Object.freeze({
   automaticUpdates: false,
@@ -88,10 +87,10 @@ function installedVersion() {
 }
 
 function installedManagerVersion() {
-  try {
-    const text = fs.readFileSync(MANAGER_FILE, "utf8");
-    return text.match(/const MANAGER_VERSION = ["']([^"']+)["']/)?.[1] || "unknown";
-  } catch { return "unknown"; }
+  // KEMS Web and its Pi helper are delivered as one appliance release.
+  // The verified updater refreshes both from the same archive, so the active
+  // package version is the authoritative installed appliance/agent version.
+  return installedVersion();
 }
 
 function normaliseVersion(value) {
@@ -101,6 +100,50 @@ function normaliseVersion(value) {
 
 function sameVersion(first, second) {
   return Boolean(first && second) && normaliseVersion(first) === normaliseVersion(second);
+}
+
+function applianceVersionKey(value) {
+  const text = normaliseVersion(value);
+  const match = /^(\d+)\.(\d+)\.(\d+)(?:-(alpha|beta|rc)(\d+))?-web\.(\d+)$/i.exec(text);
+  if (!match) return null;
+  const stageOrder = { alpha: 0, beta: 1, rc: 2 };
+  const stage = match[4]?.toLowerCase();
+  return [
+    Number(match[1]),
+    Number(match[2]),
+    Number(match[3]),
+    stage ? stageOrder[stage] : 3,
+    Number(match[5] || 0),
+    Number(match[6])
+  ];
+}
+
+function applianceVersionRelation(candidate, current) {
+  const candidateKey = applianceVersionKey(candidate);
+  const currentKey = applianceVersionKey(current);
+  if (!candidateKey || !currentKey) return null;
+  for (let index = 0; index < candidateKey.length; index += 1) {
+    if (candidateKey[index] > currentKey[index]) return 1;
+    if (candidateKey[index] < currentKey[index]) return -1;
+  }
+  return 0;
+}
+
+function applianceComponentStatus(target, installed) {
+  if (!target) return { status: "not-targeted", detail: "" };
+  if (sameVersion(target, installed)) return { status: "current", detail: "" };
+  const relation = applianceVersionRelation(installed, target);
+  if (relation === 1) {
+    return {
+      status: "ahead-of-target",
+      detail: `Installed ${installed} is newer than bundle target ${target}; downgrade blocked.`
+    };
+  }
+  if (relation === -1) return { status: "update-required", detail: "" };
+  return {
+    status: "attention-required",
+    detail: `Cannot safely order installed ${installed || "unknown"} against bundle target ${target}; automatic change blocked.`
+  };
 }
 
 function component(bundle, key) {
@@ -181,15 +224,17 @@ function componentStatuses(bundle) {
   const publicTarget = targetVersion(bundle, "public_web");
   const webInstalled = installedVersion();
   const agentInstalled = installedManagerVersion();
+  const webState = applianceComponentStatus(webTarget, webInstalled);
+  const agentState = applianceComponentStatus(agentTarget, agentInstalled);
   return [
     {
       key: "property_web", target: webTarget, installed: webInstalled,
-      status: !webTarget ? "not-targeted" : sameVersion(webTarget, webInstalled) ? "current" : "update-required",
+      status: webState.status, detail: webState.detail,
       required: Boolean(component(bundle, "property_web")?.required), delivery: "kems-pi"
     },
     {
       key: "pi_agent", target: agentTarget, installed: agentInstalled,
-      status: !agentTarget ? "not-targeted" : sameVersion(agentTarget, agentInstalled) ? "current" : "update-required",
+      status: agentState.status, detail: agentState.detail,
       required: Boolean(component(bundle, "pi_agent")?.required), delivery: "kems-pi"
     },
     {
@@ -299,10 +344,11 @@ function runCommand(program, args, timeoutMs = 20 * 60_000) {
 async function converge(bundle, configuredPolicy) {
   const statuses = componentStatuses(bundle);
   const localChanges = statuses.filter((item) => ["property_web", "pi_agent"].includes(item.key) && item.status === "update-required");
+  const localAttention = statuses.find((item) => ["property_web", "pi_agent"].includes(item.key) && item.status === "attention-required");
   const blockingSystem = statuses.find((item) => item.key === "pi_system" && item.required && item.status === "attention-required");
   const publicRequired = statuses.find((item) => item.key === "public_web" && item.required && item.status === "delegated");
   if (!localChanges.length) {
-    const overall = blockingSystem ? "attention-required" : publicRequired ? "waiting-external" : "up-to-date";
+    const overall = localAttention || blockingSystem ? "attention-required" : publicRequired ? "waiting-external" : "up-to-date";
     const previous = readJson(STATUS_FILE, {}) || {};
     const previousCompleted = previous.lastResult?.bundle === bundle.bundle && previous.lastResult?.result === "success";
     saveStatus({
@@ -312,7 +358,7 @@ async function converge(bundle, configuredPolicy) {
       components: statuses,
       maintenance: previousCompleted ? maintenanceNotice(bundle, "completed", null) : { status: "none" },
       lastResult: previous.lastResult || null,
-      lastError: blockingSystem?.detail || null
+      lastError: localAttention?.detail || blockingSystem?.detail || null
     });
     return;
   }

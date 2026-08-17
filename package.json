@@ -1,6 +1,6 @@
 {
   "name": "kems-web-companion",
-  "version": "0.7.0-alpha6-web.9",
+  "version": "0.7.0-alpha6-web.10",
   "private": true,
   "type": "module",
   "description": "KEMS property dashboard with coordinated automatic updates, maintenance windows, Pi management, scenario comparison and PWA support",
