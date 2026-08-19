@@ -18,13 +18,15 @@ concurrency:
 
 jobs:
   deploy:
-    name: Deploy public-site to /kems
+    name: Deploy public-site to IONOS /kems webspace
     runs-on: ubuntu-latest
     environment:
       name: kems.uk
       url: https://kems.uk
     env:
-      REMOTE_DIR: /kems
+      # The IONOS SFTP account is jailed to the webspace directory that is
+      # physically /kems. Therefore the SFTP-visible deployment root is '.'.
+      REMOTE_DIR: .
 
     steps:
       - name: Check out repository
@@ -67,7 +69,9 @@ jobs:
           set sftp:auto-confirm yes
           open -p ${PORT} -u "${SFTP_USER}","${SFTP_PASSWORD}" sftp://${SFTP_HOST}
           cd ${REMOTE_DIR}
+          pwd
           mirror --reverse --delete --verbose --exclude-glob README.md public-site/ .
+          cls -1
           bye
           EOF
 
@@ -78,6 +82,7 @@ jobs:
             echo "### kems.uk deployment"
             echo ""
             echo "- Source: \`public-site/\`"
-            echo "- IONOS target: \`/kems\`"
+            echo "- SFTP-visible target: account root \`.\`"
+            echo "- IONOS physical webspace: \`/kems\`"
             echo "- Public URL: https://kems.uk"
           } >> "$GITHUB_STEP_SUMMARY"
