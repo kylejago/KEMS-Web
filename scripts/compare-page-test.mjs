@@ -10,20 +10,24 @@ const compareJs = read("public/compare-page.js");
 const compareCss = read("public/compare.css");
 const worker = read("public/service-worker.js");
 const pkg = JSON.parse(read("package.json"));
+const assetVersion = pkg.version.includes("alpha7-web.13") ? "alpha7web13" : null;
 
 const assert = (condition, message) => {
   if (!condition) throw new Error(message);
 };
 
-assert(pkg.version === "0.7.0-alpha6-web.12", "Compare release must be packaged as web.12.");
+assert(pkg.version === "0.7.0-alpha7-web.13", `Compare release must match the current package version, got ${pkg.version}.`);
+assert(assetVersion, "Compare asset cache version could not be derived from package.json.");
 assert((index.match(/href="\/compare\.html"/g) || []).length >= 2, "Desktop and mobile dashboard navigation must open the full comparison page.");
-assert(index.includes("Actual vs KEMS"), "Dashboard navigation must use the new comparison name.");
-assert(index.includes("styles.css?v=alpha6web12") && index.includes("app.js?v=alpha6web12"), "Dashboard shell assets must be cache-busted for web.12.");
+assert(index.includes("Actual vs KEMS"), "Dashboard navigation must use the comparison name.");
+assert(index.includes(`styles.css?v=${assetVersion}`) && index.includes(`app.js?v=${assetVersion}`), "Dashboard shell assets must match the current package cache version.");
+assert(index.includes('href="/agile.html"'), "Dashboard navigation must include the Alpha7 Agile workspace.");
 
 for (const marker of [
   "Actual vs KEMS",
-  "compare.css?v=alpha6web12",
-  "compare-page.js?v=alpha6web12",
+  `compare.css?v=${assetVersion}`,
+  `compare-page.js?v=${assetVersion}`,
+  "/agile.html",
   "Compare scenarios",
   "Performance &amp; ROI"
 ]) assert(compareHtml.includes(marker), `Comparison HTML is missing ${marker}.`);
@@ -57,10 +61,11 @@ for (const marker of [
 
 for (const marker of [
   '"/compare.html"',
-  '"/compare.css?v=alpha6web12"',
-  '"/compare-page.js?v=alpha6web12"',
+  `"/compare.css?v=${assetVersion}"`,
+  `"/compare-page.js?v=${assetVersion}"`,
+  '"/agile.html"',
   'cache.put(url.pathname, copy)',
   'caches.match(url.pathname)'
 ]) assert(worker.includes(marker), `Service worker is missing ${marker}.`);
 
-console.log("Compare page test passed: five periods, read-only actual-vs-KEMS analysis, ROI and PWA routing are present.");
+console.log(`Compare page test passed for ${pkg.version}: five periods, read-only actual-vs-KEMS analysis, ROI, Agile navigation and PWA routing are present.`);
