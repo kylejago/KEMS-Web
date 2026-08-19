@@ -1,0 +1,83 @@
+name: Deploy kems.uk to IONOS
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "public-site/**"
+      - ".github/workflows/deploy-kems-uk.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-kems-uk-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy public-site to /kems
+    runs-on: ubuntu-latest
+    environment:
+      name: kems.uk
+      url: https://kems.uk
+    env:
+      REMOTE_DIR: /kems
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Verify public/private boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f public-site/index.html
+          if grep -RIE --exclude=README.md "/api/|HA_TOKEN|long-lived access token|long-lived token" public-site; then
+            echo "The public site contains a forbidden Home Assistant/private API reference." >&2
+            exit 1
+          fi
+
+      - name: Install SFTP client
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends lftp
+
+      - name: Deploy public site to IONOS
+        shell: bash
+        env:
+          SFTP_HOST: ${{ secrets.IONOS_SFTP_HOST }}
+          SFTP_USER: ${{ secrets.IONOS_SFTP_USER }}
+          SFTP_PASSWORD: ${{ secrets.IONOS_SFTP_PASSWORD }}
+          SFTP_PORT: ${{ secrets.IONOS_SFTP_PORT }}
+        run: |
+          set -euo pipefail
+          : "${SFTP_HOST:?Missing IONOS_SFTP_HOST secret}"
+          : "${SFTP_USER:?Missing IONOS_SFTP_USER secret}"
+          : "${SFTP_PASSWORD:?Missing IONOS_SFTP_PASSWORD secret}"
+          PORT="${SFTP_PORT:-22}"
+
+          lftp <<EOF
+          set cmd:fail-exit yes
+          set net:max-retries 2
+          set net:timeout 20
+          set sftp:auto-confirm yes
+          open -p ${PORT} -u "${SFTP_USER}","${SFTP_PASSWORD}" sftp://${SFTP_HOST}
+          cd ${REMOTE_DIR}
+          mirror --reverse --delete --verbose --exclude-glob README.md public-site/ .
+          bye
+          EOF
+
+      - name: Deployment summary
+        shell: bash
+        run: |
+          {
+            echo "### kems.uk deployment"
+            echo ""
+            echo "- Source: \`public-site/\`"
+            echo "- IONOS target: \`/kems\`"
+            echo "- Public URL: https://kems.uk"
+          } >> "$GITHUB_STEP_SUMMARY"
