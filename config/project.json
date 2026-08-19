@@ -1,23 +1,24 @@
 {
   "name": "KEMS",
   "longName": "Kyle Energy Management System",
-  "version": "0.7.0-alpha6-web.7",
-  "tagline": "Live reality. Alpha6 what-if replay. One clear energy story.",
-  "summary": "A focused local read-only companion for KEMS 0.7.0-alpha6, separating live, simulated, five-scenario what-if comparison and long-term performance data.",
+  "version": "0.7.0-alpha7-web.13",
+  "tagline": "Live reality. Alpha7 optimisation. One clear energy story.",
+  "summary": "A focused read-only companion for KEMS Alpha7, separating live hardware, digital-twin simulation, Agile Smart Export, scenario comparison and long-term performance data.",
   "repository": "https://github.com/kylejago/KEMS-Web",
-  "build": "Alpha6 local focused dashboard \u00b7 five-scenario Compare \u00b7 multi-site Home Hub \u00b7 optional built-in Home Assistant Container",
+  "build": "Alpha7 property dashboard · Agile Smart Export parity · Actual vs KEMS · multi-site appliance groundwork · kems.uk public-site source",
   "principles": [
-    "Home Assistant and KEMS remain the source of truth.",
+    "Home Assistant and KEMS remain the source of truth for each property.",
+    "The property website is read-only and cannot call Home Assistant services.",
+    "The public kems.uk site is static and receives no Home Assistant credentials or household telemetry.",
     "Home is always the centre of the energy-flow model.",
-    "Arrows follow the measured or simulated direction of energy.",
-    "Live, simulated and calculated allocation data are visibly labelled.",
+    "Live, simulated, shadow and calculated allocation data are visibly labelled.",
+    "Agile Smart Export displays KEMS' current optimiser, horizon, safety and digital-twin proof without creating a hardware write path.",
     "What-if scenario replay is read-only and never changes the active KEMS strategy.",
     "KEMS native period summaries are authoritative for Week, Month, Year and All time.",
-    "The website remains read-only and cannot call Home Assistant services.",
-    "Raspberry Pi installs and updates can be sourced from signed GitHub releases without touching persistent KEMS data.",
+    "Raspberry Pi installs and updates are sourced from checksum-verified GitHub releases without touching persistent KEMS data.",
     "Raspberry Pi maintenance, updates and encrypted backups are managed locally from the KEMS Settings panel.",
     "Each property keeps its own Home Assistant credentials and KEMS data on its own appliance.",
     "A KEMS Pi can use an existing Home Assistant or optionally host Home Assistant Container locally.",
-    "Site identity and future remote hostname are local configuration and never shared between properties."
+    "Remote property access is a separate security boundary and is not provided by the public static website."
   ]
 }

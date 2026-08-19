@@ -1,12 +1,16 @@
-const CACHE_NAME = "kems-alpha6-web12-shell-v1";
+const CACHE_NAME = "kems-alpha7-web13-shell-v1";
 const APP_SHELL = [
   "/",
   "/index.html",
+  "/agile.html",
   "/compare.html",
-  "/styles.css?v=alpha6web12",
-  "/compare.css?v=alpha6web12",
-  "/app.js?v=alpha6web12",
-  "/compare-page.js?v=alpha6web12",
+  "/styles.css?v=alpha7web13",
+  "/agile.css?v=alpha7web13",
+  "/compare.css?v=alpha7web13",
+  "/app.js?v=alpha7web13",
+  "/platform-label.js?v=alpha7web13",
+  "/agile-page.js?v=alpha7web13",
+  "/compare-page.js?v=alpha7web13",
   "/logo.svg",
   "/icons/kems-192.png",
   "/icons/kems-512.png",
@@ -31,7 +35,6 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
-  // Never cache live Home Assistant/KEMS API responses.
   if (url.pathname.startsWith("/api/") || url.pathname === "/site.webmanifest") {
     event.respondWith(fetch(request));
     return;
