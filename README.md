@@ -1,97 +1,68 @@
-# KEMS Web — 0.7.0-alpha6-web.7
+# KEMS Web — 0.7.0-alpha7-web.13
 
-Focused local companion website for **KEMS 0.7.0-alpha6**.
+KEMS Web is the read-only property companion and public-site source for the **KEMS Alpha7** platform.
 
-Home Assistant/KEMS remains the source of truth. The energy dashboard does not call Home Assistant services and keeps live, observed, simulated and calculated data visibly separate.
+Home Assistant/KEMS remains the source of truth for each property. The property dashboard displays live, observed, simulated, shadow and calculated data but does not call Home Assistant services. The public `kems.uk` site is a separate static build and receives no Home Assistant credentials or household telemetry.
 
-## Compare scenarios — alpha6
+## Property dashboard
 
-The web dashboard now reads KEMS alpha6's parallel replay engine directly. **Compare scenarios** evaluates the same retained demand/tariff observations through five independent designs: No system, Solar only, Solar + battery, KEMS no-export, and Full KEMS. Today includes the cumulative cost timeline; Today, Yesterday, 7-day and 30-day periods expose cost, savings, import/export, solar/battery routing, end SOC and replay coverage. The page is read-only and never changes the active KEMS strategy.
+The local/Pi application provides:
 
-
-## Main views
-
-- Live Today
-- Simulated Today
-- Live vs Simulated
-- Compare scenarios — Today / Yesterday / 7 days / 30 days
+- Live today
+- Simulated today
+- **Agile Smart Export** — current rate, optimiser dispatch, live house demand, digital-twin routing, price-horizon qualification, selected export slots, independent safety and non-zero proof
+- Actual vs KEMS
+- Compare scenarios
 - Performance & ROI — Day / Week / Month / Year / All time
+- KEMS Pi health, coordinated update controls, backup/restore and optional Home Assistant Container management
 
-KEMS native period summaries remain authoritative for long-term headline values. Home Assistant recorder/statistics history supplies chart detail when available.
+KEMS native period summaries remain authoritative for long-term headline values. Home Assistant Recorder/statistics history supplies chart detail when available.
 
-## web.5 — Raspberry Pi appliance management
+## Alpha7 Agile boundary
 
-When installed through the KEMS headless Pi image, **Settings → KEMS Pi server** now provides local browser management for the appliance:
+The Agile page is read-only. It reports KEMS' existing shadow entities and never creates a FoxESS write path. Real control remains governed by the Home Assistant KEMS integration and its commissioning/safety gates.
 
-- Pi/KEMS health and IP address
-- installed and latest GitHub release versions
-- Pi uptime, memory and storage usage
-- KEMS persistent-data size
-- Check for update / Install update
-- update progress and result
-- automatic health-check rollback remains in the updater
-- manual rollback to the prior release
-- restart KEMS Web
-- reboot the Pi
-- recent KEMS/manager/update logs
-- password-encrypted backup download
-- password-encrypted backup restore
+The Web regression suite requires the Alpha7 page to retain the current horizon, routing, 13/13 safety and hardware-write-block evidence.
 
-System-control endpoints are intentionally available only when KEMS is opened directly using a local address such as `http://kems-pi.local:4173` or a private LAN IP. Requests arriving through a future reverse proxy/Cloudflare hostname are blocked from Pi-management actions by default.
+## Raspberry Pi appliance
 
-Persistent website data remains under `/var/lib/kems-web`, outside versioned releases.
+A KEMS Pi keeps persistent property configuration/history outside versioned releases under `/var/lib/kems-web`.
 
-## Policy history and period-chart repair
-
-The simulated and comparison power charts can now mark Home Assistant-recorded changes to:
-
-- export tariff status
-- no-export policy
-- simulation strategy
-
-This preserves the historical simulation that actually ran during the day while making a later policy change visible rather than retrospectively rewriting the graph.
-
-Week/Month/Year/All-time chart buckets are now clipped to the **native KEMS period start/end dates**. Baseline values used internally for cumulative-statistic calculations are no longer shown outside the selected period.
-
-## Zero-touch Raspberry Pi image
-
-The repository contains the **Build KEMS Pi headless image** GitHub Actions workflow. The generated `.img.xz` can be flashed directly with Raspberry Pi Imager.
-
-With Ethernet connected, the Pi needs no monitor, keyboard or SSH session. Port `4173` first shows the setup-status page; once installation is healthy, the normal KEMS dashboard takes over that same address:
+Local browser management is available only when the dashboard is opened directly over the LAN, for example:
 
 ```text
 http://kems-pi.local:4173
 ```
 
-See [GITHUB-FIRST-SETUP.md](GITHUB-FIRST-SETUP.md) and [docs/RASPBERRY-PI.md](docs/RASPBERRY-PI.md).
+Pi-management routes reject forwarded/reverse-proxy requests by design. A future internet-facing property login is a separate authenticated security boundary rather than an exposed local management interface.
 
-## GitHub updates
+Published Web releases are checksum-verified. The Pi stages a release, runs syntax/smoke checks, switches atomically, restarts, health-checks, and can roll back automatically if activation fails.
 
-Published website releases are checksum-verified GitHub Release assets. The Pi downloads, syntax-checks and smoke-tests a new release, switches atomically, restarts KEMS and health-checks the result. If the health check fails, it automatically returns to the previous release.
+## kems.uk public website
 
-From web.5 onward the normal route is simply:
+The static source is under:
 
-**Settings → KEMS Pi server → Check now → Install update**
-
-The command-line tools remain available for recovery:
-
-```bash
-sudo kems-update
-sudo kems-rollback
-kems-status
+```text
+public-site/
 ```
 
-## Encrypted backup / restore
+It is deliberately independent of `server.mjs` and the private property dashboard.
 
-A KEMS Web backup includes only the Pi website's persistent files (saved HA connection, its local encryption key, website ledger and retained power history). The backup is compressed and encrypted with **AES-256-GCM**, using a key derived from the password you enter with `scrypt`.
+Recommended IONOS deployment:
 
-The backup never modifies or backs up Home Assistant itself. Keep the backup password somewhere safe; it is not stored by KEMS.
+1. Connect IONOS Deploy Now to `kylejago/KEMS-Web`.
+2. Use `main` as the production branch.
+3. Configure `public-site` as the static output/publish folder.
+4. No application build command is required.
+5. Assign the production deployment to `kems.uk`.
 
-## Android / installable website
+SFTP upload of the **contents** of `public-site/` to the `kems.uk` webspace is also supported as a manual fallback.
 
-KEMS remains PWA-ready. When it is later served over HTTPS, Android can install the website as an app. The installed app uses the same Raspberry Pi backend and the same Home Assistant/KEMS data.
+The public site must never contain a Home Assistant URL, long-lived token, household telemetry API or property-control endpoint. `scripts/kems-alpha7-agile-web-test.mjs` enforces this boundary.
 
-See [docs/ANDROID-PWA.md](docs/ANDROID-PWA.md).
+## PWA / Android
+
+The property dashboard remains installable as a PWA when served over HTTPS. Its Agile page is included in the Alpha7 application shell. The PWA uses the same property backend; it does not turn the public `kems.uk` website into a remote Home Assistant proxy.
 
 ## Windows local use
 
@@ -100,13 +71,20 @@ Windows launchers remain included:
 - `start-kems.cmd`
 - `start-kems.ps1`
 
-Node.js 22 or newer is required. Pi-management controls will show as unavailable on a normal Windows installation, while the energy dashboard continues to work normally.
+Node.js 22 or newer is required. Pi-management controls show as unavailable on a normal Windows installation while the energy dashboard remains usable.
 
-## Development
+## Validation
 
 ```bash
 npm test
-npm start
 ```
 
-Default dashboard port: `4173`.
+The suite checks syntax, fresh setup, legacy fixture compatibility, live Home Assistant separation, Alpha7 Agile contract, Actual-vs-KEMS comparison, PWA routing, public/private isolation and Pi deployment behavior.
+
+## Related documentation
+
+- `public-site/README.md` — public `kems.uk` deployment boundary
+- `docs/RASPBERRY-PI.md` — appliance installation
+- `docs/UPDATES.md` — website update path
+- `docs/ANDROID-PWA.md` — installable property dashboard
+- `docs/MULTI-SITE-HOME-HUB.md` — multi-property direction
