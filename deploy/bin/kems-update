@@ -7,6 +7,7 @@ BASE=/opt/kems-web
 RELEASES="$BASE/releases"
 CURRENT="$BASE/current"
 LIB=/usr/local/lib/kems-web
+REMOTE_HELPER_URL="http://127.0.0.1:4175/health"
 TMP="$(mktemp -d /tmp/kems-update.XXXXXX)"
 trap 'rm -rf "$TMP"' EXIT
 
@@ -112,8 +113,9 @@ else
 fi
 
 # Always refresh appliance helpers and service definitions from the verified
-# release. Web.16 uses this step to activate its same-origin gateway and the
-# loopback-only privileged remote-access helper without SSH or a Pi reboot.
+# release. Web.17 uses this path as a one-time bootstrap repair for Pis that
+# reached Web.16 using the Web.15 updater before the dedicated Remote Access
+# helper service existed on the appliance.
 if [[ -d "$ROOT/deploy" ]]; then
   if [[ -f "$ROOT/deploy/bin/kems-update" ]]; then install -m 0755 "$ROOT/deploy/bin/kems-update" /usr/local/sbin/kems-update.new && mv -f /usr/local/sbin/kems-update.new /usr/local/sbin/kems-update; fi
   if [[ -f "$ROOT/deploy/bin/kems-rollback" ]]; then install -m 0755 "$ROOT/deploy/bin/kems-rollback" /usr/local/sbin/kems-rollback.new && mv -f /usr/local/sbin/kems-rollback.new /usr/local/sbin/kems-rollback; fi
@@ -137,12 +139,27 @@ if [[ -d "$ROOT/deploy" ]]; then
     systemctl is-active --quiet kems-web-bundle-agent.service || systemctl start kems-web-bundle-agent.service || true
   fi
   if [[ -f /etc/systemd/system/kems-web-remote-access.service && -f "$LIB/remote-access-service.mjs" ]]; then
+    echo "Activating KEMS Remote Access setup helper..."
     systemctl enable kems-web-remote-access.service >/dev/null 2>&1 || true
     systemctl restart kems-web-remote-access.service
+
+    HELPER_OK=0
+    for _ in $(seq 1 20); do
+      if curl -fsS --max-time 2 "$REMOTE_HELPER_URL" >/dev/null 2>&1; then HELPER_OK=1; break; fi
+      sleep 1
+    done
+    if [[ "$HELPER_OK" != 1 ]]; then
+      systemctl --no-pager --full status kems-web-remote-access.service || true
+      journalctl -u kems-web-remote-access.service -n 40 --no-pager || true
+      echo "KEMS Remote Access setup helper failed its loopback health check." >&2
+      exit 8
+    fi
+    echo "KEMS Remote Access setup helper is healthy."
   fi
 
-  # Apply a changed web service definition immediately. In Web.16 this moves
-  # port 4173 onto gateway.mjs and keeps the application backend on loopback.
+  # Apply a changed web service definition immediately. The public property
+  # service remains on port 4173 while its application backend and privileged
+  # Remote Access setup helper stay on loopback-only ports.
   systemctl restart kems-web.service
   OK=0
   for _ in $(seq 1 30); do
