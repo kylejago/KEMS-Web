@@ -1,9 +1,9 @@
 {
   "name": "kems-web-companion",
-  "version": "0.7.0-alpha7-web.19",
+  "version": "0.7.0-alpha7-web.20",
   "private": true,
   "type": "module",
-  "description": "KEMS property dashboard with the exact supplied SVG brand, live seven-day-delayed public demo, Cloudflare Access property login, self-healing Tunnel setup and local-only Pi management",
+  "description": "KEMS Agile-first property dashboard with expanded strategy comparison, exact branding, delayed public demo, Cloudflare Access property login and local-only Pi management",
   "scripts": {
     "sync-brand": "node scripts/sync-approved-logo.mjs",
     "prestart": "npm run sync-brand",
