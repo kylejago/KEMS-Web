@@ -84,7 +84,7 @@ jobs:
           mirror --reverse --delete --verbose --exclude-glob README.md public-site/ .
           cls -1
           bye
-EOF2
+          EOF2
 
       - name: Deployment summary
         shell: bash
