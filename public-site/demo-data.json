@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "property": "Demo property",
+  "delayed": true,
+  "delayDays": 7,
+  "generatedAt": null,
+  "dataThrough": null,
+  "privacy": "Sanitised daily totals only. No live power, entity IDs, device identifiers, Home Assistant address, credentials or control endpoints.",
+  "days": []
+}
