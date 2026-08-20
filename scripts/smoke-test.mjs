@@ -22,7 +22,7 @@ try {
   let ready = false;
   for (let i = 0; i < 35; i += 1) { await sleep(150); try { if ((await fetch(`http://127.0.0.1:${port}/api/health`)).ok) { ready = true; break; } } catch {} }
   if (!ready) throw new Error(`Gateway did not start.\n${output}`);
-  const [health, config, setup, site, manifest, live, history, html, js, agileHtml, agileJs, css, brandCss, system, scenarios, productsHtml, productModel, remoteHtml, approvedLogo] = await Promise.all([
+  const [health, config, setup, site, manifest, live, history, html, js, agileHtml, agileJs, css, brandCss, system, scenarios, productsHtml, productModel, remoteHtml, logo] = await Promise.all([
     fetch(`http://127.0.0.1:${port}/api/health`).then((r) => r.json()),
     fetch(`http://127.0.0.1:${port}/api/config`).then((r) => r.json()),
     fetch(`http://127.0.0.1:${port}/api/setup/status`).then((r) => r.json()),
@@ -41,7 +41,7 @@ try {
     fetch(`http://127.0.0.1:${port}/products.html`).then((r) => r.text()),
     fetch(`http://127.0.0.1:${port}/product-model.js`).then((r) => r.text()),
     fetch(`http://127.0.0.1:${port}/remote-access.html`).then((r) => r.text()),
-    fetch(`http://127.0.0.1:${port}/approved-logo.png`).then(async (r) => ({ ok: r.ok, bytes: (await r.arrayBuffer()).byteLength }))
+    fetch(`http://127.0.0.1:${port}/logo.svg`).then(async (r) => ({ ok: r.ok, text: await r.text() }))
   ]);
   const shellResponse = await fetch(`http://127.0.0.1:${port}/`);
   const csp = shellResponse.headers.get("content-security-policy") || "";
@@ -51,7 +51,7 @@ try {
   if (live.source !== "unconfigured" || live.connected) throw new Error("Unconfigured snapshot failed.");
   if (history.length) throw new Error("Unconfigured history should be empty.");
   if (!html.includes(`brand-lockup.svg?v=${assetVersion}`) || !html.includes("Products") || !html.includes("Cost &amp; ROI")) throw new Error("Branded HTML shell incomplete.");
-  if (webNumber >= 18 && (!approvedLogo.ok || approvedLogo.bytes !== 2_156_120)) throw new Error("Web.18 approved artwork is not being served exactly.");
+  if (!logo.ok || !logo.text.includes('viewBox="0 0 180 180"') || !logo.text.includes('aria-label="KEMS logo"')) throw new Error("Canonical Web.19 SVG is not being served.");
   if (!productsHtml.includes("Four clear product levels") || !productModel.includes('label: "Full KEMS Agile"')) throw new Error("Product model/page incomplete.");
   if (!remoteHtml.includes("page-brand-lockup") || !remoteHtml.includes(`brand-lockup.svg?v=${assetVersion}`)) throw new Error("Remote Access shared branding is missing.");
   if (!brandCss.includes("brand-lockup") || !brandCss.includes("loading-brand-lockup")) throw new Error("Brand stylesheet is incomplete.");
