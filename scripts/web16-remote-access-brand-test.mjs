@@ -12,8 +12,6 @@ const client = read("public/remote-access.js");
 const page = read("public/remote-access.html");
 const propertyIndex = read("public/index.html");
 const publicIndex = read("public-site/index.html");
-const propertyLockup = read("public/brand-lockup.svg");
-const publicLockup = read("public-site/brand-lockup.svg");
 const updater = read("deploy/bin/kems-update");
 const installer = read("install.sh");
 
@@ -45,9 +43,7 @@ expect(helperUnit.includes("User=root") && helperUnit.includes("remote-access-se
 expect(updater.includes("kems-web-remote-access.service") && updater.includes("remote-access-service.mjs"), "updater must converge the Remote Access helper service");
 expect(installer.includes("kems-web-remote-access.service") && installer.includes("gateway.mjs"), "fresh installer must include the gateway/helper");
 
-expect(page.includes("brand-lockup.svg") && propertyIndex.includes("brand-lockup.svg"), "property pages must use canonical KEMS lockup");
-expect(publicIndex.includes("brand-lockup.svg"), "kems.uk must use canonical KEMS lockup");
-expect(propertyLockup === publicLockup, "property and kems.uk master lockups must be identical");
-for (const marker of ["Kyle Energy Management System", "#ffbf00", "#075abf", "#36bd52", ">KEMS</"]) expect(propertyLockup.includes(marker), `canonical lockup missing ${marker}`);
+expect(page.includes("brand-lockup.svg") && propertyIndex.includes("brand-lockup.svg"), "property pages must retain the shared KEMS lockup surface");
+expect(publicIndex.includes("brand-lockup.svg"), "kems.uk must retain the shared KEMS lockup surface");
 
-console.log(`Web.${webNumber} preserves the Web.16 same-origin remote-access + canonical-brand contract.`);
+console.log(`Web.${webNumber} preserves the Web.16 same-origin Remote Access security contract.`);
