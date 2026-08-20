@@ -23,4 +23,12 @@ Required GitHub Actions secrets:
 
 The workflow can be run manually from GitHub Actions and also deploys automatically whenever `public-site/**` changes on `main`.
 
-The public site must never contain a Home Assistant URL, token, household telemetry endpoint or property-control API. Remote property access remains a separate authenticated security boundary.
+## Delayed public demo
+
+`demo.html` reads only `demo-data.json`. The feed contract requires a minimum seven-day delay and daily sanitised totals. `scripts/build-public-demo.mjs` rejects candidate rows that contain fields outside the allow-list and excludes dates newer than the configured privacy cutoff.
+
+The public demo must never contain precise live power, entity IDs, device identifiers, Home Assistant URLs, tokens, household control endpoints or Pi-management actions.
+
+## Remote property access
+
+The static public site is not the property proxy. `login.html` is only the public entry point while the authenticated gateway is being built. The intended boundary is account → selected property → outbound tunnel → read-only Pi dashboard. Pi maintenance, updates, backups and Home Assistant control stay LAN-only.

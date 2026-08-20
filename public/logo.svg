@@ -1,16 +1,31 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" role="img" aria-label="KEMS logo">
   <defs>
-    <linearGradient id="g" x1="16" y1="18" x2="164" y2="164" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#66f5c3"/>
-      <stop offset=".52" stop-color="#37a7ff"/>
-      <stop offset="1" stop-color="#9d72ff"/>
+    <linearGradient id="energy" x1="28" y1="28" x2="154" y2="154" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0a66d8"/>
+      <stop offset=".52" stop-color="#00a9d6"/>
+      <stop offset="1" stop-color="#4dce49"/>
     </linearGradient>
-    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="4" result="blur"/>
-      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-    </filter>
   </defs>
-  <rect x="8" y="8" width="164" height="164" rx="44" fill="#0b111c" stroke="#27354a" stroke-width="4"/>
-  <path d="M49 46v88M50 91l56-45M50 91l61 43" fill="none" stroke="url(#g)" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>
-  <path d="M118 53h20l-13 28h18l-35 48 12-35h-18z" fill="#ffe46d" filter="url(#glow)"/>
+  <rect x="8" y="8" width="164" height="164" rx="42" fill="#0b111c" stroke="#263846" stroke-width="4"/>
+  <path d="M39 82V65l51-33 51 33v17L90 50z" fill="none" stroke="#0a66d8" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M49 80v47l41 23 41-23V80" fill="none" stroke="#0a66d8" stroke-width="8" stroke-linejoin="round"/>
+  <g fill="#ffbf00">
+    <circle cx="76" cy="69" r="11"/>
+    <path d="M76 48v10M76 80v10M55 69h10M87 69h10M61 54l7 7M84 77l7 7M91 54l-7 7M68 77l-7 7" stroke="#ffbf00" stroke-width="5" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(43 87) skewX(-12)">
+    <path d="M0 14L42 0l-4 28L-4 37z" fill="#075abf"/>
+    <path d="M10 11L8 33M23 7l-2 22M35 3l-2 22M0 22l40-14M-2 30l40-14" stroke="#58bdf2" stroke-width="2.5"/>
+  </g>
+  <g transform="translate(92 74)">
+    <rect x="0" y="5" width="25" height="48" rx="3" fill="#35bd52" stroke="#138a37" stroke-width="4"/>
+    <rect x="8" y="0" width="9" height="6" rx="1" fill="#35bd52"/>
+    <path d="M7 18h11M7 29h11M7 40h11" stroke="#9aef7c" stroke-width="4"/>
+  </g>
+  <path d="M38 127c35 19 72 21 101 1 12-8 20-19 25-30" fill="none" stroke="url(#energy)" stroke-width="7" stroke-linecap="round"/>
+  <path d="M153 96l15-4-3 15z" fill="#4dce49"/>
+  <g transform="translate(119 119)" fill="none" stroke="#1ea7a8" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M0 14h14l8-7h8"/>
+    <path d="M30 7V1M36 7V1M22 7v17"/>
+  </g>
 </svg>

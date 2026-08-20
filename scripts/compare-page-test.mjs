@@ -10,26 +10,28 @@ const compareJs = read("public/compare-page.js");
 const compareCss = read("public/compare.css");
 const worker = read("public/service-worker.js");
 const pkg = JSON.parse(read("package.json"));
-const assetVersion = pkg.version.includes("alpha7-web.13") ? "alpha7web13" : null;
+const assetVersion = pkg.version.includes("alpha7-web.14") ? "alpha7web14" : null;
 
 const assert = (condition, message) => {
   if (!condition) throw new Error(message);
 };
 
-assert(pkg.version === "0.7.0-alpha7-web.13", `Compare release must match the current package version, got ${pkg.version}.`);
+assert(pkg.version === "0.7.0-alpha7-web.14", `Compare release must match the current package version, got ${pkg.version}.`);
 assert(assetVersion, "Compare asset cache version could not be derived from package.json.");
-assert((index.match(/href="\/compare\.html"/g) || []).length >= 2, "Desktop and mobile dashboard navigation must open the full comparison page.");
-assert(index.includes("Actual vs KEMS"), "Dashboard navigation must use the comparison name.");
+assert((index.match(/href="\/compare\.html"/g) || []).length >= 2, "Desktop and mobile dashboard navigation must open the comparison page.");
+assert(index.includes(">Compare<"), "Dashboard navigation must use the simplified comparison name.");
 assert(index.includes(`styles.css?v=${assetVersion}`) && index.includes(`app.js?v=${assetVersion}`), "Dashboard shell assets must match the current package cache version.");
-assert(index.includes('href="/agile.html"'), "Dashboard navigation must include the Alpha7 Agile workspace.");
+assert(index.includes('href="/products.html"'), "Dashboard navigation must include the four-product overview.");
+assert(index.includes('href="/agile.html"'), "Dashboard navigation must include Full KEMS Agile.");
 
 for (const marker of [
-  "Actual vs KEMS",
+  "four-product comparison",
   `compare.css?v=${assetVersion}`,
   `compare-page.js?v=${assetVersion}`,
+  "/products.html",
   "/agile.html",
-  "Compare scenarios",
-  "Performance &amp; ROI"
+  "History &amp; scenarios",
+  "Cost &amp; ROI"
 ]) assert(compareHtml.includes(marker), `Comparison HTML is missing ${marker}.`);
 
 for (const marker of [
@@ -60,6 +62,7 @@ for (const marker of [
 ]) assert(compareCss.includes(marker), `Comparison CSS is missing ${marker}.`);
 
 for (const marker of [
+  '"/products.html"',
   '"/compare.html"',
   `"/compare.css?v=${assetVersion}"`,
   `"/compare-page.js?v=${assetVersion}"`,
@@ -68,4 +71,4 @@ for (const marker of [
   'caches.match(url.pathname)'
 ]) assert(worker.includes(marker), `Service worker is missing ${marker}.`);
 
-console.log(`Compare page test passed for ${pkg.version}: five periods, read-only actual-vs-KEMS analysis, ROI, Agile navigation and PWA routing are present.`);
+console.log(`Compare page test passed for ${pkg.version}: five periods, read-only analysis, ROI, four-product navigation and PWA routing are present.`);
