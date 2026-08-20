@@ -67,7 +67,8 @@ assert.equal(emptyDemo.delayDays, 7);
 assert.deepEqual(emptyDemo.days, []);
 
 const login = read("public-site/login.html");
-if (project.version.endsWith("web.19")) {
+const webNumber = Number.parseInt(project.version.match(/-web\.(\d+)$/)?.[1] || "0", 10);
+if (webNumber >= 19) {
   assert.match(login, /kems-uk\.cloudflareaccess\.com/);
   assert.match(login, /Sign in to KEMS/);
 } else {
