@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Website version from package.json, e.g. 0.7.0-alpha7-web.18'
+        description: 'Website version from package.json, e.g. 0.7.0-alpha7-web.19'
         required: true
         type: string
 
@@ -38,11 +38,15 @@ jobs:
       - name: Test KEMS Web
         run: npm test
 
-      - name: Verify approved artwork is packaged
+      - name: Verify canonical KEMS SVG is packaged
         run: |
-          test -f public/approved-logo.png
-          test -f public-site/approved-logo.png
-          test "$(sha256sum public/approved-logo.png | awk '{print $1}')" = "67ad8c3ee349a35de23f5a9040ce27c18b5cf347454f777cf1f55a6f905eb01f"
+          test -f brand/kems-logo.svg
+          test -f public/logo.svg
+          test -f public-site/logo.svg
+          test "$(wc -c < brand/kems-logo.svg | tr -d ' ')" = "877"
+          test "$(sha256sum brand/kems-logo.svg | awk '{print $1}')" = "ef53e22bdff4e4ebd81007c3a6d5f28da0384f547e9036a7be7e3bf2d420b464"
+          cmp -s brand/kems-logo.svg public/logo.svg
+          cmp -s brand/kems-logo.svg public-site/logo.svg
 
       - name: Resolve release version
         id: meta
@@ -93,7 +97,7 @@ jobs:
           VERSION='${{ steps.meta.outputs.version }}'
           NAME="kems-web-${VERSION}-pi"
           mkdir -p "dist/${NAME}"
-          for item in package.json gateway.mjs server.mjs public config scripts deploy README.md CHANGELOG.md LICENSE .env.example; do
+          for item in package.json gateway.mjs server.mjs public brand config scripts deploy README.md CHANGELOG.md LICENSE .env.example; do
             [ -e "$item" ] && cp -a "$item" "dist/${NAME}/"
           done
           mkdir -p "dist/${NAME}/data"
