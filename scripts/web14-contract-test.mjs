@@ -12,7 +12,7 @@ assert.deepEqual(KEMS_PRODUCTS.map((product) => product.label), expectedProducts
 assert.deepEqual(KEMS_PRODUCTS.map((product) => product.key), ["live_data", "battery_solar", "full_kems", "full_kems_agile"]);
 
 const project = JSON.parse(read("config/project.json"));
-assert.equal(project.version, "0.7.0-alpha7-web.14");
+assert.match(project.version, /^0\.7\.0-alpha7-web\.(?:1[4-9]|[2-9]\d+)$/);
 for (const label of expectedProducts) assert.match(`${project.summary} ${project.principles.join(" ")}`, new RegExp(label.replace(/[&]/g, "&")));
 
 const propertyIndex = read("public/index.html");
@@ -83,4 +83,4 @@ assert.match(remote, /outbound tunnel/i);
 assert.match(remote, /read-only KEMS property dashboard/i);
 assert.match(remote, /no dependency on exposing `8123`, `4173`, SSH/i);
 
-console.log("Web.14 contract checks passed");
+console.log("Web.14+ contract checks passed");

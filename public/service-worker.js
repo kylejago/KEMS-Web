@@ -1,16 +1,18 @@
-const CACHE_NAME = "kems-alpha7-web14-shell-v1";
+const CACHE_NAME = "kems-alpha7-web15-shell-v1";
 const APP_SHELL = [
   "/",
   "/index.html",
   "/products.html",
   "/agile.html",
   "/compare.html",
-  "/styles.css?v=alpha7web14",
+  "/remote-access.html",
+  "/styles.css?v=alpha7web15",
   "/products.css?v=alpha7web14",
   "/agile.css?v=alpha7web14",
   "/compare.css?v=alpha7web14",
-  "/app.js?v=alpha7web14",
-  "/platform-label.js?v=alpha7web14",
+  "/app.js?v=alpha7web15",
+  "/platform-label.js?v=alpha7web15",
+  "/remote-access.js?v=alpha7web15",
   "/agile-page.js?v=alpha7web14",
   "/compare-page.js?v=alpha7web14",
   "/product-model.js",

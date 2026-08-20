@@ -492,3 +492,10 @@ const server = http.createServer(async (request, response) => {
 server.listen(PORT, HOST, () => {
   console.log(`KEMS Pi manager ${MANAGER_VERSION} listening on ${HOST}:${PORT}`);
 });
+
+try {
+  const remoteAccess = await import("file:///opt/kems-web/current/deploy/remote-access.mjs");
+  remoteAccess.startRemoteAccessServer();
+} catch (error) {
+  console.warn(`KEMS remote-access helper unavailable: ${error.message}`);
+}

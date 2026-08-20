@@ -1,19 +1,40 @@
-# KEMS remote property access foundation
+# KEMS remote property access
 
 KEMS remote access is a separate security boundary from both the static `kems.uk` site and the local property appliance.
 
-## Target path
+## Current Web.15 path
 
 ```text
-kems.uk
-  → authenticated KEMS account
-  → property selector
-  → authenticated gateway
-  → outbound tunnel created by that property's KEMS Pi
+kyle.kems.uk
+  → Cloudflare Access authentication
+  → Cloudflare Tunnel
+  → outbound connector created by that property's KEMS Pi
+  → http://localhost:4173
   → read-only KEMS property dashboard
 ```
 
 No inbound router port-forward is required. Home Assistant is not exposed directly and the public static website never receives a Home Assistant token.
+
+## Local connector setup without SSH
+
+Web.15 adds a local-only **Remote Access** setup page to the KEMS Pi. It is designed for appliances where the owner does not have SSH access.
+
+The page accepts either the Cloudflare tunnel token itself or the dashboard-generated command of the form:
+
+```text
+sudo cloudflared service install <TUNNEL_TOKEN>
+```
+
+KEMS does **not** execute pasted shell text. It extracts only the token from the recognised Cloudflare command form, rejects anything else, downloads the current Cloudflare `cloudflared` package for the appliance architecture, stores the token in a root-only file with mode `0600`, and starts a dedicated `kems-cloudflared.service` using `--token-file`.
+
+The privileged setup helper listens on port `4175` only for private/LAN source addresses and only accepts browser requests whose Origin is the local KEMS Web service on port `4173`. The helper is not the Cloudflare tunnel origin and must never be published through Cloudflare.
+
+For Kyle's property the published application route is:
+
+- hostname: `kyle.kems.uk`
+- service type: HTTP
+- service URL: `http://localhost:4173`
+- access control: Cloudflare Access
 
 ## Local-only operations
 
@@ -21,6 +42,7 @@ The following remain local-network operations even after remote dashboard access
 
 - KEMS Pi updates and rollback
 - maintenance-window changes
+- Cloudflare connector provisioning, restart, disable and token replacement
 - encrypted backup create/restore
 - Home Assistant connection changes
 - Home Assistant services or control calls
@@ -28,6 +50,8 @@ The following remain local-network operations even after remote dashboard access
 - OS or container administration
 
 `server.mjs` already treats forwarded/proxied requests as non-LAN for Pi-management writes. The remote gateway must preserve that property rather than attempting to impersonate a local request.
+
+The tunnel must not publish port `4174`, port `4175`, Home Assistant `8123`, SSH, or a private subnet. Only the read-only KEMS property web service on `localhost:4173` is an approved origin.
 
 ## Gateway requirements
 
