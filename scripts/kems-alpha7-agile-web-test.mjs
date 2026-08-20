@@ -18,6 +18,7 @@ if (!pkg.scripts.test.includes("kems-live-fixture-test.mjs")) throw new Error("L
 if (!pkg.scripts.test.includes("kems-alpha7-agile-web-test.mjs")) throw new Error("Alpha7 Agile regression is not in npm test");
 if (!pkg.scripts.test.includes("web14-contract-test.mjs")) throw new Error("Web.14+ contract regression is not in npm test");
 if (!pkg.scripts.test.includes("web16-remote-access-brand-test.mjs")) throw new Error("Web.16 remote-access/brand regression is not in npm test");
+if (!pkg.scripts.test.includes("web17-bootstrap-brand-test.mjs")) throw new Error("Web.17 bootstrap/brand regression is not in npm test");
 if (!smoke.includes("packageVersion") || smoke.includes('health.version!=="0.7.0-alpha6-web.7"')) throw new Error("Smoke version must derive from package.json");
 if (!index.includes("/products.html") || !index.includes("/agile.html") || !index.includes("/remote-access.html") || !agileHtml.includes("Full KEMS Agile")) throw new Error("Four-product navigation / Full KEMS Agile / Remote Access navigation missing");
 for (const label of ["Live Data", "Battery & Solar", "Full KEMS", "Full KEMS Agile"]) if (!products.includes(`label: "${label}"`)) throw new Error(`Product model missing ${label}`);
@@ -32,7 +33,7 @@ for (const entityId of [
 ]) if (!agile.includes(entityId)) throw new Error(`Agile page contract missing ${entityId}`);
 if (!agile.includes("hardware_writes_blocked") || !agile.includes("independent_safety_13_of_13")) throw new Error("Agile proof safety evidence missing");
 if (/\/api\/services|services\.async_call|method:\s*["']POST/i.test(agile)) throw new Error("Agile page must remain read-only");
-if (!serviceWorker.includes("kems-alpha7-web16-shell-v1") || !serviceWorker.includes("/brand-lockup.svg") || !serviceWorker.includes("/remote-access.html")) throw new Error("PWA cache is not Web.16 brand/remote-access aware");
+if (!serviceWorker.includes("kems-alpha7-web17-shell-v1") || !serviceWorker.includes("/brand-lockup.svg?v=alpha7web17") || !serviceWorker.includes("/brand.css?v=alpha7web17") || !serviceWorker.includes("/remote-access.html")) throw new Error("PWA cache is not Web.17 brand/remote-access aware");
 if (!publicSite.includes("kems.uk") || !publicSite.includes("Home Assistant remains private") || !publicSite.includes("demo.html") || !publicSite.includes("login.html")) throw new Error("Public kems.uk boundary/demo/login copy missing");
 if (/\/api\/|HA_TOKEN|long-lived access token/i.test(publicSite + publicPrivacy)) throw new Error("Public site must not reference private property APIs or credentials");
 console.log(`KEMS ${pkg.version} contract passed: four products + Full KEMS Agile read-only parity + local remote-access setup present, public boundary preserved.`);
