@@ -54,30 +54,20 @@ install_node() {
 
 install_node
 
-# Download the repository itself for the first installation. Later upgrades use
-# checksum-verified GitHub Release assets via kems-update.
 echo "Downloading KEMS Web from GitHub: ${REPO}@${BRANCH}..."
 curl -fsSL --retry 4 "https://github.com/${REPO}/archive/refs/heads/${BRANCH}.tar.gz" -o "$TMP/repo.tar.gz"
 tar -xzf "$TMP/repo.tar.gz" -C "$TMP"
 SRC="$(find "$TMP" -mindepth 1 -maxdepth 1 -type d -name 'KEMS-Web-*' -print -quit)"
-if [[ -z "$SRC" ]]; then
-  SRC="$(find "$TMP" -mindepth 1 -maxdepth 1 -type d -print -quit)"
-fi
-[[ -n "$SRC" && -f "$SRC/package.json" && -f "$SRC/server.mjs" ]] || { echo "Downloaded repository is not a KEMS Web project." >&2; exit 4; }
+if [[ -z "$SRC" ]]; then SRC="$(find "$TMP" -mindepth 1 -maxdepth 1 -type d -print -quit)"; fi
+[[ -n "$SRC" && -f "$SRC/package.json" && -f "$SRC/server.mjs" && -f "$SRC/gateway.mjs" ]] || { echo "Downloaded repository is not a KEMS Web project." >&2; exit 4; }
 
 VERSION="$(node -e 'const p=require(process.argv[1]); process.stdout.write(String(p.version||""))' "$SRC/package.json")"
 [[ -n "$VERSION" ]] || { echo "KEMS Web package has no version." >&2; exit 5; }
 
 mkdir -p "$BASE/releases" "$LIB_DIR" "$DATA_DIR" /var/lib/kems-web-management
 
-# Use a stable non-login service account. This avoids DynamicUser/StateDirectory
-# relocation of /var/lib/kems-web and keeps the persistent data path predictable.
-if ! getent group kemsweb >/dev/null 2>&1; then
-  groupadd --system kemsweb
-fi
-if ! id -u kemsweb >/dev/null 2>&1; then
-  useradd --system --gid kemsweb --home-dir "$DATA_DIR" --shell /usr/sbin/nologin --no-create-home kemsweb
-fi
+if ! getent group kemsweb >/dev/null 2>&1; then groupadd --system kemsweb; fi
+if ! id -u kemsweb >/dev/null 2>&1; then useradd --system --gid kemsweb --home-dir "$DATA_DIR" --shell /usr/sbin/nologin --no-create-home kemsweb; fi
 chown -R kemsweb:kemsweb "$DATA_DIR"
 chmod 700 "$DATA_DIR"
 chown root:kemsweb /var/lib/kems-web-management
@@ -86,8 +76,7 @@ DEST="$BASE/releases/$VERSION"
 rm -rf "$DEST"
 mkdir -p "$DEST"
 
-# Runtime copy. Keep GitHub/deployment metadata out of the active web process.
-for item in package.json server.mjs public config scripts README.md CHANGELOG.md LICENSE .env.example; do
+for item in package.json gateway.mjs server.mjs public config scripts README.md CHANGELOG.md LICENSE .env.example; do
   [[ -e "$SRC/$item" ]] && cp -a "$SRC/$item" "$DEST/"
 done
 mkdir -p "$DEST/data"
@@ -98,17 +87,19 @@ install -m 0755 "$SRC/deploy/bin/kems-status" /usr/local/sbin/kems-status
 install -m 0644 "$SRC/deploy/healthcheck.mjs" "$LIB_DIR/healthcheck.mjs"
 install -m 0644 "$SRC/deploy/manager.mjs" "$LIB_DIR/manager.mjs"
 install -m 0644 "$SRC/deploy/bundle-agent.mjs" "$LIB_DIR/bundle-agent.mjs"
+install -m 0644 "$SRC/deploy/remote-access-service.mjs" "$LIB_DIR/remote-access-service.mjs"
 install -m 0644 "$SRC/deploy/systemd/kems-web.service" /etc/systemd/system/kems-web.service
 install -m 0644 "$SRC/deploy/systemd/kems-web-manager.service" /etc/systemd/system/kems-web-manager.service
 install -m 0644 "$SRC/deploy/systemd/kems-web-bundle-agent.service" /etc/systemd/system/kems-web-bundle-agent.service
+install -m 0644 "$SRC/deploy/systemd/kems-web-remote-access.service" /etc/systemd/system/kems-web-remote-access.service
 printf '%s\n' "$REPO" > "$LIB_DIR/github-repo"
 
+node --check "$DEST/gateway.mjs"
 node --check "$DEST/server.mjs"
 node --check "$DEST/public/app.js"
+node --check "$LIB_DIR/remote-access-service.mjs"
 ln -sfn "$DEST" "$BASE/current"
 
-# Only replace the factory hostname. Respect any hostname the user already chose
-# in Raspberry Pi Imager.
 CURRENT_HOST="$(hostnamectl --static 2>/dev/null || hostname)"
 if [[ "$CURRENT_HOST" == "raspberrypi" || -z "$CURRENT_HOST" ]]; then
   hostnamectl set-hostname kems-pi
@@ -124,11 +115,8 @@ systemctl daemon-reload
 systemctl enable --now avahi-daemon.service
 systemctl enable --now kems-web-manager.service
 systemctl enable --now kems-web-bundle-agent.service
-# The headless image uses port 4173 for its setup status page. Hand the port
-# over to the real KEMS service only when the application is ready to start.
-if systemctl list-unit-files kems-setup-status.service >/dev/null 2>&1; then
-  systemctl stop kems-setup-status.service || true
-fi
+systemctl enable --now kems-web-remote-access.service
+if systemctl list-unit-files kems-setup-status.service >/dev/null 2>&1; then systemctl stop kems-setup-status.service || true; fi
 systemctl enable --now kems-web.service
 
 OK=0
@@ -150,6 +138,7 @@ echo "Open: http://${CURRENT_HOST}.local:4173"
 [[ -n "$IP" ]] && echo "Or:   http://${IP}:4173"
 echo
 echo "First visit: enter your Home Assistant local URL and long-lived token."
+echo "Remote Access setup is available from the local KEMS website without SSH."
 echo "Check for updates later with: sudo kems-update"
 echo "Status:                       kems-status"
 echo "Rollback:                     sudo kems-rollback"
