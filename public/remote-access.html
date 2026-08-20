@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#071217" />
+  <meta name="description" content="Local-only KEMS remote access setup for Cloudflare Tunnel." />
+  <title>KEMS — Remote Access Setup</title>
+  <link rel="icon" href="logo.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="styles.css?v=alpha7web15" />
+</head>
+<body>
+  <div class="ambient" aria-hidden="true"><span></span><span></span><span></span></div>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="Back to KEMS dashboard">
+      <img src="logo.svg" alt="" />
+      <span><strong>KEMS</strong><small>Web.15 · Remote Access Setup</small></span>
+    </a>
+    <div class="top-actions"><a class="settings-button" href="/">Back to dashboard</a></div>
+  </header>
+
+  <main class="app" id="remote-access-app" tabindex="-1">
+    <header class="page-heading">
+      <div>
+        <p class="eyebrow">Local Pi setup</p>
+        <h1>Remote access</h1>
+        <p>Install the Cloudflare Tunnel connector without SSH. This page is intentionally usable only from the local KEMS Pi address.</p>
+      </div>
+    </header>
+
+    <section class="panel">
+      <header class="section-heading"><div><h2>Cloudflare Tunnel connector</h2><p>KEMS accepts only the connector token from the Cloudflare command. It never executes pasted shell commands.</p></div></header>
+      <div class="panel-body">
+        <div id="remote-status" class="system-loading">Checking the Pi connector…</div>
+        <form id="remote-install-form" class="update-policy-form" hidden>
+          <label>
+            <span>Cloudflare connector command</span>
+            <textarea id="cloudflare-command" class="input" rows="5" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sudo cloudflared service install eyJ..."></textarea>
+          </label>
+          <p class="field-hint">Paste the command Cloudflare shows for your tunnel. KEMS extracts only the token, stores it root-only, installs the current cloudflared package, and starts a dedicated connector service.</p>
+          <button class="button primary" type="submit">Install &amp; connect</button>
+          <div id="remote-result" class="form-result" aria-live="polite"></div>
+        </form>
+      </div>
+    </section>
+
+    <section class="panel">
+      <header class="section-heading"><div><h2>Cloudflare route</h2><p>Configure this in Cloudflare after the connector reports healthy.</p></div></header>
+      <div class="panel-body">
+        <div class="system-grid">
+          <div><span>Public hostname</span><strong>kyle.kems.uk</strong></div>
+          <div><span>Service type</span><strong>HTTP</strong></div>
+          <div><span>Service URL</span><strong>http://localhost:4173</strong></div>
+          <div><span>Protected by</span><strong>Cloudflare Access</strong></div>
+        </div>
+        <p class="field-hint">Do not route port 4174, port 4175, Home Assistant port 8123, SSH, or the wider LAN through this tunnel.</p>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast-root" class="toast-root" aria-live="polite"></div>
+  <script type="module" src="remote-access.js?v=alpha7web15"></script>
+</body>
+</html>
