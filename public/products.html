@@ -7,11 +7,11 @@
   <meta name="description" content="The four user-facing KEMS product types: Live Data, Battery & Solar, Full KEMS and Full KEMS Agile." />
   <title>KEMS — Products</title>
   <link rel="icon" href="logo.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="products.css?v=alpha7web14" />
+  <link rel="stylesheet" href="products.css?v=alpha7web16" />
 </head>
 <body>
   <header class="shell top">
-    <a class="brand" href="/"><img src="logo.svg" alt="" /><span><strong>KEMS</strong><small>Alpha7 energy dashboard</small></span></a>
+    <a class="brand" href="/"><img src="brand-lockup.svg" alt="KEMS — Kyle Energy Management System" style="width:190px;height:auto;max-height:56px" /></a>
     <a class="back" href="/">← Back to property dashboard</a>
   </header>
 
@@ -19,12 +19,10 @@
     <section class="hero">
       <p class="eyebrow">One KEMS model</p>
       <h1>Four clear product levels.</h1>
-      <p class="lead">The property dashboard now uses the same four user-facing KEMS types as Home Assistant. Live Data is measured reality; the other three are progressively richer simulations until the physical system is commissioned and control is explicitly enabled.</p>
+      <p class="lead">The property dashboard uses the same four user-facing KEMS types as Home Assistant. Live Data is measured reality; the other three are progressively richer simulations until the physical system is commissioned and control is explicitly enabled.</p>
     </section>
     <section class="products" id="products" aria-live="polite"></section>
-    <section class="note">
-      <strong>Data boundary:</strong> switching a product view does not alter Home Assistant, the inverter or the active KEMS operating mode. This property website remains read-only.
-    </section>
+    <section class="note"><strong>Data boundary:</strong> switching a product view does not alter Home Assistant, the inverter or the active KEMS operating mode. This property website remains read-only.</section>
   </main>
 
   <script type="module">
@@ -32,14 +30,10 @@
     const root = document.querySelector('#products');
     root.innerHTML = KEMS_PRODUCTS.map((product, index) => `
       <article class="product" data-source="${product.source}">
-        <span class="number">0${index + 1}</span>
-        <span class="source">${product.source}</span>
-        <h2>${product.label}</h2>
-        <p>${product.description}</p>
+        <span class="number">0${index + 1}</span><span class="source">${product.source}</span><h2>${product.label}</h2><p>${product.description}</p>
         <div class="caps">${product.capabilities.map((item) => `<span>${item}</span>`).join('')}</div>
         <a class="open" href="${product.href}">Open ${product.shortLabel} →</a>
-      </article>
-    `).join('');
+      </article>`).join('');
   </script>
 </body>
 </html>
