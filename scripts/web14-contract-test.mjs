@@ -26,7 +26,8 @@ assert.match(productsPage, /product-model\.js/);
 assert.match(productsPage, /read-only/);
 
 const publicIndex = read("public-site/index.html");
-for (const label of expectedProducts) assert.ok(publicIndex.includes(label), `kems.uk missing ${label}`);
+const publicIndexText = publicIndex.replaceAll("&amp;", "&");
+for (const label of expectedProducts) assert.ok(publicIndexText.includes(label), `kems.uk missing ${label}`);
 assert.match(publicIndex, /demo\.html/);
 assert.match(publicIndex, /login\.html/);
 
