@@ -2,7 +2,7 @@
   "id": "/",
   "name": "KEMS Energy",
   "short_name": "KEMS",
-  "description": "Live, simulated, Agile optimisation, comparison and long-term energy performance for KEMS Alpha7.",
+  "description": "Live Data, Battery & Solar, Full KEMS, Full KEMS Agile, comparison and long-term energy performance.",
   "start_url": "/#live",
   "scope": "/",
   "display": "standalone",
@@ -16,9 +16,10 @@
     {"src":"icons/kems-maskable-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"}
   ],
   "shortcuts": [
-    {"name":"Live today","short_name":"Live","url":"/#live","icons":[{"src":"icons/kems-192.png","sizes":"192x192"}]},
-    {"name":"Agile Smart Export","short_name":"Agile","url":"/agile.html","icons":[{"src":"icons/kems-192.png","sizes":"192x192"}]},
-    {"name":"Compare scenarios","short_name":"Compare","url":"/#scenarios","icons":[{"src":"icons/kems-192.png","sizes":"192x192"}]},
-    {"name":"Performance & ROI","short_name":"Performance","url":"/#performance","icons":[{"src":"icons/kems-192.png","sizes":"192x192"}]}
+    {"name":"Live Data","short_name":"Live","url":"/#live","icons":[{"src":"icons/kems-192.png","sizes":"192x192"}]},
+    {"name":"KEMS products","short_name":"Products","url":"/products.html","icons":[{"src":"icons/kems-192.png","sizes":"192x192"}]},
+    {"name":"Compare products","short_name":"Compare","url":"/compare.html","icons":[{"src":"icons/kems-192.png","sizes":"192x192"}]},
+    {"name":"Full KEMS Agile","short_name":"Agile","url":"/agile.html","icons":[{"src":"icons/kems-192.png","sizes":"192x192"}]},
+    {"name":"Cost & ROI","short_name":"ROI","url":"/#performance","icons":[{"src":"icons/kems-192.png","sizes":"192x192"}]}
   ]
 }
