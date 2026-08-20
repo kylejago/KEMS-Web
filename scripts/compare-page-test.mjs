@@ -10,24 +10,25 @@ const compareJs = read("public/compare-page.js");
 const compareCss = read("public/compare.css");
 const worker = read("public/service-worker.js");
 const pkg = JSON.parse(read("package.json"));
-const assetVersion = pkg.version.includes("alpha7-web.14") ? "alpha7web14" : null;
+const shellAssetVersion = "alpha7web15";
+const compareAssetVersion = "alpha7web14";
 
 const assert = (condition, message) => {
   if (!condition) throw new Error(message);
 };
 
-assert(pkg.version === "0.7.0-alpha7-web.14", `Compare release must match the current package version, got ${pkg.version}.`);
-assert(assetVersion, "Compare asset cache version could not be derived from package.json.");
+assert(pkg.version === "0.7.0-alpha7-web.15", `Compare release must match the current package version, got ${pkg.version}.`);
 assert((index.match(/href="\/compare\.html"/g) || []).length >= 2, "Desktop and mobile dashboard navigation must open the comparison page.");
 assert(index.includes(">Compare<"), "Dashboard navigation must use the simplified comparison name.");
-assert(index.includes(`styles.css?v=${assetVersion}`) && index.includes(`app.js?v=${assetVersion}`), "Dashboard shell assets must match the current package cache version.");
+assert(index.includes(`styles.css?v=${shellAssetVersion}`) && index.includes(`app.js?v=${shellAssetVersion}`), "Dashboard shell assets must match Web.15 cache version.");
 assert(index.includes('href="/products.html"'), "Dashboard navigation must include the four-product overview.");
 assert(index.includes('href="/agile.html"'), "Dashboard navigation must include Full KEMS Agile.");
+assert(index.includes('href="/remote-access.html"'), "Dashboard navigation must include local Remote Access setup.");
 
 for (const marker of [
   "four-product comparison",
-  `compare.css?v=${assetVersion}`,
-  `compare-page.js?v=${assetVersion}`,
+  `compare.css?v=${compareAssetVersion}`,
+  `compare-page.js?v=${compareAssetVersion}`,
   "/products.html",
   "/agile.html",
   "History &amp; scenarios",
@@ -64,11 +65,12 @@ for (const marker of [
 for (const marker of [
   '"/products.html"',
   '"/compare.html"',
-  `"/compare.css?v=${assetVersion}"`,
-  `"/compare-page.js?v=${assetVersion}"`,
+  `"/compare.css?v=${compareAssetVersion}"`,
+  `"/compare-page.js?v=${compareAssetVersion}"`,
   '"/agile.html"',
+  '"/remote-access.html"',
   'cache.put(url.pathname, copy)',
   'caches.match(url.pathname)'
 ]) assert(worker.includes(marker), `Service worker is missing ${marker}.`);
 
-console.log(`Compare page test passed for ${pkg.version}: five periods, read-only analysis, ROI, four-product navigation and PWA routing are present.`);
+console.log(`Compare page test passed for ${pkg.version}: five periods, read-only analysis, ROI, four-product navigation and Web.15 PWA routing are present.`);
