@@ -1,11 +1,11 @@
 {
   "name": "KEMS",
   "longName": "Kyle Energy Management System",
-  "version": "0.7.0-alpha7-web.14",
+  "version": "0.7.0-alpha7-web.15",
   "tagline": "Live reality. Four KEMS products. One clear energy story.",
-  "summary": "A focused read-only companion for KEMS Alpha7, presenting Live Data, Battery & Solar, Full KEMS and Full KEMS Agile alongside comparison, history and ROI evidence.",
+  "summary": "A focused read-only companion for KEMS Alpha7, presenting Live Data, Battery & Solar, Full KEMS and Full KEMS Agile alongside comparison, history, ROI evidence and secure local remote-access setup.",
   "repository": "https://github.com/kylejago/KEMS-Web",
-  "build": "Alpha7 property dashboard · four-product parity · delayed public demo contract · multi-site remote-access groundwork · kems.uk source",
+  "build": "Alpha7 property dashboard · four-product parity · local Cloudflare Tunnel setup · delayed public demo contract · kems.uk source",
   "principles": [
     "Home Assistant and KEMS remain the source of truth for each property.",
     "The user-facing product model is Live Data, Battery & Solar, Full KEMS and Full KEMS Agile.",
@@ -18,7 +18,9 @@
     "What-if replay is read-only and never changes the active KEMS strategy.",
     "KEMS native period summaries are authoritative for Week, Month, Year and All time.",
     "Raspberry Pi installs and updates are sourced from checksum-verified GitHub releases without touching persistent KEMS data.",
-    "Raspberry Pi maintenance, updates and encrypted backups remain local-only even when a property dashboard is reached through a remote gateway.",
+    "Raspberry Pi maintenance, updates, encrypted backups and Cloudflare connector provisioning remain local-only even when a property dashboard is reached through a remote gateway.",
+    "Cloudflare connector setup accepts only a tunnel token; pasted shell commands are never executed.",
+    "The remote property tunnel targets KEMS Web on localhost:4173 only and never exposes Pi management, setup, SSH, Home Assistant or the wider LAN.",
     "Each property keeps its own Home Assistant credentials and KEMS data on its own appliance.",
     "A KEMS Pi can use an existing Home Assistant or optionally host Home Assistant Container locally.",
     "Remote property access uses an authenticated outbound-tunnel boundary; the public static website is never the Home Assistant proxy."
