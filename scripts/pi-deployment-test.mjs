@@ -24,9 +24,10 @@ mustContain("deploy/bundle-agent.mjs", [
   "ahead-of-target",
   "downgrade blocked",
   "automatic change blocked",
-  "const AGENT_VERSION = \"0.7.0-alpha7-web.14\""
+  "const AGENT_VERSION = \"0.7.0-alpha7-web.15\""
 ]);
-mustContain("deploy/manager.mjs", ["127.0.0.1", "kems-update", "kems-rollback", "systemctl", "latestRelease", "const MANAGER_VERSION = installedVersion()", "applianceActivationRequired: MANAGER_VERSION !== installed", "home-assistant", "ghcr.io/home-assistant/home-assistant:stable", "download.docker.com/linux/debian"]);
+mustContain("deploy/manager.mjs", ["127.0.0.1", "kems-update", "kems-rollback", "systemctl", "latestRelease", "const MANAGER_VERSION = installedVersion()", "applianceActivationRequired: MANAGER_VERSION !== installed", "home-assistant", "ghcr.io/home-assistant/home-assistant:stable", "download.docker.com/linux/debian", "remote-access.mjs"]);
+mustContain("deploy/remote-access.mjs", ["4175", "cloudflared", "--token-file", "requestIsLocal", "localOrigin", "http://localhost:4173", "mode: 0o600"]);
 mustContain("install.sh", ["kems-web-manager.service", "kems-web-bundle-agent.service", "bundle-agent.mjs", "manager.mjs", "/var/lib/kems-web-management"]);
 mustContain("deploy/bin/kems-update", [
   "TARGET_VERSION",
@@ -45,3 +46,5 @@ console.log("Pi deployment checks passed.");
 
 mustContain("server.mjs", ["/api/site", "/api/maintenance", "/api/system/update-policy", "/api/home-assistant/status", "/api/home-assistant/action", "site.json"]);
 mustContain("public/app.js", ["Site identity", "Automatic coordinated updates", "Planned KEMS maintenance", "Host on this KEMS Pi", "Install Home Assistant", "Connect KEMS to local HA"]);
+mustContain("public/remote-access.html", ["Remote access", "Cloudflare Tunnel connector", "http://localhost:4173", "kyle.kems.uk"]);
+mustContain("public/remote-access.js", ["http://${location.hostname}:4175", "Install & connect", "localHostname"]);
