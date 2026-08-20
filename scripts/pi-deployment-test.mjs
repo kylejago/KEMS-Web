@@ -24,7 +24,7 @@ mustContain("deploy/bundle-agent.mjs", [
   "ahead-of-target",
   "downgrade blocked",
   "automatic change blocked",
-  "const AGENT_VERSION = \"0.7.0-alpha6-web.11\""
+  "const AGENT_VERSION = \"0.7.0-alpha7-web.14\""
 ]);
 mustContain("deploy/manager.mjs", ["127.0.0.1", "kems-update", "kems-rollback", "systemctl", "latestRelease", "const MANAGER_VERSION = installedVersion()", "applianceActivationRequired: MANAGER_VERSION !== installed", "home-assistant", "ghcr.io/home-assistant/home-assistant:stable", "download.docker.com/linux/debian"]);
 mustContain("install.sh", ["kems-web-manager.service", "kems-web-bundle-agent.service", "bundle-agent.mjs", "manager.mjs", "/var/lib/kems-web-management"]);
