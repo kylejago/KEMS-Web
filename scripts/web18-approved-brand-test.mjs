@@ -31,8 +31,8 @@ for (const marker of [
   SOURCE_PATH,
   SHA256,
   "2_156_120",
-  "public/approved-logo.png",
-  "public-site/approved-logo.png"
+  'path.join(ROOT, "public", "approved-logo.png")',
+  'path.join(ROOT, "public-site", "approved-logo.png")'
 ]) expect(sync.includes(marker), `approved-artwork sync contract missing ${marker}`);
 
 const propertyPng = readBytes("public/approved-logo.png");
