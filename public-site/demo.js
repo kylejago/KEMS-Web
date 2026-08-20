@@ -1,6 +1,7 @@
 const root = document.querySelector('#demo-root');
 const status = document.querySelector('#demo-status');
 const periodSelect = document.querySelector('#demo-period');
+const LIVE_DEMO_URL = 'https://demo-api.kems.uk/api/public-demo';
 
 const PRODUCT_KEYS = [
   ['actual', 'Live Data'],
@@ -86,6 +87,10 @@ function row(label, values) {
   return tr;
 }
 
+function feedLabel(payload) {
+  return payload.feedSource === 'live' ? 'live delayed Pi feed' : 'static fallback';
+}
+
 function render(payload) {
   const selected = periodDays(payload.days, periodSelect.value);
   root.replaceChildren();
@@ -93,9 +98,9 @@ function render(payload) {
   if (!selected.length) {
     const empty = document.createElement('div');
     empty.className = 'demo-empty';
-    empty.innerHTML = '<strong>Demo publishing is ready.</strong><p>No delayed property days have been published yet. The public feed remains intentionally empty until a sanitised seven-day-old export is supplied.</p>';
+    empty.innerHTML = '<strong>Demo publishing is ready.</strong><p>No delayed property days have been published yet. KEMS will publish automatically once retained daily evidence is at least seven days old.</p>';
     root.append(empty);
-    status.textContent = `Privacy delay: ${payload.delayDays} days · no property data published yet`;
+    status.textContent = `Privacy delay: ${payload.delayDays} days · ${feedLabel(payload)} · no eligible property data yet`;
     return;
   }
 
@@ -126,24 +131,37 @@ function render(payload) {
 
   const winnerCard = document.createElement('div');
   winnerCard.className = 'demo-winner';
-  winnerCard.innerHTML = `<span>Best simulated strategy</span><strong>${winner(products)}</strong><small>Compared on delayed net electricity cost for the selected evidence window.</small>`;
+  winnerCard.innerHTML = `<span>Best simulated strategy</span><strong>${winner(products)}</strong><small>Compared on delayed net electricity cost for the selected evidence window. Product columns appear only when retained evidence exists.</small>`;
 
   root.append(winnerCard, table);
-  status.textContent = `Demo property · data through ${payload.dataThrough || selected.at(-1).date} · delayed ${payload.delayDays} days`;
+  status.textContent = `Demo property · data through ${payload.dataThrough || selected.at(-1).date} · delayed ${payload.delayDays} days · ${feedLabel(payload)}`;
 }
 
 let payload;
 
+async function fetchJson(url) {
+  const response = await fetch(url, { cache: 'no-store', mode: 'cors' });
+  if (!response.ok) throw new Error(`Demo feed returned HTTP ${response.status}.`);
+  return response.json();
+}
+
 async function load() {
+  let liveError = null;
   try {
-    const response = await fetch('demo-data.json', { cache: 'no-store' });
-    if (!response.ok) throw new Error(`Demo feed returned HTTP ${response.status}.`);
-    payload = validate(await response.json());
-    render(payload);
+    payload = validate(await fetchJson(LIVE_DEMO_URL));
+    payload.feedSource = 'live';
   } catch (error) {
-    status.textContent = 'Demo unavailable';
-    root.textContent = error.message;
+    liveError = error;
+    try {
+      payload = validate(await fetchJson('demo-data.json'));
+      payload.feedSource = 'fallback';
+    } catch (fallbackError) {
+      status.textContent = 'Demo unavailable';
+      root.textContent = `${liveError?.message || 'Live feed unavailable'} ${fallbackError.message}`;
+      return;
+    }
   }
+  render(payload);
 }
 
 periodSelect?.addEventListener('change', () => payload && render(payload));
