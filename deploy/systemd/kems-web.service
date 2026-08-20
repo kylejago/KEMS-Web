@@ -11,9 +11,11 @@ WorkingDirectory=/opt/kems-web/current
 Environment=NODE_ENV=production
 Environment=HOST=0.0.0.0
 Environment=PORT=4173
+Environment=KEMS_BACKEND_PORT=4176
+Environment=KEMS_REMOTE_ACCESS_PORT=4175
 Environment=TZ=Europe/London
 Environment=DATA_DIR=/var/lib/kems-web
-ExecStart=/usr/local/bin/node /opt/kems-web/current/server.mjs
+ExecStart=/usr/local/bin/node /opt/kems-web/current/gateway.mjs
 Restart=on-failure
 RestartSec=3
 TimeoutStopSec=15
