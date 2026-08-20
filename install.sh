@@ -131,6 +131,18 @@ if [[ "$OK" != 1 ]]; then
   exit 6
 fi
 
+HELPER_OK=0
+for _ in $(seq 1 20); do
+  if curl -fsS --max-time 2 http://127.0.0.1:4175/health >/dev/null 2>&1; then HELPER_OK=1; break; fi
+  sleep 1
+done
+if [[ "$HELPER_OK" != 1 ]]; then
+  systemctl --no-pager --full status kems-web-remote-access.service || true
+  journalctl -u kems-web-remote-access.service -n 40 --no-pager || true
+  echo "KEMS Remote Access setup helper did not pass its loopback health check." >&2
+  exit 7
+fi
+
 IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
 echo
 echo "KEMS Web ${VERSION} is installed and running."

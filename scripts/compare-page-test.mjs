@@ -10,7 +10,7 @@ const compareJs = read("public/compare-page.js");
 const compareCss = read("public/compare.css");
 const worker = read("public/service-worker.js");
 const pkg = JSON.parse(read("package.json"));
-const assetVersion = "alpha7web16";
+const assetVersion = "alpha7web17";
 
 const assert = (condition, message) => {
   if (!condition) throw new Error(message);
@@ -19,16 +19,16 @@ const assert = (condition, message) => {
 assert(/^0\.7\.0-alpha7-web\.\d+$/.test(pkg.version), `Compare release must be an Alpha7 web release, got ${pkg.version}.`);
 assert((index.match(/href="\/compare\.html"/g) || []).length >= 2, "Desktop and mobile dashboard navigation must open the comparison page.");
 assert(index.includes(">Compare<"), "Dashboard navigation must use the simplified comparison name.");
-assert(index.includes(`styles.css?v=${assetVersion}`) && index.includes(`app.js?v=${assetVersion}`), "Dashboard shell assets must match Web.16 cache version.");
+assert(index.includes(`styles.css?v=${assetVersion}`) && index.includes(`brand.css?v=${assetVersion}`) && index.includes(`app.js?v=${assetVersion}`), "Dashboard shell assets must match Web.17 cache version.");
 assert(index.includes('href="/products.html"'), "Dashboard navigation must include the four-product overview.");
 assert(index.includes('href="/agile.html"'), "Dashboard navigation must include Full KEMS Agile.");
 assert(index.includes('href="/remote-access.html"'), "Dashboard navigation must include local Remote Access setup.");
-assert(index.includes("brand-lockup.svg"), "Dashboard must use the canonical KEMS lockup.");
+assert(index.includes(`brand-lockup.svg?v=${assetVersion}`), "Dashboard must use the canonical KEMS lockup.");
 
 for (const marker of [
   `compare.css?v=${assetVersion}`,
   `compare-page.js?v=${assetVersion}`,
-  "brand-lockup.svg",
+  `brand-lockup.svg?v=${assetVersion}`,
   "/products.html",
   "/agile.html",
   "History &amp; scenarios",
@@ -57,7 +57,7 @@ assert(compareJs.includes("setInterval") && compareJs.includes('state.range === 
 for (const marker of [".compare-hero", ".compare-insights-grid", ".compare-breakdown-grid", ".compare-cost-grid", ".compare-roi-grid"]) assert(compareCss.includes(marker), `Comparison CSS is missing ${marker}.`);
 
 for (const marker of [
-  '"/products.html"', '"/compare.html"', `"/compare.css?v=${assetVersion}"`, `"/compare-page.js?v=${assetVersion}"`, '"/agile.html"', '"/remote-access.html"', '"/brand-lockup.svg"', 'cache.put(url.pathname, copy)', 'caches.match(url.pathname)'
+  '"/products.html"', '"/compare.html"', `"/compare.css?v=${assetVersion}"`, `"/compare-page.js?v=${assetVersion}"`, '"/agile.html"', '"/remote-access.html"', `"/brand-lockup.svg?v=${assetVersion}"`, `"/brand.css?v=${assetVersion}"`, 'cache.put(url.pathname, copy)', 'caches.match(url.pathname)'
 ]) assert(worker.includes(marker), `Service worker is missing ${marker}.`);
 
-console.log(`Compare page test passed for ${pkg.version}: five periods, read-only analysis, ROI, four-product navigation and Web.16 PWA routing are present.`);
+console.log(`Compare page test passed for ${pkg.version}: five periods, read-only analysis, ROI, four-product navigation and Web.17 PWA routing are present.`);

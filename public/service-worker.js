@@ -1,4 +1,4 @@
-const CACHE_NAME = "kems-alpha7-web16-shell-v1";
+const CACHE_NAME = "kems-alpha7-web17-shell-v1";
 const APP_SHELL = [
   "/",
   "/index.html",
@@ -6,21 +6,22 @@ const APP_SHELL = [
   "/agile.html",
   "/compare.html",
   "/remote-access.html",
-  "/styles.css?v=alpha7web16",
-  "/products.css?v=alpha7web16",
-  "/agile.css?v=alpha7web16",
-  "/compare.css?v=alpha7web16",
-  "/app.js?v=alpha7web16",
-  "/platform-label.js?v=alpha7web16",
-  "/remote-access.js?v=alpha7web16",
-  "/agile-page.js?v=alpha7web16",
-  "/compare-page.js?v=alpha7web16",
-  "/product-model.js",
-  "/brand-lockup.svg",
-  "/logo.svg",
-  "/icons/kems-192.png",
-  "/icons/kems-512.png",
-  "/icons/kems-maskable-512.png"
+  "/styles.css?v=alpha7web17",
+  "/brand.css?v=alpha7web17",
+  "/products.css?v=alpha7web17",
+  "/agile.css?v=alpha7web17",
+  "/compare.css?v=alpha7web17",
+  "/app.js?v=alpha7web17",
+  "/platform-label.js?v=alpha7web17",
+  "/remote-access.js?v=alpha7web17",
+  "/agile-page.js?v=alpha7web17",
+  "/compare-page.js?v=alpha7web17",
+  "/product-model.js?v=alpha7web17",
+  "/brand-lockup.svg?v=alpha7web17",
+  "/logo.svg?v=alpha7web17",
+  "/icons/kems-192.png?v=alpha7web17",
+  "/icons/kems-512.png?v=alpha7web17",
+  "/icons/kems-maskable-512.png?v=alpha7web17"
 ];
 
 self.addEventListener("install", (event) => {

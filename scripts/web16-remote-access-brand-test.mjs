@@ -18,10 +18,11 @@ const updater = read("deploy/bin/kems-update");
 const installer = read("install.sh");
 
 const expect = (condition, message) => { if (!condition) throw new Error(message); };
+const webNumber = Number.parseInt(pkg.version.match(/-web\.(\d+)$/)?.[1] || "0", 10);
 
-expect(pkg.version === "0.7.0-alpha7-web.16", "package.json must identify Web.16");
+expect(/^0\.7\.0-alpha7-web\.\d+$/.test(pkg.version) && webNumber >= 16, "package.json must identify Web.16 or newer");
 expect(project.version === pkg.version, "project.json and package.json version drift");
-expect(pkg.scripts.start === "node gateway.mjs", "Web.16 must start through the same-origin gateway");
+expect(pkg.scripts.start === "node gateway.mjs", "Web.16+ must start through the same-origin gateway");
 
 for (const marker of ["/api/remote-access/", "cf-connecting-ip", "x-forwarded-for", "x-forwarded-host", "request.headers.forwarded", "127.0.0.1", "KEMS_BACKEND_PORT", "KEMS_REMOTE_ACCESS_PORT"]) expect(gateway.includes(marker), `gateway missing ${marker}`);
 expect(gateway.includes('process.env.HOST = "127.0.0.1"'), "application backend must move to loopback behind the gateway");
@@ -30,7 +31,6 @@ expect(!client.includes(":4175"), "browser must never connect directly to privil
 expect(client.includes('const API = "/api/remote-access"'), "Remote Access client must use same-origin API");
 
 expect(helper.includes('const HOST = "127.0.0.1"'), "privileged helper must bind loopback only");
-expect(helper.includes('const HELPER_VERSION = "0.7.0-alpha7-web.16"'), "helper version must match Web.16");
 expect(helper.includes("mode: 0o600"), "tunnel token must be stored mode 0600");
 expect(helper.includes("--token-file"), "cloudflared connector must read its token from a root-only file");
 expect(helper.includes("cloudflared\\s+service\\s+install"), "helper must recognise only the Cloudflare install-command form");
@@ -40,14 +40,14 @@ expect(!helper.includes("execSync("), "helper must not invoke a command shell");
 expect(!helper.includes("spawn(\"bash\""), "helper must not invoke bash for pasted input");
 expect(compatibility.includes("compatibility shim") && !compatibility.includes("server.listen"), "Web.15 browser-facing helper must be retired");
 
-expect(webUnit.includes("gateway.mjs") && webUnit.includes("KEMS_BACKEND_PORT=4176"), "property service must run through the Web.16 gateway");
+expect(webUnit.includes("gateway.mjs") && webUnit.includes("KEMS_BACKEND_PORT=4176"), "property service must run through the Web.16+ gateway");
 expect(helperUnit.includes("User=root") && helperUnit.includes("remote-access-service.mjs"), "dedicated privileged helper service missing");
-expect(updater.includes("kems-web-remote-access.service") && updater.includes("remote-access-service.mjs"), "updater must converge the Web.16 helper service");
-expect(installer.includes("kems-web-remote-access.service") && installer.includes("gateway.mjs"), "fresh installer must include the Web.16 gateway/helper");
+expect(updater.includes("kems-web-remote-access.service") && updater.includes("remote-access-service.mjs"), "updater must converge the Remote Access helper service");
+expect(installer.includes("kems-web-remote-access.service") && installer.includes("gateway.mjs"), "fresh installer must include the gateway/helper");
 
 expect(page.includes("brand-lockup.svg") && propertyIndex.includes("brand-lockup.svg"), "property pages must use canonical KEMS lockup");
 expect(publicIndex.includes("brand-lockup.svg"), "kems.uk must use canonical KEMS lockup");
 expect(propertyLockup === publicLockup, "property and kems.uk master lockups must be identical");
 for (const marker of ["Kyle Energy Management System", "#ffbf00", "#075abf", "#36bd52", ">KEMS</"]) expect(propertyLockup.includes(marker), `canonical lockup missing ${marker}`);
 
-console.log("Web.16 remote-access + canonical-brand contract passed.");
+console.log(`Web.${webNumber} preserves the Web.16 same-origin remote-access + canonical-brand contract.`);

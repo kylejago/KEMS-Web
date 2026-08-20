@@ -2,7 +2,7 @@
   <img src="public/brand-lockup.svg" alt="KEMS — Kyle Energy Management System" width="520">
 </p>
 
-# KEMS Web — 0.7.0-alpha7-web.16
+# KEMS Web — 0.7.0-alpha7-web.17
 
 KEMS Web is the read-only property companion and public-site source for the **KEMS Alpha7** platform.
 
@@ -10,7 +10,7 @@ Home Assistant/KEMS remains the source of truth for each property. The property 
 
 ## Canonical KEMS brand
 
-`public/brand-lockup.svg` and `public-site/brand-lockup.svg` are the Web copies of the canonical KEMS energy-system lockup defined in the KEMS repository. The compact square `logo.svg` remains a deliberate derivative for favicons, PWA icons and loading states; public-facing headers use the full lockup rather than a separate logo language.
+`public/brand-lockup.svg` and `public-site/brand-lockup.svg` are byte-identical Web copies of the canonical KEMS energy-system lockup defined in the KEMS repository. Web.17 forces a fresh brand/PWA cache and uses that full lockup for property headers, loading states, Remote Access setup, `kems.uk`, demo/login/privacy/404 pages and Pi first-boot setup. The compact square `logo.svg` remains a deliberate derivative only for favicons, PWA icons and similarly constrained square slots.
 
 ## Property dashboard
 
@@ -44,11 +44,17 @@ Local browser management is available only when the dashboard is opened directly
 http://kems-pi.local:4173
 ```
 
-Web.16 places a same-origin gateway on port `4173`. The normal KEMS application runs behind it on loopback, while the privileged Cloudflare setup helper is a separate root-owned service on `127.0.0.1:4175`. Only the allow-listed `/api/remote-access/*` setup routes can reach that helper, and those routes reject Cloudflare/forwarded requests. Browsers never connect directly to the privileged port.
+The same-origin gateway owns port `4173`. The normal KEMS application runs behind it on loopback, while the privileged Cloudflare setup helper is a separate root-owned service on `127.0.0.1:4175`. Only the allow-listed `/api/remote-access/*` setup routes can reach that helper, and those routes reject Cloudflare/forwarded requests. Browsers never connect directly to the privileged port.
+
+### Web.17 bootstrap repair
+
+Some Pis first reached Web.16 using the older Web.15 updater. That updater could switch the website to Web.16 but did not yet know how to install Web.16's newly introduced `kems-web-remote-access.service`, leaving the new same-origin gateway correctly running while `127.0.0.1:4175` refused connections.
+
+Web.17 deliberately uses the now-installed newer updater to converge that missing helper/service through the normal browser update path. The updater installs and restarts the loopback-only helper, polls `http://127.0.0.1:4175/health`, and refuses to report successful helper activation if that health check fails. Fresh installs perform the same helper health check. No SSH or Pi reflash is required.
 
 Pi-management routes reject forwarded/reverse-proxy requests by design. Internet-facing property access is a separate Cloudflare Access + outbound Tunnel boundary rather than an exposed local management interface.
 
-Published Web releases are checksum-verified. The Pi stages a release, runs syntax/smoke checks, switches atomically, activates changed appliance helper/service definitions, health-checks, and can roll back automatically if activation fails.
+Published Web releases are checksum-verified. The Pi stages a release, runs syntax/smoke checks, switches atomically, activates changed appliance helper/service definitions, health-checks both the property web and required local helper services, and can roll back the website if activation fails.
 
 ## kems.uk public website
 
@@ -74,7 +80,7 @@ The public site must never contain a Home Assistant URL, long-lived token, house
 
 ## PWA / Android
 
-The property dashboard remains installable as a PWA when served over HTTPS. Its product, comparison, Agile and Remote Access pages are in the Alpha7 application shell. The PWA uses the same property backend; it does not turn the public `kems.uk` website into a remote Home Assistant proxy.
+The property dashboard remains installable as a PWA when served over HTTPS. Its product, comparison, Agile and Remote Access pages are in the Alpha7 application shell. Web.17 advances the application-shell cache so old Web.16 header/loading artwork cannot remain pinned after the update. The PWA uses the same property backend; it does not turn the public `kems.uk` website into a remote Home Assistant proxy.
 
 ## Windows local use
 
@@ -91,7 +97,7 @@ Node.js 22 or newer is required. Pi-management controls show as unavailable on a
 npm test
 ```
 
-The suite checks syntax, fresh setup through the production gateway, legacy fixture compatibility, live Home Assistant separation, Alpha7 Agile contract, comparison/ROI, canonical branding, PWA routing, public/private isolation and Pi deployment behavior.
+The suite checks syntax, fresh setup through the production gateway, legacy fixture compatibility, live Home Assistant separation, Alpha7 Agile contract, comparison/ROI, canonical branding, Web.17 helper-bootstrap convergence, PWA routing, public/private isolation and Pi deployment behavior.
 
 ## Related documentation
 

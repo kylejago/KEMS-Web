@@ -13,7 +13,7 @@ const UNIT_NAME = "kems-cloudflared.service";
 const CLOUDFLARED = "/usr/bin/cloudflared";
 const TOKEN_PATTERN = /^[A-Za-z0-9._-]{80,4096}$/;
 const INSTALL_LINE = /^(?:sudo\s+)?(?:\/usr\/local\/bin\/|\/usr\/bin\/)?cloudflared\s+service\s+install\s+([A-Za-z0-9._-]{80,4096})\s*$/i;
-const HELPER_VERSION = "0.7.0-alpha7-web.16";
+const HELPER_VERSION = "0.7.0-alpha7-web.17";
 let busy = false;
 
 fs.mkdirSync(MANAGER_DIR, { recursive: true, mode: 0o750 });
@@ -200,5 +200,5 @@ const server = http.createServer(async (request, response) => {
 });
 
 server.listen(PORT, HOST, () => {
-  console.log(`KEMS Web.16 remote-access helper ${HELPER_VERSION} listening on http://${HOST}:${PORT}`);
+  console.log(`KEMS Web.17 remote-access helper ${HELPER_VERSION} listening on http://${HOST}:${PORT}`);
 });

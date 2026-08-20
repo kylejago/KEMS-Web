@@ -1,0 +1,4 @@
+.brand img.brand-lockup,.brand img[src*="brand-lockup.svg"]{display:block;width:min(210px,42vw)!important;height:auto!important;max-height:58px!important;object-fit:contain;object-position:left center}
+.loading-brand-lockup,.page-brand-lockup{display:block;width:min(380px,78vw)!important;height:auto!important;max-height:none!important;object-fit:contain;margin:0 auto 18px}
+.page-heading .page-brand-lockup{width:min(330px,70vw)!important;margin:0 0 16px}
+@media(max-width:760px){.brand img.brand-lockup,.brand img[src*="brand-lockup.svg"]{width:min(160px,44vw)!important;max-height:46px!important}.loading-brand-lockup,.page-brand-lockup{width:min(300px,84vw)!important}.page-heading .page-brand-lockup{width:min(260px,76vw)!important}}
