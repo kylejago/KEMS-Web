@@ -3,7 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import net from "node:net";
 import path from "node:path";
-import { spawn, spawnSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 
 const HOST = "0.0.0.0";
 const PORT = Number.parseInt(process.env.KEMS_REMOTE_ACCESS_PORT || "4175", 10) || 4175;
@@ -50,10 +50,12 @@ function localOrigin(request) {
   if (!raw) return null;
   try {
     const origin = new URL(raw);
+    const requestHost = new URL(`http://${request.headers.host || "invalid"}`).hostname;
     const port = origin.port || (origin.protocol === "https:" ? "443" : "80");
     if (!["http:", "https:"].includes(origin.protocol)) return null;
     if (port !== String(WEB_PORT)) return null;
-    if (!privateHostname(origin.hostname)) return null;
+    if (!privateHostname(origin.hostname) || !privateHostname(requestHost)) return null;
+    if (origin.hostname.toLowerCase() !== requestHost.toLowerCase()) return null;
     return origin.origin;
   } catch {
     return null;
