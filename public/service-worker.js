@@ -1,4 +1,4 @@
-const CACHE_NAME = "kems-alpha7-web17-shell-v1";
+const CACHE_NAME = "kems-alpha7-web18-shell-v1";
 const APP_SHELL = [
   "/",
   "/index.html",
@@ -6,22 +6,20 @@ const APP_SHELL = [
   "/agile.html",
   "/compare.html",
   "/remote-access.html",
-  "/styles.css?v=alpha7web17",
-  "/brand.css?v=alpha7web17",
-  "/products.css?v=alpha7web17",
-  "/agile.css?v=alpha7web17",
-  "/compare.css?v=alpha7web17",
-  "/app.js?v=alpha7web17",
-  "/platform-label.js?v=alpha7web17",
-  "/remote-access.js?v=alpha7web17",
-  "/agile-page.js?v=alpha7web17",
-  "/compare-page.js?v=alpha7web17",
-  "/product-model.js?v=alpha7web17",
-  "/brand-lockup.svg?v=alpha7web17",
-  "/logo.svg?v=alpha7web17",
-  "/icons/kems-192.png?v=alpha7web17",
-  "/icons/kems-512.png?v=alpha7web17",
-  "/icons/kems-maskable-512.png?v=alpha7web17"
+  "/styles.css?v=alpha7web18",
+  "/brand.css?v=alpha7web18",
+  "/products.css?v=alpha7web18",
+  "/agile.css?v=alpha7web18",
+  "/compare.css?v=alpha7web18",
+  "/app.js?v=alpha7web18",
+  "/platform-label.js?v=alpha7web18",
+  "/remote-access.js?v=alpha7web18",
+  "/agile-page.js?v=alpha7web18",
+  "/compare-page.js?v=alpha7web18",
+  "/product-model.js?v=alpha7web18",
+  "/approved-logo.png?v=alpha7web18",
+  "/brand-lockup.svg?v=alpha7web18",
+  "/logo.svg?v=alpha7web18"
 ];
 
 self.addEventListener("install", (event) => {

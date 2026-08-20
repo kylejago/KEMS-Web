@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Website version from package.json, e.g. 0.7.0-alpha7-web.17'
+        description: 'Website version from package.json, e.g. 0.7.0-alpha7-web.18'
         required: true
         type: string
 
@@ -37,6 +37,12 @@ jobs:
 
       - name: Test KEMS Web
         run: npm test
+
+      - name: Verify approved artwork is packaged
+        run: |
+          test -f public/approved-logo.png
+          test -f public-site/approved-logo.png
+          test "$(sha256sum public/approved-logo.png | awk '{print $1}')" = "67ad8c3ee349a35de23f5a9040ce27c18b5cf347454f777cf1f55a6f905eb01f"
 
       - name: Resolve release version
         id: meta

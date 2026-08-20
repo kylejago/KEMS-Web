@@ -11,15 +11,13 @@
   "theme_color": "#071117",
   "categories": ["utilities", "productivity"],
   "icons": [
-    {"src":"icons/kems-192.png","sizes":"192x192","type":"image/png","purpose":"any"},
-    {"src":"icons/kems-512.png","sizes":"512x512","type":"image/png","purpose":"any"},
-    {"src":"icons/kems-maskable-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"}
+    {"src":"logo.svg?v=alpha7web18","sizes":"any","type":"image/svg+xml","purpose":"any"}
   ],
   "shortcuts": [
-    {"name":"Live Data","short_name":"Live","url":"/#live","icons":[{"src":"icons/kems-192.png","sizes":"192x192"}]},
-    {"name":"KEMS products","short_name":"Products","url":"/products.html","icons":[{"src":"icons/kems-192.png","sizes":"192x192"}]},
-    {"name":"Compare products","short_name":"Compare","url":"/compare.html","icons":[{"src":"icons/kems-192.png","sizes":"192x192"}]},
-    {"name":"Full KEMS Agile","short_name":"Agile","url":"/agile.html","icons":[{"src":"icons/kems-192.png","sizes":"192x192"}]},
-    {"name":"Cost & ROI","short_name":"ROI","url":"/#performance","icons":[{"src":"icons/kems-192.png","sizes":"192x192"}]}
+    {"name":"Live Data","short_name":"Live","url":"/#live","icons":[{"src":"logo.svg?v=alpha7web18","sizes":"any","type":"image/svg+xml"}]},
+    {"name":"KEMS products","short_name":"Products","url":"/products.html","icons":[{"src":"logo.svg?v=alpha7web18","sizes":"any","type":"image/svg+xml"}]},
+    {"name":"Compare products","short_name":"Compare","url":"/compare.html","icons":[{"src":"logo.svg?v=alpha7web18","sizes":"any","type":"image/svg+xml"}]},
+    {"name":"Full KEMS Agile","short_name":"Agile","url":"/agile.html","icons":[{"src":"logo.svg?v=alpha7web18","sizes":"any","type":"image/svg+xml"}]},
+    {"name":"Cost & ROI","short_name":"ROI","url":"/#performance","icons":[{"src":"logo.svg?v=alpha7web18","sizes":"any","type":"image/svg+xml"}]}
   ]
 }

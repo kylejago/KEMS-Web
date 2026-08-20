@@ -3,3 +3,5 @@ data/*
 !data/.gitkeep
 kems-data/
 *.log
+public/approved-logo.png
+public-site/approved-logo.png

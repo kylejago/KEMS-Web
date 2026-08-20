@@ -2,15 +2,23 @@
   <img src="public/brand-lockup.svg" alt="KEMS — Kyle Energy Management System" width="520">
 </p>
 
-# KEMS Web — 0.7.0-alpha7-web.17
+# KEMS Web — 0.7.0-alpha7-web.18
 
 KEMS Web is the read-only property companion and public-site source for the **KEMS Alpha7** platform.
 
 Home Assistant/KEMS remains the source of truth for each property. The property dashboard displays live, observed, simulated, shadow and calculated data but does not call Home Assistant services. The public `kems.uk` site is a separate static build and receives no Home Assistant credentials or household telemetry.
 
-## Canonical KEMS brand
+## Exact approved KEMS brand
 
-`public/brand-lockup.svg` and `public-site/brand-lockup.svg` are byte-identical Web copies of the canonical KEMS energy-system lockup defined in the KEMS repository. Web.17 forces a fresh brand/PWA cache and uses that full lockup for property headers, loading states, Remote Access setup, `kems.uk`, demo/login/privacy/404 pages and Pi first-boot setup. The compact square `logo.svg` remains a deliberate derivative only for favicons, PWA icons and similarly constrained square slots.
+KEMS Web.18 no longer treats a redrawn SVG as the master logo. The visual source of truth is the exact approved KEMS PNG in the KEMS core repository:
+
+```text
+docs/assets/kems_full_brand_concept.png
+```
+
+Web.18 verifies that image as **2,156,120 bytes** with SHA-256 `67ad8c3ee349a35de23f5a9040ce27c18b5cf347454f777cf1f55a6f905eb01f` before tests, release packaging and `kems.uk` deployment. `brand-lockup.svg` and `logo.svg` contain no redrawn KEMS artwork: they are mechanical crop wrappers around the verified approved PNG.
+
+The exact approved image is used across property headers, loading states, Remote Access setup, `kems.uk`, demo/login/privacy/404 pages and Pi first-boot setup. Web.18 advances the PWA cache so older Web.17 artwork cannot remain pinned.
 
 ## Property dashboard
 
@@ -46,11 +54,9 @@ http://kems-pi.local:4173
 
 The same-origin gateway owns port `4173`. The normal KEMS application runs behind it on loopback, while the privileged Cloudflare setup helper is a separate root-owned service on `127.0.0.1:4175`. Only the allow-listed `/api/remote-access/*` setup routes can reach that helper, and those routes reject Cloudflare/forwarded requests. Browsers never connect directly to the privileged port.
 
-### Web.17 bootstrap repair
+### Web.17 bootstrap repair retained
 
-Some Pis first reached Web.16 using the older Web.15 updater. That updater could switch the website to Web.16 but did not yet know how to install Web.16's newly introduced `kems-web-remote-access.service`, leaving the new same-origin gateway correctly running while `127.0.0.1:4175` refused connections.
-
-Web.17 deliberately uses the now-installed newer updater to converge that missing helper/service through the normal browser update path. The updater installs and restarts the loopback-only helper, polls `http://127.0.0.1:4175/health`, and refuses to report successful helper activation if that health check fails. Fresh installs perform the same helper health check. No SSH or Pi reflash is required.
+Some Pis first reached Web.16 using the older Web.15 updater. Web.17 repaired that transition by converging the missing `kems-web-remote-access.service` and verifying `http://127.0.0.1:4175/health`. Web.18 retains that loopback-only helper and security boundary unchanged while aligning its reported helper version with the appliance release.
 
 Pi-management routes reject forwarded/reverse-proxy requests by design. Internet-facing property access is a separate Cloudflare Access + outbound Tunnel boundary rather than an exposed local management interface.
 
@@ -64,23 +70,13 @@ The static source is under:
 public-site/
 ```
 
-It is deliberately independent of the private property backend. The visible public-site brand uses the same canonical KEMS lockup as the property appliance.
-
-Recommended IONOS deployment:
-
-1. Connect IONOS Deploy Now to `kylejago/KEMS-Web`.
-2. Use `main` as the production branch.
-3. Configure `public-site` as the static output/publish folder.
-4. No application build command is required.
-5. Assign the production deployment to `kems.uk`.
-
-SFTP upload of the **contents** of `public-site/` to the `kems.uk` webspace is also supported as a manual fallback.
+It is deliberately independent of the private property backend. Deployment synchronises and SHA-verifies the exact approved KEMS artwork before uploading the static site to IONOS.
 
 The public site must never contain a Home Assistant URL, long-lived token, household telemetry API or property-control endpoint. Regression tests enforce this boundary.
 
 ## PWA / Android
 
-The property dashboard remains installable as a PWA when served over HTTPS. Its product, comparison, Agile and Remote Access pages are in the Alpha7 application shell. Web.17 advances the application-shell cache so old Web.16 header/loading artwork cannot remain pinned after the update. The PWA uses the same property backend; it does not turn the public `kems.uk` website into a remote Home Assistant proxy.
+The property dashboard remains installable as a PWA when served over HTTPS. Its product, comparison, Agile and Remote Access pages are in the Alpha7 application shell. The PWA uses the same property backend; it does not turn the public `kems.uk` website into a remote Home Assistant proxy.
 
 ## Windows local use
 
@@ -97,7 +93,7 @@ Node.js 22 or newer is required. Pi-management controls show as unavailable on a
 npm test
 ```
 
-The suite checks syntax, fresh setup through the production gateway, legacy fixture compatibility, live Home Assistant separation, Alpha7 Agile contract, comparison/ROI, canonical branding, Web.17 helper-bootstrap convergence, PWA routing, public/private isolation and Pi deployment behavior.
+The suite checks syntax, exact approved artwork identity, fresh setup through the production gateway, legacy fixture compatibility, live Home Assistant separation, Alpha7 Agile contract, comparison/ROI, helper-bootstrap convergence, PWA routing, public/private isolation and Pi deployment behavior.
 
 ## Related documentation
 
