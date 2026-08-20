@@ -6,12 +6,12 @@
   <meta name="theme-color" content="#071217" />
   <meta name="description" content="The four user-facing KEMS product types: Live Data, Battery & Solar, Full KEMS and Full KEMS Agile." />
   <title>KEMS — Products</title>
-  <link rel="icon" href="logo.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="products.css?v=alpha7web16" />
+  <link rel="icon" href="logo.svg?v=alpha7web17" type="image/svg+xml" />
+  <link rel="stylesheet" href="products.css?v=alpha7web17" />
 </head>
 <body>
   <header class="shell top">
-    <a class="brand" href="/"><img src="brand-lockup.svg" alt="KEMS — Kyle Energy Management System" style="width:190px;height:auto;max-height:56px" /></a>
+    <a class="brand" href="/"><img src="brand-lockup.svg?v=alpha7web17" alt="KEMS — Kyle Energy Management System" /></a>
     <a class="back" href="/">← Back to property dashboard</a>
   </header>
 
@@ -26,7 +26,7 @@
   </main>
 
   <script type="module">
-    import { KEMS_PRODUCTS } from './product-model.js';
+    import { KEMS_PRODUCTS } from './product-model.js?v=alpha7web17';
     const root = document.querySelector('#products');
     root.innerHTML = KEMS_PRODUCTS.map((product, index) => `
       <article class="product" data-source="${product.source}">
