@@ -7,6 +7,8 @@ on:
       - main
     paths:
       - "public-site/**"
+      - "scripts/sync-approved-logo.mjs"
+      - "package.json"
       - ".github/workflows/deploy-kems-uk.yml"
 
 permissions:
@@ -32,11 +34,20 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Sync exact approved KEMS artwork
+        run: node scripts/sync-approved-logo.mjs
+
       - name: Verify public/private boundary
         shell: bash
         run: |
           set -euo pipefail
           test -f public-site/index.html
+          test -f public-site/approved-logo.png
           if grep -RIE --exclude=README.md "/api/|HA_TOKEN|long-lived access token|long-lived token" public-site; then
             echo "The public site contains a forbidden Home Assistant/private API reference." >&2
             exit 1
@@ -82,6 +93,7 @@ jobs:
             echo "### kems.uk deployment"
             echo ""
             echo "- Source: \`public-site/\`"
+            echo "- Approved KEMS artwork: SHA-256 verified before upload"
             echo "- SFTP-visible target: account root \`.\`"
             echo "- IONOS physical webspace: \`/kems\`"
             echo "- Public URL: https://kems.uk"
