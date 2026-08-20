@@ -76,6 +76,7 @@ else
   cp -a "$ROOT" "$DEST"
   rm -rf "$DEST/data"
   mkdir -p "$DEST/data"
+  [[ -f "$DEST/gateway.mjs" ]] && node --check "$DEST/gateway.mjs"
   node --check "$DEST/server.mjs"
   node --check "$DEST/public/app.js"
   if [[ -f "$DEST/scripts/smoke-test.mjs" ]]; then
@@ -110,9 +111,9 @@ else
   echo "Updated KEMS Web: ${CURRENT_VERSION:-none} -> ${VERSION} (${TAG})"
 fi
 
-# Always refresh appliance helper files from the verified release, even when the
-# website version is already installed. This makes browser-driven repair possible
-# when a previous updater installed the site before a new helper/service existed.
+# Always refresh appliance helpers and service definitions from the verified
+# release. Web.16 uses this step to activate its same-origin gateway and the
+# loopback-only privileged remote-access helper without SSH or a Pi reboot.
 if [[ -d "$ROOT/deploy" ]]; then
   if [[ -f "$ROOT/deploy/bin/kems-update" ]]; then install -m 0755 "$ROOT/deploy/bin/kems-update" /usr/local/sbin/kems-update.new && mv -f /usr/local/sbin/kems-update.new /usr/local/sbin/kems-update; fi
   if [[ -f "$ROOT/deploy/bin/kems-rollback" ]]; then install -m 0755 "$ROOT/deploy/bin/kems-rollback" /usr/local/sbin/kems-rollback.new && mv -f /usr/local/sbin/kems-rollback.new /usr/local/sbin/kems-rollback; fi
@@ -120,9 +121,11 @@ if [[ -d "$ROOT/deploy" ]]; then
   [[ -f "$ROOT/deploy/healthcheck.mjs" ]] && install -m 0644 "$ROOT/deploy/healthcheck.mjs" "$LIB/healthcheck.mjs"
   [[ -f "$ROOT/deploy/manager.mjs" ]] && install -m 0644 "$ROOT/deploy/manager.mjs" "$LIB/manager.mjs"
   [[ -f "$ROOT/deploy/bundle-agent.mjs" ]] && install -m 0644 "$ROOT/deploy/bundle-agent.mjs" "$LIB/bundle-agent.mjs"
+  [[ -f "$ROOT/deploy/remote-access-service.mjs" ]] && install -m 0644 "$ROOT/deploy/remote-access-service.mjs" "$LIB/remote-access-service.mjs"
   [[ -f "$ROOT/deploy/systemd/kems-web.service" ]] && install -m 0644 "$ROOT/deploy/systemd/kems-web.service" /etc/systemd/system/kems-web.service
   [[ -f "$ROOT/deploy/systemd/kems-web-manager.service" ]] && install -m 0644 "$ROOT/deploy/systemd/kems-web-manager.service" /etc/systemd/system/kems-web-manager.service
   [[ -f "$ROOT/deploy/systemd/kems-web-bundle-agent.service" ]] && install -m 0644 "$ROOT/deploy/systemd/kems-web-bundle-agent.service" /etc/systemd/system/kems-web-bundle-agent.service
+  [[ -f "$ROOT/deploy/systemd/kems-web-remote-access.service" ]] && install -m 0644 "$ROOT/deploy/systemd/kems-web-remote-access.service" /etc/systemd/system/kems-web-remote-access.service
   mkdir -p /var/lib/kems-web-management
   chown root:kemsweb /var/lib/kems-web-management 2>/dev/null || true
   chmod 750 /var/lib/kems-web-management 2>/dev/null || true
@@ -133,13 +136,32 @@ if [[ -d "$ROOT/deploy" ]]; then
     systemctl enable kems-web-bundle-agent.service >/dev/null 2>&1 || true
     systemctl is-active --quiet kems-web-bundle-agent.service || systemctl start kems-web-bundle-agent.service || true
   fi
+  if [[ -f /etc/systemd/system/kems-web-remote-access.service && -f "$LIB/remote-access-service.mjs" ]]; then
+    systemctl enable kems-web-remote-access.service >/dev/null 2>&1 || true
+    systemctl restart kems-web-remote-access.service
+  fi
+
+  # Apply a changed web service definition immediately. In Web.16 this moves
+  # port 4173 onto gateway.mjs and keeps the application backend on loopback.
+  systemctl restart kems-web.service
+  OK=0
+  for _ in $(seq 1 30); do
+    if node "$LIB/healthcheck.mjs" http://127.0.0.1:4173/api/health >/dev/null 2>&1; then OK=1; break; fi
+    sleep 1
+  done
+  [[ "$OK" == 1 ]] || { echo "KEMS Web failed its post-helper-refresh health check." >&2; exit 7; }
+
+  # The updater may itself be running as a child of the manager. Schedule the
+  # manager refresh after this command exits rather than killing its own cgroup.
+  if command -v systemd-run >/dev/null 2>&1; then
+    systemd-run --on-active=3s --collect /bin/systemctl restart kems-web-manager.service >/dev/null 2>&1 || true
+  fi
 fi
 
 if [[ "$SAME_VERSION" == 1 ]]; then
   echo "Refreshed KEMS Web ${VERSION} appliance helpers and service definitions."
 fi
 
-# Keep the active release plus the two most recently modified older versions.
 ACTIVE="$(readlink -f "$CURRENT")"
 mapfile -t OLD < <(find "$RELEASES" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %p\n' | sort -nr | awk '{print $2}' | tail -n +4)
 for item in "${OLD[@]:-}"; do

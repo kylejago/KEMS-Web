@@ -2,7 +2,7 @@
 
 KEMS remote access is a separate security boundary from both the static `kems.uk` site and the local property appliance.
 
-## Current Web.15 path
+## Current Web.16 path
 
 ```text
 kyle.kems.uk
@@ -10,6 +10,7 @@ kyle.kems.uk
   → Cloudflare Tunnel
   → outbound connector created by that property's KEMS Pi
   → http://localhost:4173
+  → KEMS same-origin gateway
   → read-only KEMS property dashboard
 ```
 
@@ -17,9 +18,13 @@ No inbound router port-forward is required. Home Assistant is not exposed direct
 
 ## Local connector setup without SSH
 
-Web.15 adds a local-only **Remote Access** setup page to the KEMS Pi. It is designed for appliances where the owner does not have SSH access.
+Web.16 keeps the browser-managed **Remote Access** setup page introduced in Web.15 but removes the browser-to-port-4175 connection that could fail under modern browser/network policy.
 
-The page accepts either the Cloudflare tunnel token itself or the dashboard-generated command of the form:
+The normal KEMS origin on port `4173` now owns a small allow-listed API under `/api/remote-access/*`. Those routes are accepted only for a direct local-network KEMS request: the host must be local/private, the browser origin must match, and Cloudflare/forwarded headers are rejected. The gateway then forwards the request internally to the root-owned helper on `127.0.0.1:4175`.
+
+The privileged helper therefore listens on **loopback only**. Port `4175` is not a LAN service, is not a browser destination, and must never be published through Cloudflare.
+
+The setup page accepts either the Cloudflare tunnel token itself or the dashboard-generated command of the form:
 
 ```text
 sudo cloudflared service install <TUNNEL_TOKEN>
@@ -27,14 +32,16 @@ sudo cloudflared service install <TUNNEL_TOKEN>
 
 KEMS does **not** execute pasted shell text. It extracts only the token from the recognised Cloudflare command form, rejects anything else, downloads the current Cloudflare `cloudflared` package for the appliance architecture, stores the token in a root-only file with mode `0600`, and starts a dedicated `kems-cloudflared.service` using `--token-file`.
 
-The privileged setup helper listens on port `4175` only for private/LAN source addresses and only accepts browser requests whose Origin is the local KEMS Web service on port `4173`. The helper is not the Cloudflare tunnel origin and must never be published through Cloudflare.
-
 For Kyle's property the published application route is:
 
 - hostname: `kyle.kems.uk`
 - service type: HTTP
 - service URL: `http://localhost:4173`
 - access control: Cloudflare Access
+
+## Appliance activation
+
+Web.16 installs and enables the dedicated `kems-web-remote-access.service` during both fresh install and browser-driven updates. A changed `kems-web.service` definition is restarted immediately so the same-origin gateway becomes active without a Pi reboot. The manager refresh is scheduled after the updater exits so an update initiated by the manager does not terminate its own cgroup mid-action.
 
 ## Local-only operations
 
@@ -49,9 +56,9 @@ The following remain local-network operations even after remote dashboard access
 - inverter/charger control endpoints
 - OS or container administration
 
-`server.mjs` already treats forwarded/proxied requests as non-LAN for Pi-management writes. The remote gateway must preserve that property rather than attempting to impersonate a local request.
+The KEMS gateway and `server.mjs` both preserve the local-management boundary. Forwarded/proxied traffic cannot be used to impersonate a local request.
 
-The tunnel must not publish port `4174`, port `4175`, Home Assistant `8123`, SSH, or a private subnet. Only the read-only KEMS property web service on `localhost:4173` is an approved origin.
+The tunnel must not publish Pi manager port `4174`, helper port `4175`, application backend port `4176`, Home Assistant `8123`, SSH, or a private subnet. Only the read-only KEMS property web service on `localhost:4173` is an approved origin.
 
 ## Gateway requirements
 
