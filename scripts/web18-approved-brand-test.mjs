@@ -6,6 +6,7 @@ const readBytes = (file) => fs.readFileSync(file);
 const expect = (condition, message) => { if (!condition) throw new Error(message); };
 const SHA256 = "67ad8c3ee349a35de23f5a9040ce27c18b5cf347454f777cf1f55a6f905eb01f";
 const BYTES = 2_156_120;
+const SOURCE_PATH = "docs/assets/kems_full_brand_concept.png";
 
 const pkg = JSON.parse(read("package.json"));
 const project = JSON.parse(read("config/project.json"));
@@ -19,6 +20,7 @@ const installer = read("install.sh");
 const release = read(".github/workflows/release.yml");
 const deploy = read(".github/workflows/deploy-kems-uk.yml");
 const helper = read("deploy/remote-access-service.mjs");
+const firstBoot = read("image/kems-setup-status.mjs");
 
 expect(pkg.version === "0.7.0-alpha7-web.18", "package.json must identify Web.18");
 expect(project.version === pkg.version, "project.json and package.json version drift");
@@ -26,7 +28,7 @@ expect(pkg.scripts.test.includes("web18-approved-brand-test.mjs"), "Web.18 appro
 expect(pkg.scripts.test.startsWith("npm run sync-brand"), "Web.18 tests must sync the approved artwork before validation");
 
 for (const marker of [
-  "docs/assets/kems_full_brand_concept.png",
+  SOURCE_PATH,
   SHA256,
   "2_156_120",
   "public/approved-logo.png",
@@ -64,6 +66,9 @@ for (const file of publicPages) {
   expect(!text.includes("alpha7web17") && !text.includes("alpha7web16"), `${file} still references an older branded shell`);
 }
 
+expect(firstBoot.includes(SOURCE_PATH), "Pi first-boot screen must use the exact approved KEMS source image");
+expect(firstBoot.includes('viewBox=\"240 285 1040 370\"'), "Pi first-boot artwork must use the same mechanical wide crop");
+expect(!firstBoot.includes("linearGradient id=\"word\""), "Pi first-boot must not retain the redrawn KEMS mark");
 expect(worker.includes('const CACHE_NAME = "kems-alpha7-web18-shell-v1"'), "Web.18 must advance the PWA cache");
 expect(worker.includes("/approved-logo.png?v=alpha7web18"), "PWA shell must cache the exact approved artwork");
 expect(installer.includes("sync-approved-logo.mjs") && installer.includes("approved-logo.png"), "fresh Pi install must prepare the approved artwork");
