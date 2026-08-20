@@ -9,9 +9,11 @@ const SIZE = 877;
 
 const pkg = JSON.parse(read("package.json"));
 const project = JSON.parse(read("config/project.json"));
-expect(pkg.version === "0.7.0-alpha7-web.19", "package.json must identify Web.19");
-expect(project.version === pkg.version, "project.json must match Web.19");
-expect(pkg.scripts.test.includes("web19-demo-login-brand-test.mjs"), "Web.19 regression must run in npm test");
+const webNumber = Number.parseInt(pkg.version.match(/-web\.(\d+)$/)?.[1] || "0", 10);
+const assetVersion = `alpha7web${webNumber}`;
+expect(webNumber >= 19, "package.json must identify Web.19 or later");
+expect(project.version === pkg.version, "project.json must match package.json");
+expect(pkg.scripts.test.includes("web19-demo-login-brand-test.mjs"), "Web.19+ regression must run in npm test");
 
 const master = bytes("brand/kems-logo.svg");
 expect(master.length === SIZE, `canonical SVG must be ${SIZE} bytes`);
@@ -21,7 +23,7 @@ for (const file of ["public/logo.svg", "public/brand-lockup.svg", "public-site/l
 }
 const sync = read("scripts/sync-approved-logo.mjs");
 expect(sync.includes('brand", "kems-logo.svg"') && sync.includes(SHA) && sync.includes("877"), "brand sync must verify the local exact SVG");
-expect(!sync.includes("kems_full_brand_concept.png") && !sync.includes("67ad8c3e"), "Web.19 must not fetch the old PNG brand");
+expect(!sync.includes("kems_full_brand_concept.png") && !sync.includes("67ad8c3e"), "Web.19+ must not fetch the old PNG brand");
 
 const gateway = read("gateway.mjs");
 for (const marker of ["demo-api.kems.uk", '"/api/public-demo"', "PUBLIC_DEMO_DELAY_DAYS = 7", "energy-ledger.json", "PUBLIC_DEMO_ORIGINS"]) {
@@ -40,12 +42,13 @@ expect(login.includes("https://kems-uk.cloudflareaccess.com/"), "property login 
 expect(!/<input[^>]+type=["']?password/i.test(login), "kems.uk must not implement a password form");
 
 const worker = read("public/service-worker.js");
-expect(worker.includes('kems-alpha7-web19-shell-v1'), "Web.19 must advance the PWA cache");
+expect(worker.includes(`kems-alpha7-web${webNumber}-shell-v1`), "current Web release must advance the PWA cache");
+expect(worker.includes(`/brand-lockup.svg?v=${assetVersion}`), "PWA must cache the current brand lockup");
 expect(!worker.includes("approved-logo.png"), "PWA must not cache the obsolete PNG concept");
 const pages = ["public/index.html", "public/products.html", "public/agile.html", "public/compare.html", "public/remote-access.html", "public-site/index.html", "public-site/demo.html", "public-site/login.html", "public-site/privacy.html", "public-site/404.html"];
 for (const file of pages) {
   const text = read(file);
-  expect(text.includes("alpha7web19"), `${file} must use Web.19 cache-busted assets`);
+  expect(text.includes(assetVersion), `${file} must use current cache-busted assets`);
   expect(!text.includes("alpha7web18"), `${file} still references Web.18 assets`);
 }
 
@@ -55,8 +58,9 @@ const installer = read("install.sh");
 const helper = read("deploy/remote-access-service.mjs");
 expect(release.includes(SHA) && release.includes("brand/kems-logo.svg") && release.includes("package.json gateway.mjs server.mjs public brand"), "release must verify and package canonical SVG source");
 expect(deploy.includes(SHA) && deploy.includes("brand/**"), "kems.uk deployment must verify the canonical SVG");
-expect(installer.includes('"$SRC/public/logo.svg"') && installer.includes("brand"), "fresh installer must verify/copy Web.19 SVG brand");
+expect(installer.includes('"$SRC/public/logo.svg"') && installer.includes("brand"), "fresh installer must verify/copy the exact SVG brand");
 expect(!installer.includes("approved-logo.png"), "fresh installer must not require obsolete PNG artwork");
-expect(helper.includes('const HELPER_VERSION = "0.7.0-alpha7-web.19"'), "Remote Access helper must report Web.19");
+const helperVersion = Number.parseInt(helper.match(/HELPER_VERSION = "0\.7\.0-alpha7-web\.(\d+)"/)?.[1] || "0", 10);
+expect(helperVersion >= 19, "Remote Access helper must retain the Web.19+ security baseline");
 
-console.log("Web.19 exact SVG, delayed demo and Cloudflare login contract passed.");
+console.log(`Web.${webNumber} exact SVG, delayed demo and Cloudflare login contract passed.`);
