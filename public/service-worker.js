@@ -1,4 +1,4 @@
-const CACHE_NAME = "kems-alpha7-web18-shell-v1";
+const CACHE_NAME = "kems-alpha7-web19-shell-v1";
 const APP_SHELL = [
   "/",
   "/index.html",
@@ -6,20 +6,19 @@ const APP_SHELL = [
   "/agile.html",
   "/compare.html",
   "/remote-access.html",
-  "/styles.css?v=alpha7web18",
-  "/brand.css?v=alpha7web18",
-  "/products.css?v=alpha7web18",
-  "/agile.css?v=alpha7web18",
-  "/compare.css?v=alpha7web18",
-  "/app.js?v=alpha7web18",
-  "/platform-label.js?v=alpha7web18",
-  "/remote-access.js?v=alpha7web18",
-  "/agile-page.js?v=alpha7web18",
-  "/compare-page.js?v=alpha7web18",
-  "/product-model.js?v=alpha7web18",
-  "/approved-logo.png?v=alpha7web18",
-  "/brand-lockup.svg?v=alpha7web18",
-  "/logo.svg?v=alpha7web18"
+  "/styles.css?v=alpha7web19",
+  "/brand.css?v=alpha7web19",
+  "/products.css?v=alpha7web19",
+  "/agile.css?v=alpha7web19",
+  "/compare.css?v=alpha7web19",
+  "/app.js?v=alpha7web19",
+  "/platform-label.js?v=alpha7web19",
+  "/remote-access.js?v=alpha7web19",
+  "/agile-page.js?v=alpha7web19",
+  "/compare-page.js?v=alpha7web19",
+  "/product-model.js?v=alpha7web19",
+  "/brand-lockup.svg?v=alpha7web19",
+  "/logo.svg?v=alpha7web19"
 ];
 
 self.addEventListener("install", (event) => {
