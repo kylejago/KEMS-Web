@@ -3,28 +3,28 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="description" content="KEMS property access entry point." />
+  <meta name="description" content="Sign in to KEMS property access through Cloudflare Access." />
   <meta name="robots" content="noindex,nofollow" />
   <meta name="theme-color" content="#071217" />
-  <title>KEMS — Property access</title>
-  <link rel="icon" href="logo.svg?v=alpha7web18" type="image/svg+xml" />
-  <link rel="stylesheet" href="styles.css?v=alpha7web18" />
+  <title>KEMS — Sign in</title>
+  <link rel="icon" href="logo.svg?v=alpha7web19" type="image/svg+xml" />
+  <link rel="stylesheet" href="styles.css?v=alpha7web19" />
 </head>
 <body>
   <div class="glow glow-a" aria-hidden="true"></div><div class="glow glow-b" aria-hidden="true"></div>
-  <header class="shell nav"><a class="brand" href="index.html"><img src="brand-lockup.svg?v=alpha7web18" alt="KEMS — Kyle Energy Management System" /></a><nav><a href="demo.html">Demo</a><a href="privacy.html">Privacy</a><a class="button small" href="https://github.com/kylejago/KEMS">GitHub</a></nav></header>
+  <header class="shell nav"><a class="brand" href="index.html"><img src="brand-lockup.svg?v=alpha7web19" alt="KEMS" /></a><nav><a href="demo.html">Demo</a><a href="privacy.html">Privacy</a><a class="button small" href="https://github.com/kylejago/KEMS">GitHub</a></nav></header>
   <main>
     <section class="shell hero" style="min-height:620px;grid-template-columns:1fr .72fr">
       <div>
         <p class="eyebrow">Private property access</p>
-        <h1>Your property stays behind its own security boundary.</h1>
-        <p class="lead">KEMS remote access is being built around authenticated accounts and outbound property tunnels. The Pi initiates the connection outward; Home Assistant is not port-forwarded and household access tokens are not stored in this public website.</p>
-        <div class="actions"><a class="button ghost" href="index.html">Back to kems.uk</a><a class="button" href="demo.html">View delayed demo</a></div>
-        <p class="boundary">This page intentionally does not accept credentials yet. A real sign-in form will only appear when the authenticated gateway is deployed.</p>
+        <h1>Sign in once. Open only the KEMS properties you are allowed to see.</h1>
+        <p class="lead">KEMS uses Cloudflare Access as the authentication boundary. kems.uk does not store a separate KEMS password database, Home Assistant credentials or property access tokens.</p>
+        <div class="actions"><a class="button" href="https://kems-uk.cloudflareaccess.com/">Sign in to KEMS</a><a class="button ghost" href="demo.html">View delayed demo</a></div>
+        <p class="boundary">After authentication, the KEMS property launcher shows only the Access applications your account is permitted to open. Each property remains behind its own outbound Cloudflare Tunnel.</p>
       </div>
-      <aside class="hero-card"><div class="pulse"></div><span>Remote access foundation</span><strong>Account → property → outbound tunnel → read-only Pi dashboard</strong><p>Local Pi maintenance, updates, backups and Home Assistant control remain unavailable through the remote route.</p></aside>
+      <aside class="hero-card"><div class="pulse"></div><span>Secure property access</span><strong>Cloudflare identity → KEMS property launcher → authorised property → outbound tunnel → read-only Pi dashboard</strong><p>Local Pi maintenance, Remote Access setup, Home Assistant and hardware-control endpoints remain unavailable through the public property route.</p></aside>
     </section>
   </main>
-  <footer class="shell footer"><div class="brand"><img src="brand-lockup.svg?v=alpha7web18" alt="KEMS — Kyle Energy Management System" /></div><p><a href="privacy.html">Privacy</a> · <a href="https://github.com/kylejago/KEMS">Open project</a></p></footer>
+  <footer class="shell footer"><div class="brand"><img src="brand-lockup.svg?v=alpha7web19" alt="KEMS" /></div><p><a href="privacy.html">Privacy</a> · <a href="https://github.com/kylejago/KEMS">Open project</a></p></footer>
 </body>
 </html>

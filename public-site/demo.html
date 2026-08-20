@@ -6,22 +6,22 @@
   <meta name="description" content="See KEMS in action using deliberately sanitised property evidence delayed by at least seven days." />
   <meta name="theme-color" content="#071217" />
   <title>KEMS — Delayed demo property</title>
-  <link rel="icon" href="logo.svg?v=alpha7web18" type="image/svg+xml" />
-  <link rel="stylesheet" href="styles.css?v=alpha7web18" />
-  <link rel="stylesheet" href="demo.css?v=alpha7web18" />
+  <link rel="icon" href="logo.svg?v=alpha7web19" type="image/svg+xml" />
+  <link rel="stylesheet" href="styles.css?v=alpha7web19" />
+  <link rel="stylesheet" href="demo.css?v=alpha7web19" />
 </head>
 <body>
   <div class="glow glow-a" aria-hidden="true"></div><div class="glow glow-b" aria-hidden="true"></div>
   <header class="shell nav">
-    <a class="brand" href="index.html"><img src="brand-lockup.svg?v=alpha7web18" alt="KEMS — Kyle Energy Management System" /></a>
-    <nav><a href="index.html#how">How it works</a><a href="demo.html" aria-current="page">Demo</a><a href="login.html">Property login</a><a class="button small" href="https://github.com/kylejago/KEMS">GitHub</a></nav>
+    <a class="brand" href="index.html"><img src="brand-lockup.svg?v=alpha7web19" alt="KEMS" /></a>
+    <nav><a href="index.html#how">How it works</a><a href="demo.html" aria-current="page">Demo</a><a href="login.html">Sign in</a><a class="button small" href="https://github.com/kylejago/KEMS">GitHub</a></nav>
   </header>
 
   <main class="demo-shell">
     <section class="demo-hero">
       <p class="eyebrow">See KEMS in action</p>
-      <h1>Real evidence, deliberately seven days late.</h1>
-      <p class="lead">This demonstration uses sanitised daily totals only. It is designed to show how the same property compares across Live Data, Battery &amp; Solar, Full KEMS and Full KEMS Agile without exposing a live house, Home Assistant credentials or control endpoints.</p>
+      <h1>Real property evidence, deliberately seven days late.</h1>
+      <p class="lead">This page now reads a live sanitised feed from the KEMS Pi. Only retained daily totals old enough to satisfy the seven-day privacy delay are eligible. No live house power, Home Assistant credentials or control endpoints are exposed.</p>
       <p class="demo-warning"><strong>Demo property — data delayed by at least 7 days.</strong> Precise live power, entity IDs, device identifiers and remote-control surfaces are excluded from this feed.</p>
     </section>
 
@@ -29,13 +29,13 @@
       <label for="demo-period">Evidence window
         <select id="demo-period"><option value="day">Latest delayed day</option><option value="week" selected>Last 7 published days</option><option value="month">Last 30 published days</option><option value="year">Last 365 published days</option><option value="all">All published evidence</option></select>
       </label>
-      <div class="demo-status" id="demo-status">Loading delayed demo…</div>
+      <div class="demo-status" id="demo-status">Loading delayed KEMS feed…</div>
     </section>
 
     <section class="demo-root" id="demo-root" aria-live="polite"></section>
   </main>
 
-  <footer class="shell footer"><div class="brand"><img src="brand-lockup.svg?v=alpha7web18" alt="KEMS — Kyle Energy Management System" /></div><p><a href="index.html">Home</a> · <a href="privacy.html">Privacy</a> · <a href="https://github.com/kylejago/KEMS">Open project</a></p></footer>
-  <script type="module" src="demo.js?v=alpha7web18"></script>
+  <footer class="shell footer"><div class="brand"><img src="brand-lockup.svg?v=alpha7web19" alt="KEMS" /></div><p><a href="index.html">Home</a> · <a href="privacy.html">Privacy</a> · <a href="https://github.com/kylejago/KEMS">Open project</a></p></footer>
+  <script type="module" src="demo.js?v=alpha7web19"></script>
 </body>
 </html>

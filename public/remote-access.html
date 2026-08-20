@@ -6,20 +6,20 @@
   <meta name="theme-color" content="#071217" />
   <meta name="description" content="Local-only KEMS remote access setup for Cloudflare Tunnel." />
   <title>KEMS — Remote Access Setup</title>
-  <link rel="icon" href="logo.svg?v=alpha7web18" type="image/svg+xml" />
-  <link rel="stylesheet" href="styles.css?v=alpha7web18" />
-  <link rel="stylesheet" href="brand.css?v=alpha7web18" />
+  <link rel="icon" href="logo.svg?v=alpha7web19" type="image/svg+xml" />
+  <link rel="stylesheet" href="styles.css?v=alpha7web19" />
+  <link rel="stylesheet" href="brand.css?v=alpha7web19" />
 </head>
 <body>
   <div class="ambient" aria-hidden="true"><span></span><span></span><span></span></div>
   <header class="topbar">
-    <a class="brand" href="/" aria-label="Back to KEMS dashboard"><img class="brand-lockup" src="brand-lockup.svg?v=alpha7web18" alt="KEMS — Kyle Energy Management System" /></a>
+    <a class="brand" href="/" aria-label="Back to KEMS dashboard"><img class="brand-lockup" src="brand-lockup.svg?v=alpha7web19" alt="KEMS" /></a>
     <div></div>
     <div class="top-actions"><a class="settings-button" href="/">Back to dashboard</a></div>
   </header>
 
   <main class="app" id="remote-access-app" tabindex="-1">
-    <header class="page-heading"><div><img class="page-brand-lockup" src="brand-lockup.svg?v=alpha7web18" alt="KEMS — Kyle Energy Management System" /><p class="eyebrow">Local Pi setup</p><h1>Remote access</h1><p>Install the Cloudflare Tunnel connector without SSH. Privileged setup stays behind the normal local KEMS address and is blocked when the request arrives through a proxy or tunnel.</p></div></header>
+    <header class="page-heading"><div><img class="page-brand-lockup" src="brand-lockup.svg?v=alpha7web19" alt="KEMS" /><p class="eyebrow">Local Pi setup</p><h1>Remote access</h1><p>Install the Cloudflare Tunnel connector without SSH. Privileged setup stays behind the normal local KEMS address and is blocked when the request arrives through a proxy or tunnel.</p></div></header>
 
     <section class="panel">
       <header class="section-heading"><div><h2>Cloudflare Tunnel connector</h2><p>KEMS accepts only the connector token from the Cloudflare command. It never executes pasted shell commands.</p></div></header>
@@ -34,15 +34,15 @@
     </section>
 
     <section class="panel">
-      <header class="section-heading"><div><h2>Cloudflare route</h2><p>Configure this in Cloudflare after the connector reports healthy.</p></div></header>
+      <header class="section-heading"><div><h2>Cloudflare routes</h2><p>The private property route uses Access. The public demo route is a separate host that exposes only a sanitised seven-day-delayed JSON endpoint.</p></div></header>
       <div class="panel-body">
-        <div class="system-grid"><div><span>Public hostname</span><strong>kyle.kems.uk</strong></div><div><span>Service type</span><strong>HTTP</strong></div><div><span>Service URL</span><strong>http://localhost:4173</strong></div><div><span>Protected by</span><strong>Cloudflare Access</strong></div></div>
-        <p class="field-hint">Do not route Pi management, the remote-access helper, Home Assistant port 8123, SSH, or the wider LAN through this tunnel.</p>
+        <div class="system-grid"><div><span>Private hostname</span><strong>kyle.kems.uk</strong></div><div><span>Private service</span><strong>HTTP · http://localhost:4173</strong></div><div><span>Demo hostname</span><strong>demo-api.kems.uk</strong></div><div><span>Demo path</span><strong>/api/public-demo only</strong></div></div>
+        <p class="field-hint">Do not route Pi management, the remote-access helper, Home Assistant port 8123, SSH, or the wider LAN through either hostname.</p>
       </div>
     </section>
   </main>
 
   <div id="toast-root" class="toast-root" aria-live="polite"></div>
-  <script type="module" src="remote-access.js?v=alpha7web18"></script>
+  <script type="module" src="remote-access.js?v=alpha7web19"></script>
 </body>
 </html>

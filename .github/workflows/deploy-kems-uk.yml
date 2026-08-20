@@ -7,6 +7,7 @@ on:
       - main
     paths:
       - "public-site/**"
+      - "brand/**"
       - "scripts/sync-approved-logo.mjs"
       - "package.json"
       - ".github/workflows/deploy-kems-uk.yml"
@@ -26,8 +27,6 @@ jobs:
       name: kems.uk
       url: https://kems.uk
     env:
-      # The IONOS SFTP account is jailed to the webspace directory that is
-      # physically /kems. Therefore the SFTP-visible deployment root is '.'.
       REMOTE_DIR: .
 
     steps:
@@ -39,7 +38,7 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Sync exact approved KEMS artwork
+      - name: Sync exact KEMS SVG
         run: node scripts/sync-approved-logo.mjs
 
       - name: Verify public/private boundary
@@ -47,9 +46,10 @@ jobs:
         run: |
           set -euo pipefail
           test -f public-site/index.html
-          test -f public-site/approved-logo.png
-          if grep -RIE --exclude=README.md "/api/|HA_TOKEN|long-lived access token|long-lived token" public-site; then
-            echo "The public site contains a forbidden Home Assistant/private API reference." >&2
+          test -f public-site/logo.svg
+          test "$(sha256sum public-site/logo.svg | awk '{print $1}')" = "ef53e22bdff4e4ebd81007c3a6d5f28da0384f547e9036a7be7e3bf2d420b464"
+          if grep -RIE --exclude=README.md "HA_TOKEN|long-lived access token|long-lived token|localhost:8123|:4174|:4175" public-site; then
+            echo "The public site contains a forbidden private credential/control reference." >&2
             exit 1
           fi
 
@@ -73,7 +73,7 @@ jobs:
           : "${SFTP_PASSWORD:?Missing IONOS_SFTP_PASSWORD secret}"
           PORT="${SFTP_PORT:-22}"
 
-          lftp <<EOF
+          lftp <<EOF2
           set cmd:fail-exit yes
           set net:max-retries 2
           set net:timeout 20
@@ -84,7 +84,7 @@ jobs:
           mirror --reverse --delete --verbose --exclude-glob README.md public-site/ .
           cls -1
           bye
-          EOF
+EOF2
 
       - name: Deployment summary
         shell: bash
@@ -93,7 +93,9 @@ jobs:
             echo "### kems.uk deployment"
             echo ""
             echo "- Source: \`public-site/\`"
-            echo "- Approved KEMS artwork: SHA-256 verified before upload"
+            echo "- Canonical KEMS SVG: SHA-256 verified before upload"
+            echo "- Delayed demo client: https://demo-api.kems.uk/api/public-demo"
+            echo "- Property login: Cloudflare Access App Launcher"
             echo "- SFTP-visible target: account root \`.\`"
             echo "- IONOS physical webspace: \`/kems\`"
             echo "- Public URL: https://kems.uk"

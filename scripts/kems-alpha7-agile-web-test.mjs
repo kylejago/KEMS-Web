@@ -21,7 +21,8 @@ if (!pkg.scripts.test.includes("kems-alpha7-agile-web-test.mjs")) throw new Erro
 if (!pkg.scripts.test.includes("web14-contract-test.mjs")) throw new Error("Web.14+ contract regression is not in npm test");
 if (!pkg.scripts.test.includes("web16-remote-access-brand-test.mjs")) throw new Error("Web.16 remote-access regression is not in npm test");
 if (!pkg.scripts.test.includes("web17-bootstrap-brand-test.mjs")) throw new Error("Web.17 bootstrap regression is not in npm test");
-if (webNumber >= 18 && !pkg.scripts.test.includes("web18-approved-brand-test.mjs")) throw new Error("Web.18 approved-brand regression is not in npm test");
+if (webNumber === 18 && !pkg.scripts.test.includes("web18-approved-brand-test.mjs")) throw new Error("Web.18 approved-brand regression is not in npm test");
+if (webNumber >= 19 && !pkg.scripts.test.includes("web19-demo-login-brand-test.mjs")) throw new Error("Web.19 branding/demo/login regression is not in npm test");
 if (!smoke.includes("packageVersion") || smoke.includes('health.version!=="0.7.0-alpha6-web.7"')) throw new Error("Smoke version must derive from package.json");
 if (!index.includes("/products.html") || !index.includes("/agile.html") || !index.includes("/remote-access.html") || !agileHtml.includes("Full KEMS Agile")) throw new Error("Four-product navigation / Full KEMS Agile / Remote Access navigation missing");
 for (const label of ["Live Data", "Battery & Solar", "Full KEMS", "Full KEMS Agile"]) if (!products.includes(`label: "${label}"`)) throw new Error(`Product model missing ${label}`);

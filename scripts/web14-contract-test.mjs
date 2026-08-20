@@ -34,7 +34,7 @@ assert.match(publicIndex, /login\.html/);
 const publicLogo = read("public/logo.svg");
 const publicSiteLogo = read("public-site/logo.svg");
 assert.equal(publicLogo, publicSiteLogo, "property and public sites must use the same compact KEMS logo");
-assert.match(publicLogo, /Solar|KEMS logo/);
+assert.match(publicLogo, /KEMS logo/);
 
 const cutoffNow = new Date("2026-08-20T09:00:00Z");
 const payload = sanitisePublicDemo({
@@ -47,10 +47,7 @@ const payload = sanitisePublicDemo({
       fullKemsAgile: { netCostGbp: 1.1 },
       winner: "Full KEMS Agile"
     },
-    {
-      date: "2026-08-14",
-      actual: { gridImportKwh: 100 }
-    }
+    { date: "2026-08-14", actual: { gridImportKwh: 100 } }
   ]
 }, { now: cutoffNow, delayDays: 7 });
 assert.equal(payload.days.length, 1, "newer-than-cutoff demo data must be removed");
@@ -70,7 +67,12 @@ assert.equal(emptyDemo.delayDays, 7);
 assert.deepEqual(emptyDemo.days, []);
 
 const login = read("public-site/login.html");
-assert.match(login, /does not accept credentials yet/);
+if (project.version.endsWith("web.19")) {
+  assert.match(login, /kems-uk\.cloudflareaccess\.com/);
+  assert.match(login, /Sign in to KEMS/);
+} else {
+  assert.match(login, /does not accept credentials yet/);
+}
 assert.doesNotMatch(login, /type=["']password["']/i);
 
 const server = read("server.mjs");

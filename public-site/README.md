@@ -1,34 +1,31 @@
-# kems.uk public site
+# kems.uk public site — Web.19
 
-This folder is the static public KEMS website. It is intentionally separate from the Node.js property dashboard in `public/` + `server.mjs`.
+`public-site/` is the static public KEMS website deployed to IONOS. It contains no Home Assistant credentials, property-control API or private Pi-management endpoint.
 
-## IONOS production deployment
+## Branding
 
-Production is hosted on the existing IONOS web-hosting package, with `kems.uk` linked to the webspace directory `/kems`.
+The deployment workflow runs `scripts/sync-approved-logo.mjs`, which copies the exact user-supplied `brand/kems-logo.svg` into the public site and verifies SHA-256 `ef53e22bdff4e4ebd81007c3a6d5f28da0384f547e9036a7be7e3bf2d420b464`.
 
-Deployment is automated by `.github/workflows/deploy-kems-uk.yml`:
+## Demo
 
-1. GitHub checks the public/private boundary.
-2. Only the contents of `public-site/` are mirrored over SFTP.
-3. `README.md` is excluded from the public webspace.
-4. The remote target is fixed to `/kems`.
-5. Files removed from `public-site/` are also removed from `/kems` so the live site cannot accumulate stale assets.
+`demo.html` loads deliberately delayed data from:
 
-Required GitHub Actions secrets:
+```text
+https://demo-api.kems.uk/api/public-demo
+```
 
-- `IONOS_SFTP_HOST`
-- `IONOS_SFTP_USER`
-- `IONOS_SFTP_PASSWORD`
-- `IONOS_SFTP_PORT` is optional; port 22 is used when it is absent.
+That hostname is served by the property Pi through Cloudflare Tunnel, but the Web.19 gateway exposes only the sanitised public-demo endpoint on that hostname. Data is daily aggregate evidence at least seven days old. If the API is unavailable, the page falls back to `demo-data.json` and reports the unavailable/live-feed state.
 
-The workflow can be run manually from GitHub Actions and also deploys automatically whenever `public-site/**` changes on `main`.
+## Sign in
 
-## Delayed public demo
+`login.html` sends users to the Cloudflare Access App Launcher:
 
-`demo.html` reads only `demo-data.json`. The feed contract requires a minimum seven-day delay and daily sanitised totals. `scripts/build-public-demo.mjs` rejects candidate rows that contain fields outside the allow-list and excludes dates newer than the configured privacy cutoff.
+```text
+https://kems-uk.cloudflareaccess.com/
+```
 
-The public demo must never contain precise live power, entity IDs, device identifiers, Home Assistant URLs, tokens, household control endpoints or Pi-management actions.
+Cloudflare performs authentication and property authorisation. `kems.uk` does not maintain a separate password database.
 
-## Remote property access
+## Deployment
 
-The static public site is not the property proxy. `login.html` is only the public entry point while the authenticated gateway is being built. The intended boundary is account → selected property → outbound tunnel → read-only Pi dashboard. Pi maintenance, updates, backups and Home Assistant control stay LAN-only.
+The GitHub workflow `.github/workflows/deploy-kems-uk.yml` mirrors the contents of `public-site/` to the IONOS webspace. The public site may reference the deliberately public `demo-api.kems.uk/api/public-demo` endpoint; it must never contain Home Assistant tokens, `localhost:8123`, Pi manager port 4174 or Remote Access helper port 4175.
