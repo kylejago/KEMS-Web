@@ -64,6 +64,10 @@ if [[ -z "$SRC" ]]; then SRC="$(find "$TMP" -mindepth 1 -maxdepth 1 -type d -pri
 VERSION="$(node -e 'const p=require(process.argv[1]); process.stdout.write(String(p.version||""))' "$SRC/package.json")"
 [[ -n "$VERSION" ]] || { echo "KEMS Web package has no version." >&2; exit 5; }
 
+echo "Verifying exact approved KEMS artwork..."
+node "$SRC/scripts/sync-approved-logo.mjs"
+[[ -f "$SRC/public/approved-logo.png" ]] || { echo "Approved KEMS artwork was not prepared." >&2; exit 8; }
+
 mkdir -p "$BASE/releases" "$LIB_DIR" "$DATA_DIR" /var/lib/kems-web-management
 
 if ! getent group kemsweb >/dev/null 2>&1; then groupadd --system kemsweb; fi
