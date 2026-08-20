@@ -28,8 +28,11 @@ expect(remote.includes("--token-file"), "cloudflared must use a root-only token 
 expect(remote.includes("mode: 0o600"), "tunnel token must be stored with mode 0600");
 expect(remote.includes("cloudflared\\s+service\\s+install"), "helper must recognise only the Cloudflare service-install command form");
 expect(remote.includes("Nothing was executed"), "invalid pasted commands must explicitly remain non-executable");
-expect(!remote.includes("exec("), "remote helper must not use generic exec shell execution");
+expect(remote.includes('import { spawnSync } from "node:child_process"'), "remote helper must use argument-vector process execution");
+expect(!remote.includes("execSync("), "remote helper must not use execSync shell execution");
+expect(!remote.includes("execFile("), "remote helper must not use execFile for pasted input");
 expect(!remote.includes("spawn(\"bash\""), "remote helper must not invoke a generic shell for pasted input");
+expect(!remote.includes("bash -c") && !remote.includes("bash -lc"), "remote helper must not construct shell command strings");
 expect(remote.includes("requestIsLocal"), "remote helper must verify local-network callers");
 expect(remote.includes("localOrigin"), "remote helper must verify the local KEMS web origin");
 expect(remote.includes("Do not route") === false, "routing warning belongs in the UI, not privileged server logic");
