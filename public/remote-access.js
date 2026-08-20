@@ -4,14 +4,7 @@ const form = document.querySelector("#remote-install-form");
 const commandInput = document.querySelector("#cloudflare-command");
 const resultRoot = document.querySelector("#remote-result");
 const toastRoot = document.querySelector("#toast-root");
-
-function localHostname(hostname) {
-  const value = String(hostname || "").toLowerCase();
-  if (["localhost", "127.0.0.1", "::1"].includes(value) || value.endsWith(".local")) return true;
-  if (/^10\./.test(value) || /^192\.168\./.test(value) || /^169\.254\./.test(value)) return true;
-  const match = /^172\.(\d+)\./.exec(value);
-  return Boolean(match && Number(match[1]) >= 16 && Number(match[1]) <= 31);
-}
+const API = "/api/remote-access";
 
 function escapeHtml(value = "") {
   return String(value).replace(/[&<>"']/g, (character) => ({
@@ -31,12 +24,8 @@ function toast(message, type = "good") {
   setTimeout(() => item.remove(), 4200);
 }
 
-const local = localHostname(location.hostname) && location.protocol === "http:";
-const managerBase = local ? `http://${location.hostname}:4175` : null;
-
 async function json(path, options = {}) {
-  if (!managerBase) throw new Error("Remote Access Setup must be opened from the Pi's local HTTP address.");
-  const response = await fetch(`${managerBase}${path}`, options);
+  const response = await fetch(`${API}${path}`, options);
   let body = {};
   try { body = await response.json(); } catch {}
   if (!response.ok) throw new Error(body.error || `Request failed (${response.status})`);
@@ -52,7 +41,7 @@ function render(status) {
   const state = status.connected ? "Connected" : status.service === "active" ? "Starting / checking Cloudflare" : status.configured ? "Configured but stopped" : "Not configured";
   const logs = Array.isArray(status.recentLogs) ? status.recentLogs.slice(-5) : [];
   statusRoot.innerHTML = `
-    <div class="system-status-line"><span class="system-dot ${tone(status.connected ? "connected" : status.service)}"></span><strong>${escapeHtml(state)}</strong><span>LAN-only setup helper</span></div>
+    <div class="system-status-line"><span class="system-dot ${tone(status.connected ? "connected" : status.service)}"></span><strong>${escapeHtml(state)}</strong><span>LAN-only setup API · helper ${escapeHtml(status.helperVersion || "current")}</span></div>
     <div class="system-grid">
       <div><span>cloudflared</span><strong>${escapeHtml(status.version || (status.installed ? "Installed" : "Not installed"))}</strong></div>
       <div><span>Service</span><strong>${escapeHtml(status.service || "Unknown")}</strong></div>
@@ -72,15 +61,12 @@ function render(status) {
 }
 
 async function refresh() {
-  if (!local) {
-    statusRoot.innerHTML = `<div class="system-unavailable"><strong>Local network required</strong><p>Open this page from your Pi address, for example <code>http://kems-pi.local:4173/remote-access.html</code>. Remote tunnel users cannot reach the privileged setup helper.</p></div>`;
-    form.hidden = true;
-    return;
-  }
   try {
     render(await json("/status"));
   } catch (error) {
-    render({ available: false, error: error.message });
+    const localOnly = /direct local-network|local-network/i.test(error.message);
+    statusRoot.innerHTML = `<div class="system-unavailable"><strong>${localOnly ? "Local network required" : "Remote-access helper unavailable"}</strong><p>${escapeHtml(error.message)}</p></div>`;
+    form.hidden = localOnly;
   }
 }
 
