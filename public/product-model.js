@@ -15,7 +15,7 @@ export const KEMS_PRODUCTS = Object.freeze([
     description: "The same home replayed with the configured solar array and battery using normal tariff-aware storage behaviour.",
     source: "simulation",
     capabilities: Object.freeze(["Solar routing", "Battery routing", "Import reduction", "Export income"]),
-    href: "/compare.html?product=battery_solar"
+    href: "/compare.html"
   }),
   Object.freeze({
     key: "full_kems",
@@ -24,7 +24,7 @@ export const KEMS_PRODUCTS = Object.freeze([
     description: "Forecast-aware KEMS optimisation, protecting the home while deciding when to charge, hold, use or export stored energy.",
     source: "simulation",
     capabilities: Object.freeze(["Demand forecast", "Solar forecast", "Smart import", "Reserve protection"]),
-    href: "/compare.html?product=full_kems"
+    href: "/compare.html"
   }),
   Object.freeze({
     key: "full_kems_agile",
