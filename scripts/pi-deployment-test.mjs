@@ -46,5 +46,5 @@ console.log("Pi deployment checks passed.");
 
 mustContain("server.mjs", ["/api/site", "/api/maintenance", "/api/system/update-policy", "/api/home-assistant/status", "/api/home-assistant/action", "site.json"]);
 mustContain("public/app.js", ["Site identity", "Automatic coordinated updates", "Planned KEMS maintenance", "Host on this KEMS Pi", "Install Home Assistant", "Connect KEMS to local HA"]);
-mustContain("public/remote-access.html", ["Remote access", "Cloudflare Tunnel connector", "http://localhost:4173", "kyle.kems.uk"]);
-mustContain("public/remote-access.js", ["http://${location.hostname}:4175", "Install & connect", "localHostname"]);
+mustContain("public/remote-access.html", ["Remote access", "Cloudflare Tunnel connector", "http://localhost:4173", "kyle.kems.uk", "Install &amp; connect"]);
+mustContain("public/remote-access.js", ["http://${location.hostname}:4175", "localHostname", "\"/install\"", "\"/action\""]);
