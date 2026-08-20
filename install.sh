@@ -11,6 +11,7 @@ NODE_MAJOR="${KEMS_NODE_MAJOR:-22}"
 BASE=/opt/kems-web
 DATA_DIR=/var/lib/kems-web
 LIB_DIR=/usr/local/lib/kems-web
+KEMS_LOGO_SHA256="ef53e22bdff4e4ebd81007c3a6d5f28da0384f547e9036a7be7e3bf2d420b464"
 
 [[ ${EUID:-$(id -u)} -eq 0 ]] || { echo "Run this installer with sudo." >&2; exit 1; }
 
@@ -64,9 +65,11 @@ if [[ -z "$SRC" ]]; then SRC="$(find "$TMP" -mindepth 1 -maxdepth 1 -type d -pri
 VERSION="$(node -e 'const p=require(process.argv[1]); process.stdout.write(String(p.version||""))' "$SRC/package.json")"
 [[ -n "$VERSION" ]] || { echo "KEMS Web package has no version." >&2; exit 5; }
 
-echo "Verifying exact approved KEMS artwork..."
+echo "Verifying canonical KEMS SVG..."
 node "$SRC/scripts/sync-approved-logo.mjs"
-[[ -f "$SRC/public/approved-logo.png" ]] || { echo "Approved KEMS artwork was not prepared." >&2; exit 8; }
+[[ -f "$SRC/brand/kems-logo.svg" && -f "$SRC/public/logo.svg" ]] || { echo "Canonical KEMS SVG was not prepared." >&2; exit 8; }
+[[ "$(sha256sum "$SRC/brand/kems-logo.svg" | awk '{print $1}')" == "$KEMS_LOGO_SHA256" ]] || { echo "Canonical KEMS SVG hash mismatch." >&2; exit 8; }
+cmp -s "$SRC/brand/kems-logo.svg" "$SRC/public/logo.svg" || { echo "Property KEMS SVG differs from canonical master." >&2; exit 8; }
 
 mkdir -p "$BASE/releases" "$LIB_DIR" "$DATA_DIR" /var/lib/kems-web-management
 
@@ -80,7 +83,7 @@ DEST="$BASE/releases/$VERSION"
 rm -rf "$DEST"
 mkdir -p "$DEST"
 
-for item in package.json gateway.mjs server.mjs public config scripts README.md CHANGELOG.md LICENSE .env.example; do
+for item in package.json gateway.mjs server.mjs public brand config scripts README.md CHANGELOG.md LICENSE .env.example; do
   [[ -e "$SRC/$item" ]] && cp -a "$SRC/$item" "$DEST/"
 done
 mkdir -p "$DEST/data"
