@@ -2,7 +2,7 @@
 
 KEMS remote access is a separate security boundary from both the static `kems.uk` site and the local property appliance.
 
-## Current Web.16 path
+## Current Web.17 path
 
 ```text
 kyle.kems.uk
@@ -18,9 +18,9 @@ No inbound router port-forward is required. Home Assistant is not exposed direct
 
 ## Local connector setup without SSH
 
-Web.16 keeps the browser-managed **Remote Access** setup page introduced in Web.15 but removes the browser-to-port-4175 connection that could fail under modern browser/network policy.
+Web.17 keeps the browser-managed **Remote Access** setup page and the Web.16 same-origin design that removed the browser-to-port-4175 connection.
 
-The normal KEMS origin on port `4173` now owns a small allow-listed API under `/api/remote-access/*`. Those routes are accepted only for a direct local-network KEMS request: the host must be local/private, the browser origin must match, and Cloudflare/forwarded headers are rejected. The gateway then forwards the request internally to the root-owned helper on `127.0.0.1:4175`.
+The normal KEMS origin on port `4173` owns a small allow-listed API under `/api/remote-access/*`. Those routes are accepted only for a direct local-network KEMS request: the host must be local/private, the browser origin must match, and Cloudflare/forwarded headers are rejected. The gateway then forwards the request internally to the root-owned helper on `127.0.0.1:4175`.
 
 The privileged helper therefore listens on **loopback only**. Port `4175` is not a LAN service, is not a browser destination, and must never be published through Cloudflare.
 
@@ -39,9 +39,13 @@ For Kyle's property the published application route is:
 - service URL: `http://localhost:4173`
 - access control: Cloudflare Access
 
-## Appliance activation
+## Web.17 bootstrap repair
 
-Web.16 installs and enables the dedicated `kems-web-remote-access.service` during both fresh install and browser-driven updates. A changed `kems-web.service` definition is restarted immediately so the same-origin gateway becomes active without a Pi reboot. The manager refresh is scheduled after the updater exits so an update initiated by the manager does not terminate its own cgroup mid-action.
+A Pi that first installed Web.16 through the older Web.15 updater could switch the website/gateway successfully but miss Web.16's newly introduced `kems-web-remote-access.service`. In that state the browser correctly used the same-origin `/api/remote-access/*` path, but the gateway received `ECONNREFUSED` from `127.0.0.1:4175` because no helper was listening.
+
+Web.17 repairs that transition through the normal browser update path. By the time Web.17 is installed, the Pi already has the newer updater delivered with Web.16. That updater can copy and enable the missing helper service from the Web.17 release. Web.17 then strengthens the updater for future releases by explicitly polling `http://127.0.0.1:4175/health` after helper activation and refusing to report successful helper activation if the loopback health check fails. Fresh installs perform the same helper health check.
+
+No SSH session, router port-forward, Pi reflash or Home Assistant change is required for this repair.
 
 ## Local-only operations
 
