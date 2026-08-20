@@ -2,7 +2,7 @@
 
 KEMS remote access is a separate security boundary from both the static `kems.uk` site and the local property appliance.
 
-## Current Web.17 path
+## Current Web.18 path
 
 ```text
 kyle.kems.uk
@@ -18,7 +18,7 @@ No inbound router port-forward is required. Home Assistant is not exposed direct
 
 ## Local connector setup without SSH
 
-Web.17 keeps the browser-managed **Remote Access** setup page and the Web.16 same-origin design that removed the browser-to-port-4175 connection.
+Web.18 retains the browser-managed **Remote Access** setup page and the Web.16 same-origin design, plus the Web.17 self-healing helper bootstrap.
 
 The normal KEMS origin on port `4173` owns a small allow-listed API under `/api/remote-access/*`. Those routes are accepted only for a direct local-network KEMS request: the host must be local/private, the browser origin must match, and Cloudflare/forwarded headers are rejected. The gateway then forwards the request internally to the root-owned helper on `127.0.0.1:4175`.
 
@@ -39,13 +39,11 @@ For Kyle's property the published application route is:
 - service URL: `http://localhost:4173`
 - access control: Cloudflare Access
 
-## Web.17 bootstrap repair
+## Self-healing helper baseline
 
-A Pi that first installed Web.16 through the older Web.15 updater could switch the website/gateway successfully but miss Web.16's newly introduced `kems-web-remote-access.service`. In that state the browser correctly used the same-origin `/api/remote-access/*` path, but the gateway received `ECONNREFUSED` from `127.0.0.1:4175` because no helper was listening.
+Web.17 repaired Pis that had reached Web.16 using an older updater before `kems-web-remote-access.service` existed. Current releases retain the same repair path: the updater installs/enables the helper, restarts it, polls `http://127.0.0.1:4175/health`, and does not report successful helper activation if that loopback health check fails. Fresh installs perform the same helper check.
 
-Web.17 repairs that transition through the normal browser update path. By the time Web.17 is installed, the Pi already has the newer updater delivered with Web.16. That updater can copy and enable the missing helper service from the Web.17 release. Web.17 then strengthens the updater for future releases by explicitly polling `http://127.0.0.1:4175/health` after helper activation and refusing to report successful helper activation if the loopback health check fails. Fresh installs perform the same helper health check.
-
-No SSH session, router port-forward, Pi reflash or Home Assistant change is required for this repair.
+Web.18 does not change the Remote Access trust boundary. Its changes are branding/version alignment plus the existing helper reporting the current Web.18 appliance version.
 
 ## Local-only operations
 
