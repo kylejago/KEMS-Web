@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.7.0-alpha7-web.14 — Four-product parity, delayed demo and remote-access foundation
+
+- Aligns the property dashboard and public site to the canonical user-facing KEMS product model: **Live Data**, **Battery & Solar**, **Full KEMS**, and **Full KEMS Agile**.
+- Adds a dedicated property Products page and updates navigation, PWA shortcuts, comparison labels and the Agile workspace naming.
+- Replaces the temporary K/lightning web mark with the shared KEMS energy-system brand icon used across property and public surfaces.
+- Adds the `kems.uk` **See KEMS in action** experience with a strict minimum seven-day privacy delay and an allow-listed sanitiser for daily totals.
+- Adds Day / Week / Month / Year / All published evidence controls to the public demo while excluding precise live power, entity IDs, device identifiers, credentials and control endpoints.
+- Adds a public Property login entry point that deliberately accepts no credentials until the authenticated gateway exists.
+- Documents the target remote path as account → property → authenticated gateway → outbound Pi tunnel → read-only property dashboard, with Pi administration and Home Assistant control remaining LAN-only.
+- Adds Web.14 contract regression checks for product labels, brand consistency, delayed-demo safety and the existing forwarded-request Pi-management guard.
+- No public-site deployment, Pi release or remote tunnel is activated by this branch alone.
+
 ## 0.7.0-alpha6-web.11 — Reliable appliance activation state
 
 - Fixes the stale “Reboot required” banner after KEMS Web updates by capturing the active appliance version when the Pi manager process starts instead of keeping a release-specific hard-coded manager version.
