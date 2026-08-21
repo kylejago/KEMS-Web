@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="Compare Live Data, Battery & Solar, Full KEMS and Full KEMS Agile using sanitised delayed property evidence." />
+  <meta name="theme-color" content="#071217" />
+  <title>KEMS — Delayed demo comparison</title>
+  <link rel="icon" href="logo.svg?v=alpha7web20" type="image/svg+xml" />
+  <link rel="stylesheet" href="styles.css?v=alpha7web20" />
+  <link rel="stylesheet" href="demo.css?v=alpha7web20" />
+</head>
+<body data-demo-view="compare">
+  <div class="ambient" aria-hidden="true"><span></span><span></span><span></span></div>
+
+  <header class="topbar">
+    <a class="brand" href="index.html" aria-label="KEMS home"><img src="brand-lockup.svg?v=alpha7web20" alt="KEMS" /></a>
+    <nav class="primary-nav" aria-label="Demo navigation">
+      <a href="index.html">Home</a>
+      <a href="demo.html">Full KEMS Agile</a>
+      <a class="active" aria-current="page" href="demo-compare.html">Compare</a>
+      <a href="login.html">Sign in</a>
+    </nav>
+    <div class="top-actions">
+      <span class="connection-pill" id="demo-status"><i></i><span>Loading demo</span></span>
+      <button class="icon-button" id="refresh-button" type="button" aria-label="Refresh comparison">↻</button>
+    </div>
+  </header>
+
+  <nav class="mobile-nav" aria-label="Demo mobile navigation">
+    <a href="index.html">Home</a><a href="demo.html">Agile</a><a class="active" href="demo-compare.html">Compare</a><a href="login.html">Sign in</a>
+  </nav>
+
+  <main id="demo-root" class="app demo-app" aria-live="polite">
+    <section class="loading-screen"><img src="brand-lockup.svg?v=alpha7web20" alt="KEMS" /><h1>Loading four-way comparison</h1><p>Matching measured and simulated delayed evidence on one period basis…</p></section>
+  </main>
+
+  <footer class="footer"><div class="brand"><img src="brand-lockup.svg?v=alpha7web20" alt="KEMS" /></div><p>Public demo · minimum 7-day privacy delay · <a href="privacy.html">Privacy</a></p></footer>
+  <script type="module" src="demo.js?v=alpha7web20"></script>
+</body>
+</html>
