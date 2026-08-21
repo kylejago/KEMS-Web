@@ -1,6 +1,6 @@
 # KEMS mobile app and PWA
 
-KEMS Web.31 makes the authenticated property website the primary KEMS mobile application surface.
+KEMS Web.32 makes the authenticated property website the primary KEMS mobile application surface and adds explicit install diagnostics after the first real-phone Web.31 acceptance test exposed a shortcut-versus-PWA ambiguity.
 
 The property website includes:
 
@@ -12,11 +12,16 @@ The property website includes:
 - explicit exclusion of `/api/*` from offline data caching so live KEMS/Home Assistant readings are never replaced by stale cached telemetry;
 - Cloudflare Access redirect detection so an expired remote session is never cached as if it were a KEMS page or JavaScript asset;
 - a visible **Sign in again** prompt when an authenticated property's API session expires;
-- an Install KEMS action in Settings on browsers that expose the installation prompt.
+- one authoritative captured browser install prompt shared with Settings;
+- Settings diagnostics for secure context, runtime manifest, service-worker readiness/control, browser install prompt and standalone launch mode.
 
 ## Local Pi versus installed app
 
-The local Pi dashboard remains available at `http://kems-pi.local:4173`. Modern PWA installation and service-worker features require a secure context, so the normal installed-app path uses the authenticated HTTPS property hostname published through Cloudflare Access.
+The local Pi dashboard remains available at `http://kems-pi.local:4173`. That address is plain HTTP and is therefore not the normal standalone PWA installation route.
+
+Chrome may still offer **Add to Home screen** for the local HTTP page. In that case Chrome is creating a normal website shortcut: launching it opens Chrome with the address bar. That is expected and is not treated by KEMS as a successful PWA install.
+
+The real installed-app path uses the authenticated HTTPS property hostname published through Cloudflare Access. Web.32 Settings now calls this distinction out directly rather than leaving the Install button disabled without an explanation.
 
 The installed PWA uses the same Raspberry Pi backend, same Home Assistant/KEMS source data and same dashboard code as the property website. There is no second mobile dashboard implementation to keep in sync.
 
@@ -24,12 +29,14 @@ The installed PWA uses the same Raspberry Pi backend, same Home Assistant/KEMS s
 
 On Android:
 
-1. Open the authorised KEMS property HTTPS address in Chrome.
+1. Open the authorised **HTTPS** KEMS property address in Chrome, not `http://kems-pi.local:4173`.
 2. Complete Cloudflare Access sign-in if prompted.
-3. Open **Settings → KEMS as a web app** and choose **Install KEMS**, or use Chrome's **Install app** action.
-4. Launch KEMS from the Android home screen.
+3. Open **Settings → KEMS as a web app**.
+4. Confirm the diagnostics show **HTTPS / secure**, **Manifest: Valid** and **Service worker: Ready**. If Current page says **Reload once**, reload once and return to Settings.
+5. Choose **Install KEMS** when the browser prompt is ready. If Chrome owns the prompt instead, use Chrome's **Install app** action.
+6. Launch KEMS from the Android home screen.
 
-The installed app opens in standalone mode and retains the five primary property sections: Live, Compare, Agile, Cost and Settings.
+A successful Android PWA opens without Chrome's normal address bar and reports **Launch mode: Standalone app** in KEMS Settings.
 
 ## iPhone / iPad
 
@@ -40,7 +47,20 @@ On Safari:
 3. Use **Share → Add to Home Screen**.
 4. Launch KEMS from the home-screen icon.
 
-Web.31 includes `viewport-fit=cover`, Apple installed-app metadata and safe-area padding so the fixed mobile navigation remains clear of the home indicator.
+Web.32 includes `viewport-fit=cover`, Apple installed-app metadata and safe-area padding so the fixed mobile navigation remains clear of the home indicator.
+
+## Install diagnostics
+
+Web.32 reports these values directly in Settings:
+
+- **Page security** — whether the current page is HTTPS/secure or HTTP/shortcut-only;
+- **Manifest** — whether the actual runtime `/site.webmanifest` contains the required standalone fields and 192px/512px icons;
+- **Service worker** — whether the KEMS app worker is registered and ready;
+- **Current page** — whether this tab is actually controlled by the worker, or needs one reload after first activation;
+- **Browser install prompt** — whether Chrome has exposed the real PWA install prompt;
+- **Launch mode** — Browser tab or Standalone app.
+
+This makes a failed install diagnosable from the phone itself instead of relying on whether a browser menu happens to say **Add to Home screen**.
 
 ## Cloudflare Access boundary
 
@@ -59,8 +79,8 @@ Pi administration, connector provisioning, Home Assistant connection changes and
 
 ## Existing Flutter Android app
 
-`KEMS-Android` 1.4.1 is now a frozen legacy companion implementation. It should remain available as a reference and fallback while Web.31 is proved on real phones, but new KEMS dashboard features should not be duplicated into Flutter.
+`KEMS-Android` 1.4.1 remains a frozen legacy companion implementation. It should remain available as a reference and fallback until Web.32 has passed real-phone standalone acceptance, but new KEMS dashboard features should not be duplicated into Flutter.
 
-After the PWA has passed real-device acceptance, the legacy Android repository can be archived. If a Play Store package is wanted later, prefer a small Trusted Web Activity/native wrapper around the verified KEMS PWA rather than rebuilding Live, Compare and Agile in Flutter.
+After the PWA opens standalone and the primary mobile pages are accepted on a real phone, the legacy Android repository can be archived. If a Play Store package is wanted later, prefer a small Trusted Web Activity/native wrapper around the verified KEMS PWA rather than rebuilding Live, Compare and Agile in Flutter.
 
 A native layer should only be reintroduced for capabilities that genuinely require it, such as Android widgets, specialised background services, biometrics or device integrations that are not practical from the web platform.
