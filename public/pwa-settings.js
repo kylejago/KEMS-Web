@@ -71,12 +71,17 @@ function diagnosticMarkup(state) {
   return `<div class="kems-pwa-diagnostics"><h3>Install diagnostics</h3><div class="status-list">${valueRow("Page security", secure)}${valueRow("Manifest", manifest)}${valueRow("Service worker", worker)}${valueRow("Current page", control)}${valueRow("Browser install prompt", prompt)}${valueRow("Launch mode", launch)}</div></div>`;
 }
 
+function setText(node, text) {
+  if (node.textContent !== text) node.textContent = text;
+}
+
 async function applyPwaState(state = pwaState()) {
   if (applying) return;
   applying = true;
   try {
     const button = document.querySelector("#install-pwa");
     if (!button) return;
+    button.dataset.kemsPwaBound = "true";
 
     await loadSiteDetails();
     const section = button.closest("section");
@@ -88,7 +93,8 @@ async function applyPwaState(state = pwaState()) {
       diagnostics.dataset.kemsPwaDiagnostics = "true";
       section.append(diagnostics);
     }
-    diagnostics.innerHTML = diagnosticMarkup(state);
+    const nextDiagnostics = diagnosticMarkup(state);
+    if (diagnostics.innerHTML !== nextDiagnostics) diagnostics.innerHTML = nextDiagnostics;
 
     let guidance = section.querySelector("[data-kems-pwa-guidance]");
     if (!guidance) {
@@ -97,25 +103,25 @@ async function applyPwaState(state = pwaState()) {
       guidance.dataset.kemsPwaGuidance = "true";
       section.append(guidance);
     }
-    guidance.textContent = browserGuidance(state);
+    setText(guidance, browserGuidance(state));
 
     button.disabled = Boolean(state.installed);
     button.classList.toggle("primary", Boolean(state.installAvailable && !state.installed));
 
     if (state.installed) {
-      button.textContent = "KEMS is installed";
+      setText(button, "KEMS is installed");
       button.dataset.kemsPwaAction = "installed";
     } else if (!state.secureContext) {
-      button.textContent = safeRemoteUrl() ? "Open secure KEMS" : "How to install KEMS";
+      setText(button, safeRemoteUrl() ? "Open secure KEMS" : "How to install KEMS");
       button.dataset.kemsPwaAction = safeRemoteUrl() ? "https" : "guide";
     } else if (state.installAvailable) {
-      button.textContent = "Install KEMS";
+      setText(button, "Install KEMS");
       button.dataset.kemsPwaAction = "prompt";
     } else if (state.serviceWorkerReady && !state.serviceWorkerControlled) {
-      button.textContent = "Reload to finish app setup";
+      setText(button, "Reload to finish app setup");
       button.dataset.kemsPwaAction = "reload";
     } else {
-      button.textContent = "How to install KEMS";
+      setText(button, "How to install KEMS");
       button.dataset.kemsPwaAction = "guide";
     }
   } finally {
@@ -166,7 +172,13 @@ window.addEventListener("kems:pwa-state", (event) => {
 });
 
 const observer = new MutationObserver(() => {
-  if (document.querySelector("#install-pwa")) applyPwaState(pwaState());
+  const button = document.querySelector("#install-pwa");
+  if (!button) return;
+  const section = button.closest("section");
+  const alreadyBound =
+    button.dataset.kemsPwaBound === "true" &&
+    Boolean(section?.querySelector("[data-kems-pwa-diagnostics]"));
+  if (!alreadyBound) applyPwaState(pwaState());
 });
 observer.observe(document.documentElement, { childList: true, subtree: true });
 
