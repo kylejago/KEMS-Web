@@ -1,19 +1,17 @@
 {
   "name": "kems-web-companion",
-  "version": "0.7.0-alpha7-web.20",
+  "version": "0.7.0-alpha7-web.21",
   "private": true,
   "type": "module",
-  "description": "KEMS Agile-first property dashboard with expanded strategy comparison, exact branding, delayed public demo, Cloudflare Access property login and local-only Pi management",
+  "description": "Mobile-ready KEMS property dashboard with 16x16 flow parity, four-strategy comparison, Agile live/simulated telemetry, actual ROI and consolidated settings",
   "scripts": {
     "sync-brand": "node scripts/sync-approved-logo.mjs",
     "prestart": "npm run sync-brand",
     "predev": "npm run sync-brand",
     "start": "node gateway.mjs",
     "dev": "node --watch gateway.mjs",
-    "check": "node --check gateway.mjs && node --check server.mjs && node --check public/app.js && node --check public/agile-page.js && node --check public/platform-label.js && node --check public/compare-page.js && node --check public/strategy-comparison.js && node --check public/product-model.js && node --check public/remote-access.js && node --check public-site/demo.js && node --check scripts/build-public-demo.mjs && node --check scripts/sync-approved-logo.mjs && node --check scripts/smoke-test.mjs && node --check scripts/kems-alpha5-fixture-test.mjs && node --check scripts/kems-alpha6-scenario-web-test.mjs && node --check scripts/kems-live-fixture-test.mjs && node --check scripts/kems-alpha7-agile-web-test.mjs && node --check scripts/compare-page-test.mjs && node --check scripts/web14-contract-test.mjs && node --check scripts/web16-remote-access-brand-test.mjs && node --check scripts/web17-bootstrap-brand-test.mjs && node --check scripts/web18-approved-brand-test.mjs && node --check scripts/web19-demo-login-brand-test.mjs && node --check scripts/web20-agile-primary-test.mjs && node --check image/kems-setup-status.mjs && node --check deploy/manager.mjs && node --check deploy/remote-access.mjs && node --check deploy/remote-access-service.mjs && node --check deploy/bundle-agent.mjs && node --check scripts/pi-deployment-test.mjs",
-    "test": "npm run sync-brand && npm run check && node scripts/smoke-test.mjs && node scripts/kems-alpha5-fixture-test.mjs && node scripts/kems-alpha6-scenario-web-test.mjs && node scripts/kems-live-fixture-test.mjs && node scripts/kems-alpha7-agile-web-test.mjs && node scripts/compare-page-test.mjs && node scripts/web14-contract-test.mjs && node scripts/web16-remote-access-brand-test.mjs && node scripts/web17-bootstrap-brand-test.mjs && node scripts/web19-demo-login-brand-test.mjs && node scripts/web20-agile-primary-test.mjs && node scripts/pi-deployment-test.mjs"
+    "check": "node --check gateway.mjs && node --check server.mjs && node --check public/app.js && node --check public/agile-page.js && node --check public/web21-agile.js && node --check public/web21-live.js && node --check public/performance-page.js && node --check public/settings-page.js && node --check public/platform-label.js && node --check public/compare-page.js && node --check public/strategy-comparison.js && node --check public/product-model.js && node --check public/remote-access.js && node --check public-site/demo.js && node --check scripts/build-public-demo.mjs && node --check scripts/sync-approved-logo.mjs && node --check scripts/smoke-test.mjs && node --check scripts/kems-alpha5-fixture-test.mjs && node --check scripts/kems-alpha6-scenario-web-test.mjs && node --check scripts/kems-live-fixture-test.mjs && node --check scripts/kems-alpha7-agile-web-test.mjs && node --check scripts/compare-page-test.mjs && node --check scripts/web14-contract-test.mjs && node --check scripts/web16-remote-access-brand-test.mjs && node --check scripts/web17-bootstrap-brand-test.mjs && node --check scripts/web18-approved-brand-test.mjs && node --check scripts/web19-demo-login-brand-test.mjs && node --check scripts/web20-agile-primary-test.mjs && node --check scripts/web21-property-ui-test.mjs && node --check image/kems-setup-status.mjs && node --check deploy/manager.mjs && node --check deploy/remote-access.mjs && node --check deploy/remote-access-service.mjs && node --check deploy/bundle-agent.mjs && node --check scripts/pi-deployment-test.mjs",
+    "test": "npm run sync-brand && npm run check && node scripts/smoke-test.mjs && node scripts/kems-alpha5-fixture-test.mjs && node scripts/kems-alpha6-scenario-web-test.mjs && node scripts/kems-live-fixture-test.mjs && node scripts/kems-alpha7-agile-web-test.mjs && node scripts/compare-page-test.mjs && node scripts/web14-contract-test.mjs && node scripts/web16-remote-access-brand-test.mjs && node scripts/web17-bootstrap-brand-test.mjs && node scripts/web19-demo-login-brand-test.mjs && node scripts/web20-agile-primary-test.mjs && node scripts/web21-property-ui-test.mjs && node scripts/pi-deployment-test.mjs"
   },
-  "engines": {
-    "node": ">=22"
-  }
+  "engines": { "node": ">=22" }
 }
