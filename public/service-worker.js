@@ -13,6 +13,7 @@ const APP_SHELL = [
   "/compare.css?v=alpha7web31",
   "/web21.css?v=alpha7web31",
   "/web26.css?v=alpha7web31",
+  "/mobile-pwa.css?v=alpha7web31",
   "/pwa-bootstrap.js?v=alpha7web31",
   "/live-page.js?v=alpha7web31",
   "/panel-widget.js?v=alpha7web31",
