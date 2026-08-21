@@ -1,0 +1,14 @@
+import fs from "node:fs";
+import assert from "node:assert/strict";
+const read=(path)=>fs.readFileSync(path,"utf8");
+const pkg=JSON.parse(read("package.json"));
+const index=read("public/index.html"),compare=read("public/strategy-comparison.js"),agile=read("public/web21-agile.js"),live=read("public/web21-live.js"),performance=read("public/performance-page.js"),settings=read("public/settings-page.js"),manifest=read("public/site.webmanifest"),worker=read("public/service-worker.js"),css=read("public/web21.css");
+assert.equal(pkg.version,"0.7.0-alpha7-web.21");
+assert.doesNotMatch(index,/>Products</);assert.doesNotMatch(index,/History &amp; scenarios/);assert.match(index,/\/performance\.html/);assert.match(index,/\/settings\.html/);
+for(const marker of ["SOLAR","GRID","HOME","BATTERY","EV","sensor.kems_solar_power","sensor.kems_battery_state_of_charge"])assert.match(live,new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")));
+for(const marker of ["Live Data","Battery & Solar","Full KEMS","Full KEMS Agile","Winner","Cost comparison","Estimated ROI"])assert.match(compare,new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),"i"));
+for(const marker of ["data-agile-mode","simulated","Solar generation","Battery SoC","Home usage","EV usage"])assert.match(agile,new RegExp(marker,"i"));
+assert.match(performance,/sensor\.kems_actual_roi/);assert.match(performance,/sensor\.kems_actual_system_value_today/);assert.doesNotMatch(performance,/sensor\.kems_roi["']/);assert.doesNotMatch(performance,/\/api\/scenarios/);
+for(const marker of ["/api/site","/api/home-assistant/status","/api/updates","/api/remote-access/status","beforeinstallprompt"])assert.match(settings,new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")));
+assert.doesNotMatch(manifest,/products\.html/);assert.match(manifest,/performance\.html/);assert.match(manifest,/settings\.html/);assert.match(worker,/web21/);assert.match(worker,/performance\.html/);assert.match(worker,/settings\.html/);assert.match(css,/@media\(max-width:620px\)/);assert.match(css,/grid-template-areas:"\. solar \." "grid home battery" "\. ev \."/);
+console.log("Web.21 property UI contract passed: property-only navigation, panel flow, four-way comparison, Agile toggle, live ROI, settings and PWA mobile shell present.");
