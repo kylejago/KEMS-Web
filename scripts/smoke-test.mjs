@@ -8,8 +8,12 @@ const port = 4197;
 const packageVersion = JSON.parse(
   fs.readFileSync(new URL("../package.json", import.meta.url), "utf8"),
 ).version;
-const webNumber = Number.parseInt(packageVersion.match(/-web\.(\d+)$/)?.[1] || "0", 10);
-const assetVersion = `alpha7web${webNumber}`;
+const versionMatch = packageVersion.match(/-alpha(\d+)-web\.(\d+)$/);
+if (!versionMatch) throw new Error(`Unsupported KEMS Web version ${packageVersion}`);
+const alphaNumber = Number.parseInt(versionMatch[1], 10);
+const webNumber = Number.parseInt(versionMatch[2], 10);
+const assetVersion = `alpha${alphaNumber}web${webNumber}`;
+const hasPropertyFocusedShell = alphaNumber > 7 || webNumber >= 21;
 const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "kems-web-smoke-"));
 const child = spawn(process.execPath, ["gateway.mjs"], {
   cwd: new URL("..", import.meta.url),
@@ -128,10 +132,10 @@ try {
     throw new Error("Branded HTML shell incomplete.");
   }
   if (
-    webNumber >= 21 &&
+    hasPropertyFocusedShell &&
     (html.includes(">Products<") || !html.includes("/settings.html") || !html.includes("/performance.html"))
   ) {
-    throw new Error("Web.21 property navigation is not focused on property data/settings.");
+    throw new Error("Property navigation is not focused on property data/settings.");
   }
   if (
     !logo.ok ||
@@ -140,7 +144,7 @@ try {
   ) {
     throw new Error("Canonical SVG is not being served.");
   }
-  if (webNumber >= 21) {
+  if (hasPropertyFocusedShell) {
     if (!productsHtml.includes("Product information has moved")) {
       throw new Error("Products page should hand off to public KEMS site.");
     }
@@ -152,12 +156,12 @@ try {
       ["performance", performanceHtml],
       ["settings", settingsHtml],
     ]) {
-      if (!page.includes(`alpha7web${webNumber}`)) {
+      if (!page.includes(assetVersion)) {
         throw new Error(`${name} page is not cache-version aligned`);
       }
     }
     if (!web21Css.includes("panel-flow") || !web21Css.includes("web21-mobile-nav")) {
-      throw new Error("Web.21 responsive styles missing.");
+      throw new Error("Responsive property styles missing.");
     }
   } else if (!productsHtml.includes("Four clear product levels")) {
     throw new Error("Legacy product page incomplete.");
@@ -177,7 +181,7 @@ try {
     throw new Error("Frontend bundle incomplete.");
   }
   if (!agileHtml.includes("Full KEMS Agile") || !agileJs.includes("sensor.kems_agile_shadow_status")) {
-    throw new Error("Alpha7 Full KEMS Agile frontend incomplete.");
+    throw new Error("Full KEMS Agile frontend incomplete.");
   }
   if (
     !css.includes(".connection-layout") ||
@@ -203,7 +207,7 @@ try {
   }
 
   console.log(
-    `Smoke test passed through Web.${webNumber}: ${packageVersion}, setup ready, runtime manifest installable and mobile property shell present.`,
+    `Smoke test passed for ${packageVersion}: setup ready, runtime manifest installable and mobile property shell present.`,
   );
 } finally {
   child.kill("SIGTERM");
