@@ -1,13 +1,8 @@
+import { derivePanelState } from "./panel-state.js?v=alpha8web0";
+
 const app = document.querySelector("#live-app");
-const PANEL_THRESHOLD = 0.03;
 let latest = null;
 let busy = false;
-
-function n(value) {
-  if (value === null || value === undefined || value === "") return null;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
-}
 
 function kw(value, digits = 2) {
   return Number.isFinite(value) ? `${value.toFixed(digits)} kW` : "—";
@@ -15,37 +10,6 @@ function kw(value, digits = 2) {
 
 function pct(value) {
   return Number.isFinite(value) ? `${Math.max(0, Math.min(100, value)).toFixed(0)}%` : "—";
-}
-
-function derive(data) {
-  const metrics = data?.metrics || {};
-  const availability = data?.availability || {};
-  const gridNet = n(metrics.gridPower);
-  const gridKnown = availability.liveGrid !== false && (n(metrics.gridImportPower) !== null || n(metrics.gridExportPower) !== null || gridNet !== null);
-  const gridImport = n(metrics.gridImportPower) ?? (gridNet !== null ? Math.max(0, gridNet) : null);
-  const gridExport = n(metrics.gridExportPower) ?? (gridNet !== null ? Math.max(0, -gridNet) : null);
-  const solarKnown = metrics.solarDataAvailable !== false && availability.liveSolar !== false;
-  const batteryKnown = metrics.batteryDataAvailable !== false && availability.liveBattery !== false;
-  const solar = solarKnown ? n(metrics.solarPower) : null;
-  const battery = batteryKnown ? n(metrics.batteryPower) : null;
-  const batterySoc = batteryKnown ? n(metrics.batterySoc) : null;
-  const ev = n(metrics.evPower);
-  const evCharging = Boolean(metrics.evCharging) || (Number.isFinite(ev) && ev > PANEL_THRESHOLD);
-  const evConnected = Boolean(metrics.evConnected) || evCharging;
-  const costToday = n(data?.observed?.costToday);
-
-  return {
-    home: n(metrics.housePower), solar, battery, batterySoc,
-    gridImport: gridKnown ? gridImport : null,
-    gridExport: gridKnown ? gridExport : null,
-    gridAvailable: Boolean(data?.connected && gridKnown),
-    ev, evSoc: n(metrics.evSoc), evConnected, evCharging, costToday,
-    gridImporting: Number.isFinite(gridImport) && gridImport > PANEL_THRESHOLD,
-    gridExporting: Number.isFinite(gridExport) && gridExport > PANEL_THRESHOLD,
-    solarProducing: Number.isFinite(solar) && solar > PANEL_THRESHOLD,
-    batteryCharging: Number.isFinite(battery) && battery < -PANEL_THRESHOLD,
-    batteryDischarging: Number.isFinite(battery) && battery > PANEL_THRESHOLD
-  };
 }
 
 function statusTone(active, available = true) {
@@ -93,7 +57,7 @@ function render(data) {
   latest = data;
   const panel = ensurePanel();
   if (!panel) return;
-  const v = derive(data);
+  const v = derivePanelState(data);
 
   const gridStatus = v.gridAvailable ? "✓" : "×";
   const costKnown = Number.isFinite(v.costToday);
