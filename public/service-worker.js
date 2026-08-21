@@ -1,9 +1,9 @@
-const CACHE_NAME = "kems-alpha7-web21-shell-v1";
+const CACHE_NAME = "kems-alpha7-web22-shell-v1";
 const APP_SHELL = [
   "/","/index.html","/agile.html","/compare.html","/performance.html","/settings.html","/remote-access.html",
-  "/styles.css?v=alpha7web21","/brand.css?v=alpha7web21","/agile.css?v=alpha7web21","/compare.css?v=alpha7web21","/web21.css?v=alpha7web21",
-  "/app.js?v=alpha7web21","/platform-label.js?v=alpha7web21","/agile-page.js?v=alpha7web21","/web21-agile.js?v=alpha7web21","/compare-page.js?v=alpha7web21","/strategy-comparison.js?v=alpha7web21","/product-model.js?v=alpha7web21","/web21-live.js?v=alpha7web21","/performance-page.js?v=alpha7web21","/settings-page.js?v=alpha7web21",
-  "/brand-lockup.svg?v=alpha7web21","/logo.svg?v=alpha7web21"
+  "/styles.css?v=alpha7web22","/brand.css?v=alpha7web22","/agile.css?v=alpha7web22","/compare.css?v=alpha7web22","/web21.css?v=alpha7web22",
+  "/app.js?v=alpha7web22","/platform-label.js?v=alpha7web22","/agile-page.js?v=alpha7web22","/web21-agile.js?v=alpha7web22","/compare-page.js?v=alpha7web22","/strategy-comparison.js?v=alpha7web22","/product-model.js?v=alpha7web22","/web21-live.js?v=alpha7web22","/performance-page.js?v=alpha7web22","/settings-page.js?v=alpha7web22",
+  "/brand-lockup.svg?v=alpha7web22","/logo.svg?v=alpha7web22"
 ];
 self.addEventListener("install",(event)=>{event.waitUntil(caches.open(CACHE_NAME).then((cache)=>cache.addAll(APP_SHELL)).then(()=>self.skipWaiting()))});
 self.addEventListener("activate",(event)=>{event.waitUntil(caches.keys().then((keys)=>Promise.all(keys.filter((key)=>key.startsWith("kems-")&&key!==CACHE_NAME).map((key)=>caches.delete(key)))).then(()=>self.clients.claim()))});
