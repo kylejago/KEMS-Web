@@ -10,8 +10,11 @@ for(const marker of ["SOLAR","GRID","HOME","BATTERY","EV","sensor.kems_solar_pow
 for(const marker of ["Live Data","Battery & Solar","Full KEMS","Full KEMS Agile","Winner","Cost comparison","Estimated ROI"])assert.match(compare,new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),"i"));
 for(const marker of ["data-agile-mode","simulated","Solar generation","Battery SoC","Home usage","EV usage"])assert.match(agile,new RegExp(marker,"i"));
 assert.match(performance,/sensor\.kems_actual_roi/);assert.match(performance,/sensor\.kems_actual_system_value_today/);assert.doesNotMatch(performance,/sensor\.kems_roi["']/);assert.doesNotMatch(performance,/\/api\/scenarios/);
-for(const marker of ["/api/site","/api/home-assistant/status","/api/updates","/api/remote-access/status","beforeinstallprompt"])assert.match(settings,new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")));
+for(const marker of ["/api/site","/api/home-assistant/status","/api/system/status","/api/system/action","/api/remote-access/status","beforeinstallprompt","Check for updates","Install ${esc(latest)}"])assert.match(settings,new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")));
+assert.doesNotMatch(settings,/\/api\/updates/,"Settings must use the real Pi manager status endpoint, not the nonexistent /api/updates route");
+assert.match(settings,/\?refresh=1/,"Check for updates must force a fresh release lookup");
+assert.match(settings,/action:\"update\"/,"Install update must call the Pi maintenance action");
 assert.doesNotMatch(manifest,/products\.html/);assert.match(manifest,/performance\.html/);assert.match(manifest,/settings\.html/);assert.match(worker,/performance\.html/);assert.match(worker,/settings\.html/);assert.match(css,/@media\(max-width:620px\)/);assert.match(css,/grid-template-areas:"\. solar \." "grid home battery" "\. ev \."/);
 assert.match(live,/observer\.observe\(app,\{childList:true,subtree:false\}\)/,"Live enhancement observer must watch only top-level app replacement");
 assert.doesNotMatch(live,/queueMicrotask\(enhance\)/,"Live enhancement must not recursively queue itself from its own DOM writes");
-console.log(`Web.${webNumber} property UI contract passed: property-only navigation, panel flow, four-way comparison, Agile toggle, live ROI, settings, PWA shell and non-recursive live enhancement present.`);
+console.log(`Web.${webNumber} property UI contract passed: property-only navigation, panel flow, four-way comparison, Agile toggle, live ROI, update controls, PWA shell and non-recursive live enhancement present.`);
