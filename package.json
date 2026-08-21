@@ -1,6 +1,6 @@
 {
   "name": "kems-web-companion",
-  "version": "0.7.0-alpha7-web.22",
+  "version": "0.7.0-alpha7-web.23",
   "private": true,
   "type": "module",
   "description": "Mobile-ready KEMS property dashboard with 16x16 flow parity, four-strategy comparison, Agile live/simulated telemetry, actual ROI and consolidated settings",
