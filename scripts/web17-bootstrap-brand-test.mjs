@@ -10,9 +10,12 @@ const helperUnit = read("deploy/systemd/kems-web-remote-access.service");
 const client = read("public/remote-access.js");
 
 const expect = (condition, message) => { if (!condition) throw new Error(message); };
-const webNumber = Number.parseInt(pkg.version.match(/-web\.(\d+)$/)?.[1] || "0", 10);
+const versionMatch = pkg.version.match(/-alpha(\d+)-web\.(\d+)$/);
+expect(Boolean(versionMatch), `Unsupported KEMS Web version ${pkg.version}`);
+const alphaNumber = Number.parseInt(versionMatch?.[1] || "0", 10);
+const webNumber = Number.parseInt(versionMatch?.[2] || "0", 10);
 
-expect(/^0\.7\.0-alpha7-web\.\d+$/.test(pkg.version) && webNumber >= 17, "Web.17 bootstrap baseline requires Web.17 or newer");
+expect(alphaNumber > 7 || webNumber >= 17, "Web.17 bootstrap baseline must remain present");
 expect(project.version === pkg.version, "project.json and package.json version drift");
 expect(pkg.scripts.test.includes("web17-bootstrap-brand-test.mjs"), "Web.17 bootstrap regression must remain in npm test");
 
@@ -30,8 +33,9 @@ for (const marker of [
 ]) expect(installer.includes(marker), `fresh installer missing helper verification: ${marker}`);
 
 expect(helper.includes('const HOST = "127.0.0.1"'), "Remote Access helper must stay loopback-only");
+expect(helper.includes(`const HELPER_VERSION = "${pkg.version}"`), "Remote Access helper must match the coordinated release identity");
 expect(helper.includes("--token-file"), "Remote Access helper must retain root-only token-file use");
 expect(helperUnit.includes("User=root") && helperUnit.includes("remote-access-service.mjs"), "privileged helper systemd unit missing");
 expect(client.includes('const API = "/api/remote-access"') && !client.includes(":4175"), "browser must continue to use the same-origin Remote Access API");
 
-console.log(`Web.${webNumber} retains the Web.17 self-healing loopback Remote Access bootstrap baseline.`);
+console.log(`${pkg.version} retains the Web.17 self-healing loopback Remote Access bootstrap baseline.`);
