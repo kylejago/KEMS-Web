@@ -1,6 +1,6 @@
 {
   "name": "kems-web-companion",
-  "version": "0.7.0-alpha7-web.29",
+  "version": "0.7.0-alpha7-web.30",
   "private": true,
   "type": "module",
   "description": "Mobile-ready KEMS property dashboard with panel-inspired Live Data and Full KEMS Agile live/simulated energy views, extended four-strategy comparison, actual ROI and consolidated settings",
