@@ -1,11 +1,11 @@
 {
   "name": "KEMS",
   "longName": "Kyle Energy Management System",
-  "version": "0.7.0-alpha7-web.33",
+  "version": "0.8.0-alpha8-web.0",
   "tagline": "Your property data first. Full KEMS Agile when you need the detail.",
-  "summary": "An installable mobile-first read-only KEMS property PWA with Cloudflare-authenticated manifest loading, authoritative install diagnostics, panel-inspired Live Data and Full KEMS Agile live/simulated energy views, four-strategy comparison, actual commissioned cost and ROI, and consolidated settings.",
+  "summary": "The coordinated Alpha8 property PWA, Pi companion and public-site source, preserving the accepted Web.33 Cloudflare-authenticated install path while consolidating shared panel state and release contracts.",
   "repository": "https://github.com/kylejago/KEMS-Web",
-  "build": "Web.33 makes the browser manifest request include Cloudflare Access credentials and diagnoses that exact contract · Web.32 install-state diagnostics · Web.31 mobile PWA shell",
+  "build": "Alpha8 Web.0 coordinated cleanup baseline · Web.33 Cloudflare-authenticated PWA parity · shared Live/panel state · no Home Assistant control writes",
   "principles": [
     "Home Assistant and KEMS remain the source of truth for each property.",
     "The user-facing product model is Live Data, Battery & Solar, Full KEMS and Full KEMS Agile.",
@@ -13,6 +13,7 @@
     "Full KEMS Agile is the flagship strategy, but KEMS must report when another strategy wins on the available evidence.",
     "Strategy comparison uses one common bill basis and one period selector, with missing evidence left unavailable rather than guessed.",
     "The Live Data and Full KEMS Agile panel views are inspired by the physical KEMS panel but use robust web-native HTML/CSS rather than fragile artwork masks.",
+    "Live Data and the web panel derive physical source/flow availability through one shared panel-state model rather than duplicating the same calculations.",
     "The panel keeps the same core functions: GRID/COST/IMPORT/EXPORT status, Solar/Grid/Home/Battery/EV layout, flow direction, battery SoC and EV state.",
     "On Full KEMS Agile the Live/Simulated selector changes both the panel and the telemetry chart together, keeping physical and digital-twin evidence visibly separate.",
     "Long-period comparison never scales a shorter replay to invent Year or All-time evidence; unavailable strategies remain visibly unavailable.",
