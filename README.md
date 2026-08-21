@@ -2,53 +2,67 @@
   <img src="brand/kems-logo.svg" alt="KEMS" width="180">
 </p>
 
-# KEMS Web — 0.7.0-alpha7-web.19
+# KEMS Web — 0.7.0-alpha7-web.31
 
-KEMS Web is the read-only property companion and public-site source for the **KEMS Alpha7** platform. Home Assistant/KEMS remains the source of truth for each property.
+KEMS Web is the read-only property companion, installable mobile PWA and public-site source for the **KEMS Alpha7** platform. Home Assistant/KEMS remains the source of truth for each property.
 
 ## Canonical KEMS logo
 
-Web.19 uses the exact user-supplied SVG at `brand/kems-logo.svg` as the single visual source of truth. It is **877 bytes** with SHA-256:
-
-`ef53e22bdff4e4ebd81007c3a6d5f28da0384f547e9036a7be7e3bf2d420b464`
-
-The property dashboard, `kems.uk`, Remote Access, PWA/favicons and Pi first-boot setup use byte-identical copies of that SVG. Web.19 no longer downloads or crops the older PNG concept and does not redraw the supplied mark.
+`brand/kems-logo.svg` remains the single approved KEMS visual source of truth. The property dashboard, `kems.uk`, Remote Access and Pi setup use synced copies of the approved brand asset.
 
 ## Property dashboard
 
-The property UI remains read-only and provides Live Data, Battery & Solar, Full KEMS, Full KEMS Agile, Compare, History & scenarios, Cost & ROI and local-only Pi/Remote Access setup. Real Home Assistant/inverter control remains outside KEMS Web.
+The property UI is read-only and provides:
+
+- **Live Data** with the panel-inspired Solar / Grid / Home / Battery / EV view;
+- **Compare** for Live Data, Battery & Solar, Full KEMS and Full KEMS Agile;
+- **Full KEMS Agile** with Live / Simulated routing and optimiser evidence;
+- **Cost & ROI** from commissioned live evidence;
+- **Settings** for local property status, KEMS Web updates, maintenance policy, PWA install state and local-only Remote Access provisioning.
+
+Real Home Assistant/inverter control remains outside KEMS Web.
+
+## Mobile / installed app
+
+Web.31 makes the authenticated property website the primary KEMS mobile application surface.
+
+The same property UI can be installed as a PWA on Android and added to the home screen on iPhone/iPad. It includes proper 192px, 512px and maskable icons, standalone mode, mobile safe-area handling and a shared service-worker bootstrap across all primary pages.
+
+The service worker caches only same-origin application-shell responses. `/api/*` telemetry is always network-only, and redirected Cloudflare Access login responses are never cached as KEMS pages or JavaScript assets. If an authenticated remote session expires while the installed app is open, KEMS surfaces a **Sign in again** prompt.
+
+See `docs/ANDROID-PWA.md`.
 
 ## Remote access
 
-Private property access continues through Cloudflare Access plus the outbound property tunnel. For Kyle:
+Private property access continues through Cloudflare Access plus the outbound property tunnel:
 
 ```text
-kyle.kems.uk -> Cloudflare Access -> kems-kyle tunnel -> http://localhost:4173
+property.kems.uk -> Cloudflare Access -> property tunnel -> http://localhost:4173
 ```
 
 The privileged connector setup helper remains root-owned and loopback-only on `127.0.0.1:4175`; management/setup requests are rejected when they arrive through Cloudflare or another forwarded proxy.
 
-## Live delayed public demo
+See `docs/REMOTE-ACCESS.md` and `docs/PROPERTY-LOGIN.md`.
 
-Web.19 adds a deliberately tiny public-demo surface:
+## Seven-day-delayed public demo
+
+The public demo remains a deliberately restricted surface:
 
 ```text
 demo-api.kems.uk -> tunnel -> localhost:4173 -> GET /api/public-demo only
 ```
 
-The gateway reads retained daily ledger evidence and excludes every day newer than seven days. It publishes sanitised daily aggregates only. All other paths on the demo hostname return 404. The static `kems.uk` demo consumes this feed and falls back safely if it is unavailable.
+The gateway publishes sanitised daily product evidence only after the configured minimum seven-day privacy delay. It may include delayed aggregate EV energy, but never current household power, EV state/SOC/times, entity IDs, device IDs, Home Assistant credentials or a control endpoint.
 
 See `docs/PUBLIC-DEMO.md`.
 
-## Property login
-
-`kems.uk` does not implement its own password database. The **Sign in to KEMS** action opens the Cloudflare Access App Launcher at `https://kems-uk.cloudflareaccess.com/`. Cloudflare authenticates the user and shows only property applications allowed by their Access policies.
-
-See `docs/PROPERTY-LOGIN.md`.
-
 ## Raspberry Pi appliance
 
-Persistent data stays under `/var/lib/kems-web`; versioned releases stay under `/opt/kems-web/releases`. Published releases are checksum-verified and can roll back. The Web.17/18 Remote Access helper bootstrap and health checks remain intact.
+Persistent data stays under `/var/lib/kems-web`; versioned releases stay under `/opt/kems-web/releases`. Published releases are checksum-verified, health-checked and can roll back. Pi updates, maintenance policy, connector provisioning and Home Assistant setup remain local-network operations even when the read-only dashboard is available remotely.
+
+## Legacy Android app
+
+The separate Flutter `KEMS-Android` 1.4.1 app is now considered a frozen legacy implementation while the Web.31 PWA is proved on real devices. New dashboard work belongs in KEMS Web so Live, Compare and Full KEMS Agile are maintained once. A future Play Store package, if required, should be a thin wrapper around the verified PWA rather than a second dashboard implementation.
 
 ## Validation
 
@@ -56,4 +70,4 @@ Persistent data stays under `/var/lib/kems-web`; versioned releases stay under `
 npm test
 ```
 
-The suite checks syntax, exact SVG identity, public-demo host isolation, seven-day privacy delay, Cloudflare-login links, private-management boundaries, fixture compatibility, Alpha7 Agile evidence, comparison/ROI and Pi deployment behavior.
+The suite checks syntax, brand identity, public-demo isolation and delay, Cloudflare-login boundaries, fixture compatibility, Alpha7 Agile evidence, comparison/ROI, Pi deployment behaviour and the Web.31 mobile/PWA contract.
