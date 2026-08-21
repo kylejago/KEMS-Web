@@ -1,10 +1,11 @@
 {
-  "schema": 1,
+  "schema": 2,
   "property": "Demo property",
   "delayed": true,
   "delayDays": 7,
   "generatedAt": null,
   "dataThrough": null,
-  "privacy": "Sanitised daily totals only. No live power, entity IDs, device identifiers, Home Assistant address, credentials or control endpoints.",
+  "privacy": "Sanitised daily totals only. Aggregate EV energy may be included after the privacy delay; no live power, EV state/SOC, entity IDs, device identifiers, Home Assistant address, credentials or control endpoints are published.",
+  "economics": null,
   "days": []
 }
