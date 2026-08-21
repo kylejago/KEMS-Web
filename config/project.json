@@ -1,11 +1,11 @@
 {
   "name": "KEMS",
   "longName": "Kyle Energy Management System",
-  "version": "0.7.0-alpha7-web.29",
+  "version": "0.7.0-alpha7-web.30",
   "tagline": "Your property data first. Full KEMS Agile when you need the detail.",
   "summary": "A mobile-ready read-only KEMS property companion with panel-inspired Live Data and Full KEMS Agile live/simulated energy views, extended four-strategy comparison periods, actual commissioned cost and ROI, and consolidated settings.",
   "repository": "https://github.com/kylejago/KEMS-Web",
-  "build": "Web.29 adds the KEMS Panel View to Full KEMS Agile for both Live and Simulated modes · Web.28 panel-inspired Live Data view · Web.26 extended comparison periods · responsive PWA shell",
+  "build": "Web.30 adds privacy-delayed public scenario/Agile evidence recovery, aggregate delayed EV energy and public ROI evidence · Web.29 KEMS Panel View · Web.28 panel-inspired Live Data view · Web.26 extended comparison periods · responsive PWA shell",
   "principles": [
     "Home Assistant and KEMS remain the source of truth for each property.",
     "The user-facing product model is Live Data, Battery & Solar, Full KEMS and Full KEMS Agile.",
@@ -24,6 +24,8 @@
     "Maintenance windows, automatic coordinated updates, automatic reboot permission and maintenance notices are configurable from local Settings.",
     "Mobile uses the same responsive PWA property website so no app-store publication is required for the current phase.",
     "The public kems.uk site receives no Home Assistant credentials, live control API or precise live household power.",
+    "The public demo may publish aggregate EV energy only after the configured minimum seven-day privacy delay; EV state, SoC, charge times and identifiers remain private.",
+    "Delayed public product evidence is recovered only from historical KEMS Recorder states that are already at least seven days old and is cached as sanitised daily totals.",
     "Private property sign-in is delegated to Cloudflare Access and the KEMS App Launcher.",
     "Raspberry Pi maintenance, updates, encrypted backups and Cloudflare connector provisioning remain local-only even when a property dashboard is reached through a remote gateway.",
     "Cloudflare connector setup accepts only a tunnel token; pasted shell commands are never executed.",
