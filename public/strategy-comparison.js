@@ -1,154 +1,30 @@
-const app = document.querySelector("#compare-app");
-let latest = null;
-let loading = false;
+import { KEMS_PRODUCTS } from "./product-model.js?v=alpha7web21";
 
-function number(value) {
-  const parsed = Number.parseFloat(value);
-  return Number.isFinite(parsed) ? parsed : null;
-}
-
-function money(value) {
-  return Number.isFinite(value)
-    ? new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 2 }).format(value)
-    : "—";
-}
-
-function escapeHtml(value = "") {
-  return String(value).replace(/[&<>"']/g, (character) => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
-  })[character]);
-}
-
-function entity(id) {
-  return latest?.entities?.find((item) => item.entityId === id) || null;
-}
-
-function attrs(id) {
-  return entity(id)?.attributes || {};
-}
-
-function netCost(entry = {}) {
-  const importCost = number(entry.import_cost_pence);
-  const exportIncome = number(entry.export_income_pence) || 0;
-  return Number.isFinite(importCost) ? (importCost - exportIncome) / 100 : null;
-}
-
-function standardScenario(periodKey, scenarioKey) {
-  const periods = attrs("sensor.kems_scenario_comparison_today").periods || {};
-  const scenarios = periods?.[periodKey]?.scenarios || [];
-  return Array.isArray(scenarios) ? scenarios.find((row) => row?.key === scenarioKey) || {} : {};
-}
-
-function agileScenario(periodKey) {
-  const periods = attrs("sensor.kems_agile_smart_export_plan").periods || {};
-  return periods?.[periodKey]?.agile_smart_export || {};
-}
-
-function livePeriod(entityId) {
-  const item = entity(entityId);
-  if (!item) return null;
-  const a = item.attributes || {};
-  const importCost = number(a.import_cost_pence);
-  const exportIncome = number(a.export_income_pence) || 0;
-  return Number.isFinite(importCost) ? (importCost - exportIncome) / 100 : null;
-}
-
-function periodCosts(key) {
-  return {
-    batterySolar: netCost(standardScenario(key, "solar_battery")),
-    fullKems: netCost(standardScenario(key, "kems_forecast")),
-    agile: netCost(agileScenario(key))
-  };
-}
-
-function leader(costs) {
-  const candidates = [
-    [costs.live, "Live Data"],
-    [costs.batterySolar, "Battery & Solar"],
-    [costs.fullKems, "Full KEMS"],
-    [costs.agile, "Full KEMS Agile"]
-  ].filter(([value]) => Number.isFinite(value));
-  candidates.sort((a, b) => a[0] - b[0]);
-  return candidates[0] || [null, "Building evidence"];
-}
-
-function modelLeader(costs) {
-  return leader({ ...costs, live: null });
-}
-
-function evidenceSummary() {
-  const today = periodCosts("today");
-  today.live = livePeriod("sensor.kems_today_energy_summary");
-  const seven = periodCosts("7_days");
-  const thirty = periodCosts("30_days");
-  const todayWinner = leader(today);
-  const sevenWinner = modelLeader(seven);
-  const thirtyWinner = modelLeader(thirty);
-  const votes = [todayWinner[1], sevenWinner[1], thirtyWinner[1]].filter((name) => name !== "Building evidence");
-  const counts = new Map();
-  votes.forEach((name) => counts.set(name, (counts.get(name) || 0) + 1));
-  const ranked = [...counts.entries()].sort((a, b) => b[1] - a[1]);
-  const recommendation = ranked.length && ranked[0][1] >= 2 ? ranked[0][0] : "Mixed evidence";
-  return { today, seven, thirty, todayWinner, sevenWinner, thirtyWinner, recommendation };
-}
-
-function tableRow(label, costs, winnerName) {
-  const live = Number.isFinite(costs.live) ? money(costs.live) : "—";
-  const b = money(costs.batterySolar);
-  const f = money(costs.fullKems);
-  const a = money(costs.agile);
-  return `<tr><th>${escapeHtml(label)}</th><td>${escapeHtml(live)}</td><td>${escapeHtml(b)}</td><td>${escapeHtml(f)}</td><td>${escapeHtml(a)}</td><td><strong>${escapeHtml(winnerName)}</strong></td></tr>`;
-}
-
-function renderBlock() {
-  if (!latest?.connected || !app) return;
-  const existing = document.querySelector("#strategy-overview-web20");
-  const summary = evidenceSummary();
-  const liveSaving = Number.isFinite(summary.today.live) && Number.isFinite(summary.today.agile)
-    ? summary.today.live - summary.today.agile
-    : null;
-  const html = `<section id="strategy-overview-web20" class="panel compare-why-panel">
-    <header class="section-heading"><div><h2>Overall strategy comparison</h2><p>Current result plus retained historical evidence across all four user-facing KEMS products.</p></div></header>
-    <div class="panel-body">
-      <section class="compare-hero ${summary.recommendation === "Full KEMS Agile" ? "good" : "neutral"}">
-        <div class="compare-hero-card simulated"><span>CURRENT RECOMMENDATION</span><strong>${escapeHtml(summary.recommendation)}</strong><small>A recommendation is made only when the same strategy leads at least two of Today, 7-day and 30-day evidence horizons.</small></div>
-        <div class="compare-hero-card actual"><span>TODAY LEADER</span><strong>${escapeHtml(summary.todayWinner[1])}</strong><small>${money(summary.todayWinner[0])} on import cost − export income.</small></div>
-        <div class="compare-hero-result ${Number.isFinite(liveSaving) && liveSaving > 0 ? "good" : "neutral"}"><span>FULL KEMS AGILE VS LIVE TODAY</span><strong>${Number.isFinite(liveSaving) ? money(liveSaving) : "Building evidence"}</strong><small>${Number.isFinite(liveSaving) ? (liveSaving >= 0 ? "Positive means Agile is cheaper than observed Live Data today." : "Negative means Live Data is currently cheaper today.") : "Waiting for comparable observed and Agile cost evidence."}</small></div>
-      </section>
-      <div class="table-scroll"><table class="comparison-table compare-master-table"><thead><tr><th>Evidence horizon</th><th>Live Data</th><th>Battery &amp; Solar</th><th>Full KEMS</th><th>Full KEMS Agile</th><th>Leader</th></tr></thead><tbody>
-        ${tableRow("Today", summary.today, summary.todayWinner[1])}
-        ${tableRow("Last 7 days", summary.seven, summary.sevenWinner[1])}
-        ${tableRow("Last 30 days", summary.thirty, summary.thirtyWinner[1])}
-      </tbody></table></div>
-      <div class="data-note"><strong>How the recommendation works:</strong> KEMS does not force Agile to win. The current recommendation is the strategy that leads at least two of the three available evidence horizons. Live Data is included for Today; retained what-if replay supplies like-for-like 7-day and 30-day model evidence for Battery &amp; Solar, Full KEMS and Full KEMS Agile.</div>
-    </div>
-  </section>`;
-  if (existing) existing.outerHTML = html;
-  else {
-    const heading = app.querySelector(".page-heading");
-    heading?.insertAdjacentHTML("afterend", html);
-  }
-}
-
-async function refresh() {
-  if (loading) return;
-  loading = true;
-  try {
-    const response = await fetch("/api/live", { cache: "no-store" });
-    if (!response.ok) return;
-    latest = await response.json();
-    renderBlock();
-  } finally {
-    loading = false;
-  }
-}
-
-const observer = new MutationObserver(() => {
-  if (latest?.connected) renderBlock();
-});
-observer.observe(app, { childList: true, subtree: false });
-
-refresh();
-setInterval(() => {
-  if (document.visibilityState === "visible") refresh();
-}, 60_000);
+const app=document.querySelector("#compare-app");let latest=null;let loading=false;let selectedHorizon="30_days";
+const liveEntity={today:"sensor.kems_today_energy_summary","7_days":"sensor.kems_last_7_days_energy_summary","30_days":"sensor.kems_last_30_days_energy_summary"};
+const horizonLabel={today:"Today","7_days":"Last 7 days","30_days":"Last 30 days"};
+const horizonDays={today:1,"7_days":7,"30_days":30};
+function n(value){const x=Number.parseFloat(value);return Number.isFinite(x)?x:null}
+function money(value){return Number.isFinite(value)?new Intl.NumberFormat("en-GB",{style:"currency",currency:"GBP",maximumFractionDigits:2}).format(value):"—"}
+function energy(value){return Number.isFinite(value)?`${value.toFixed(2)} kWh`:"—"}
+function esc(value=""){return String(value).replace(/[&<>"']/g,(c)=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"})[c])}
+function entity(id){return latest?.entities?.find((x)=>x.entityId===id)||null}function attrs(id){return entity(id)?.attributes||{}}
+function first(row,keys){for(const key of keys){const value=n(row?.[key]);if(value!=null)return value}return null}
+function metrics(row={}){const importCost=first(row,["import_cost_pence","grid_import_cost_pence","cost_pence"]);const exportIncome=first(row,["export_income_pence","grid_export_income_pence"])||0;return{home:first(row,["home_energy_kwh","house_energy_kwh","home_usage_kwh","house_load_kwh"]),import:first(row,["grid_import_kwh","import_kwh"]),export:first(row,["grid_export_kwh","export_kwh"]),solar:first(row,["solar_generation_kwh","solar_kwh"]),battery:first(row,["battery_discharged_kwh","battery_to_home_kwh","battery_discharge_kwh"]),cost:importCost==null?null:(importCost-exportIncome)/100}}
+function standard(period,key){const periods=attrs("sensor.kems_scenario_comparison_today").periods||{};const rows=periods?.[period]?.scenarios||[];return Array.isArray(rows)?rows.find((r)=>r?.key===key)||{}:{}}
+function agile(period){const periods=attrs("sensor.kems_agile_smart_export_plan").periods||{};return periods?.[period]?.agile_smart_export||{}}
+function live(period){const item=entity(liveEntity[period]);if(!item)return{};return item.attributes||{}}
+function rows(period){return[
+ {key:"live_data",label:"Live Data",price:0,data:metrics(live(period))},
+ {key:"battery_solar",label:"Battery & Solar",price:KEMS_PRODUCTS.find((p)=>p.key==="battery_solar")?.indicativePriceGbp||null,data:metrics(standard(period,"solar_battery"))},
+ {key:"full_kems",label:"Full KEMS",price:KEMS_PRODUCTS.find((p)=>p.key==="full_kems")?.indicativePriceGbp||null,data:metrics(standard(period,"kems_forecast"))},
+ {key:"full_kems_agile",label:"Full KEMS Agile",price:KEMS_PRODUCTS.find((p)=>p.key==="full_kems_agile")?.indicativePriceGbp||null,data:metrics(agile(period))}
+]}
+function winner(list){return list.filter((r)=>Number.isFinite(r.data.cost)).sort((a,b)=>a.data.cost-b.data.cost)[0]||null}
+function annualSaving(productKey){if(productKey==="live_data")return null;for(const period of ["30_days","7_days","today"]){const list=rows(period),baseline=list[0].data.cost,target=list.find((r)=>r.key===productKey)?.data.cost;if(Number.isFinite(baseline)&&Number.isFinite(target)){const saving=baseline-target;if(saving>0)return saving/horizonDays[period]*365}}return null}
+function roiCard(row){if(row.key==="live_data")return `<div class="web21-card"><span class="web21-kicker">Live Data</span><strong>Baseline</strong><small>Observed home evidence · no system payback calculation</small></div>`;const annual=annualSaving(row.key);const years=Number.isFinite(annual)&&annual>0&&Number.isFinite(row.price)?row.price/annual:null;return `<div class="web21-card"><span class="web21-kicker">${esc(row.label)} estimated ROI</span><strong>${Number.isFinite(years)?`${years.toFixed(1)} years`:"Building evidence"}</strong><small>${Number.isFinite(annual)?`${money(annual)} estimated annual saving`:"Needs comparable retained live + strategy cost data"}${Number.isFinite(row.price)?` · ${money(row.price)} indicative system cost`:""}</small></div>`}
+function metricTable(list,win){const metricRows=[["Home usage","home",energy],["Grid import","import",energy],["Grid export","export",energy],["Solar generation","solar",energy],["Battery discharged","battery",energy],["Net electricity cost","cost",money]];return `<div class="web21-table-wrap"><table class="web21-table"><thead><tr><th>${esc(horizonLabel[selectedHorizon])}</th>${list.map((r)=>`<th>${esc(r.label)}${win?.key===r.key?`<br><span class="web21-winner-badge">Winner</span>`:""}</th>`).join("")}</tr></thead><tbody>${metricRows.map(([label,key,format])=>`<tr><td>${label}</td>${list.map((r)=>`<td>${format(r.data[key])}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`}
+function costChart(list,win){const finite=list.map((r)=>r.data.cost).filter(Number.isFinite);const max=Math.max(...finite.map(Math.abs),1);return `<div class="web21-cost-bars" aria-label="Cost comparison chart">${list.map((r)=>{const height=Number.isFinite(r.data.cost)?Math.max(4,Math.abs(r.data.cost)/max*150):4;return `<div class="web21-bar-wrap ${win?.key===r.key?"winner":""}"><div class="web21-bar-area"><div class="web21-bar" style="height:${height}px" title="${esc(r.label)} ${money(r.data.cost)}"></div></div><strong>${money(r.data.cost)}</strong><div class="web21-bar-label">${esc(r.label)}</div></div>`}).join("")}</div>`}
+function render(){if(!latest?.connected||!app)return;const list=rows(selectedHorizon),win=winner(list);const html=`<section id="strategy-overview-web21" class="web21-section"><div class="web21-kicker">Four-strategy comparison</div><h2>Which KEMS setup wins?</h2><p class="web21-muted">All four main KEMS options are compared on the same import-cost minus export-income basis. Missing evidence stays missing rather than being guessed.</p><div class="web21-toggle" role="group" aria-label="Comparison period">${Object.entries(horizonLabel).map(([key,label])=>`<button type="button" data-web21-horizon="${key}" class="${selectedHorizon===key?"active":""}">${label}</button>`).join("")}</div>${win?`<div class="web21-card web21-winner" style="margin-top:1rem"><span class="web21-winner-badge">Winner · ${esc(horizonLabel[selectedHorizon])}</span><strong>${esc(win.label)}</strong><small>${money(win.data.cost)} net electricity cost on available evidence</small></div>`:"<p>Building comparable cost evidence…</p>"}<h3>Usage &amp; energy comparison</h3>${metricTable(list,win)}<h3 style="margin-top:1.2rem">Cost comparison</h3>${costChart(list,win)}<h3 style="margin-top:1.2rem">Estimated ROI by setup</h3><div class="web21-roi-grid">${list.map(roiCard).join("")}</div><p class="web21-muted" style="margin-bottom:0">ROI uses the longest comparable retained evidence currently available (30 days, then 7 days, then today) and annualises the observed saving. It is an estimate, not the live commissioned ROI shown on Cost &amp; ROI.</p></section>`;const existing=document.querySelector("#strategy-overview-web21");if(existing)existing.outerHTML=html;else{document.querySelector("#strategy-overview-web20")?.remove();const heading=app.querySelector(".page-heading");heading?.insertAdjacentHTML("afterend",html)}document.querySelectorAll("[data-web21-horizon]").forEach((button)=>button.addEventListener("click",()=>{selectedHorizon=button.dataset.web21Horizon;render()}))}
+async function refresh(){if(loading)return;loading=true;try{const response=await fetch("/api/live",{cache:"no-store"});if(response.ok){latest=await response.json();render()}}finally{loading=false}}
+const observer=new MutationObserver(()=>{if(latest?.connected&&!document.querySelector("#strategy-overview-web21"))render()});if(app)observer.observe(app,{childList:true,subtree:false});refresh();setInterval(()=>document.visibilityState==="visible"&&refresh(),60000);
