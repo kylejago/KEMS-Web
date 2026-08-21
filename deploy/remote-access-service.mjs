@@ -13,7 +13,7 @@ const UNIT_NAME = "kems-cloudflared.service";
 const CLOUDFLARED = "/usr/bin/cloudflared";
 const TOKEN_PATTERN = /^[A-Za-z0-9._-]{80,4096}$/;
 const INSTALL_LINE = /^(?:sudo\s+)?(?:\/usr\/local\/bin\/|\/usr\/bin\/)?cloudflared\s+service\s+install\s+([A-Za-z0-9._-]{80,4096})\s*$/i;
-const HELPER_VERSION = "0.7.0-alpha7-web.19";
+const HELPER_VERSION = "0.8.0-alpha8-web.0";
 let busy = false;
 
 fs.mkdirSync(MANAGER_DIR, { recursive: true, mode: 0o750 });
@@ -28,172 +28,158 @@ function sendJson(response, status, value) {
   response.end(JSON.stringify(value));
 }
 
-async function readBody(request, limit = 64_000) {
-  let raw = "";
-  for await (const chunk of request) {
-    raw += chunk;
-    if (raw.length > limit) throw new Error("Request body too large.");
-  }
-  return raw ? JSON.parse(raw) : {};
+function readJsonBody(request) {
+  return new Promise((resolve, reject) => {
+    let body = "";
+    request.setEncoding("utf8");
+    request.on("data", (chunk) => {
+      body += chunk;
+      if (body.length > 64 * 1024) reject(new Error("Request body too large"));
+    });
+    request.on("end", () => {
+      try {
+        resolve(body ? JSON.parse(body) : {});
+      } catch (error) {
+        reject(error);
+      }
+    });
+    request.on("error", reject);
+  });
 }
 
-function commandOutput(program, args, timeout = 15_000) {
-  const result = spawnSync(program, args, { encoding: "utf8", timeout, env: process.env });
-  return { ok: result.status === 0, status: result.status, stdout: String(result.stdout || "").trim(), stderr: String(result.stderr || "").trim() };
-}
-
-function redact(value = "") {
-  return String(value).replace(/eyJ[A-Za-z0-9._-]{20,}/g, "[REDACTED_TUNNEL_TOKEN]");
-}
-
-function requireCommand(program, args, label, timeout = 120_000) {
-  const result = commandOutput(program, args, timeout);
-  if (!result.ok) throw new Error(`${label} failed${result.stderr ? `: ${redact(result.stderr).slice(-500)}` : "."}`);
-  return result.stdout;
-}
-
-function extractToken(input) {
-  const text = String(input || "").trim();
-  if (!text) throw new Error("Paste the Cloudflare connector command or tunnel token.");
-  if (TOKEN_PATTERN.test(text)) return text;
-  for (const rawLine of text.split(/\r?\n/)) {
-    const match = INSTALL_LINE.exec(rawLine.trim());
-    if (match && TOKEN_PATTERN.test(match[1])) return match[1];
-  }
-  throw new Error("KEMS could not find a valid 'cloudflared service install <token>' command. Nothing was executed.");
-}
-
-function cloudflaredVersion() {
-  if (!fs.existsSync(CLOUDFLARED)) return null;
-  const result = commandOutput(CLOUDFLARED, ["--version"], 5000);
-  return result.ok ? result.stdout || null : null;
-}
-
-function serviceState() {
-  const result = commandOutput("systemctl", ["is-active", UNIT_NAME], 5000);
-  return result.stdout || (result.ok ? "active" : "inactive");
-}
-
-function serviceEnabled() {
-  return commandOutput("systemctl", ["is-enabled", UNIT_NAME], 5000).ok;
-}
-
-function recentLogs(maxLines = 60) {
-  const result = commandOutput("journalctl", ["-u", UNIT_NAME, "-n", String(maxLines), "--no-pager", "-o", "short-iso"], 7000);
-  return redact(result.stdout || result.stderr || "").split(/\r?\n/).filter(Boolean).slice(-maxLines);
-}
-
-function status() {
-  const logs = recentLogs();
-  const service = serviceState();
-  const connected = service === "active" && logs.some((line) => /registered tunnel connection|connection .* registered|serving tunnel/i.test(line));
+function run(command, args, options = {}) {
+  const result = spawnSync(command, args, {
+    encoding: "utf8",
+    timeout: options.timeout || 15_000,
+    env: { ...process.env, PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" }
+  });
   return {
-    available: true,
-    helperVersion: HELPER_VERSION,
-    loopbackOnly: true,
-    busy,
-    configured: fs.existsSync(TOKEN_FILE),
-    installed: fs.existsSync(CLOUDFLARED),
-    version: cloudflaredVersion(),
-    service,
-    enabled: serviceEnabled(),
-    connected,
-    serviceUrl: "http://localhost:4173",
-    recommendedHostname: "kyle.kems.uk",
-    tokenStored: fs.existsSync(TOKEN_FILE),
-    tokenReadableByUi: false,
-    recentLogs: logs.slice(-12),
-    note: "Only the Cloudflare connector token is accepted. Pasted shell commands are never executed."
+    ok: result.status === 0,
+    status: result.status,
+    stdout: String(result.stdout || "").trim(),
+    stderr: String(result.stderr || "").trim(),
+    error: result.error ? String(result.error.message || result.error) : null
   };
 }
 
-function architectureAsset() {
-  const result = commandOutput("dpkg", ["--print-architecture"], 5000);
-  const architecture = result.ok ? result.stdout : "";
-  const assets = { amd64: "amd64", arm64: "arm64", armhf: "arm" };
-  if (!assets[architecture]) throw new Error(`Unsupported architecture for automatic cloudflared installation: ${architecture || os.arch()}.`);
-  return assets[architecture];
+function systemctl(args) {
+  return run("/usr/bin/systemctl", args);
+}
+
+function serviceState() {
+  const active = systemctl(["is-active", UNIT_NAME]);
+  const enabled = systemctl(["is-enabled", UNIT_NAME]);
+  return {
+    configured: fs.existsSync(UNIT_FILE) && fs.existsSync(TOKEN_FILE),
+    active: active.stdout === "active",
+    enabled: enabled.stdout === "enabled",
+    unit: UNIT_NAME,
+    tokenStored: fs.existsSync(TOKEN_FILE)
+  };
+}
+
+function normaliseToken(input) {
+  const text = String(input || "").trim();
+  if (!text) return { token: null, error: "Paste the Cloudflare tunnel token or the cloudflared service install command." };
+  if (TOKEN_PATTERN.test(text)) return { token: text, error: null };
+  const match = INSTALL_LINE.exec(text);
+  if (match && TOKEN_PATTERN.test(match[1])) return { token: match[1], error: null };
+  return {
+    token: null,
+    error: "That input is not a recognised Cloudflare tunnel token/install command. Nothing was executed."
+  };
 }
 
 function writeToken(token) {
-  const temporary = `${TOKEN_FILE}.tmp`;
-  fs.writeFileSync(temporary, `${token}\n`, { mode: 0o600 });
-  fs.renameSync(temporary, TOKEN_FILE);
+  const temp = `${TOKEN_FILE}.${process.pid}.tmp`;
+  fs.writeFileSync(temp, `${token}\n`, { encoding: "utf8", mode: 0o600 });
+  fs.renameSync(temp, TOKEN_FILE);
   fs.chmodSync(TOKEN_FILE, 0o600);
 }
 
-function writeConnectorUnit() {
-  const unit = `[Unit]\nDescription=KEMS Cloudflare Tunnel connector\nWants=network-online.target\nAfter=network-online.target\n\n[Service]\nType=simple\nUser=root\nGroup=root\nExecStart=${CLOUDFLARED} tunnel --no-autoupdate run --token-file ${TOKEN_FILE}\nRestart=always\nRestartSec=5\nTimeoutStopSec=20\nNoNewPrivileges=yes\nPrivateTmp=yes\nProtectHome=yes\nProtectKernelTunables=yes\nProtectKernelModules=yes\nProtectControlGroups=yes\nRestrictSUIDSGID=yes\nLockPersonality=yes\nRestrictRealtime=yes\n\n[Install]\nWantedBy=multi-user.target\n`;
-  fs.writeFileSync(UNIT_FILE, unit, { mode: 0o644 });
+function unitContents() {
+  return `[Unit]\nDescription=KEMS Cloudflare Tunnel\nAfter=network-online.target\nWants=network-online.target\n\n[Service]\nType=simple\nExecStart=${CLOUDFLARED} tunnel --no-autoupdate run --token-file ${TOKEN_FILE}\nRestart=always\nRestartSec=5s\n\n[Install]\nWantedBy=multi-user.target\n`;
 }
 
-function installCloudflared(token) {
-  const asset = architectureAsset();
-  const temporary = fs.mkdtempSync("/tmp/kems-cloudflared-");
-  const packageFile = path.join(temporary, "cloudflared.deb");
-  try {
-    const url = `https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-${asset}.deb`;
-    requireCommand("curl", ["-fL", "--retry", "4", "--retry-delay", "2", url, "-o", packageFile], "Downloading cloudflared", 180_000);
-    requireCommand("dpkg", ["-i", packageFile], "Installing cloudflared", 180_000);
-    if (!fs.existsSync(CLOUDFLARED)) throw new Error("cloudflared installed but /usr/bin/cloudflared was not found.");
-    writeToken(token);
-    writeConnectorUnit();
-    requireCommand("systemctl", ["daemon-reload"], "Reloading systemd", 30_000);
-    requireCommand("systemctl", ["enable", UNIT_NAME], "Enabling KEMS Cloudflare connector", 30_000);
-    requireCommand("systemctl", ["restart", UNIT_NAME], "Starting KEMS Cloudflare connector", 30_000);
-  } finally {
-    fs.rmSync(temporary, { recursive: true, force: true });
-  }
+function writeUnit() {
+  const temp = `${UNIT_FILE}.${process.pid}.tmp`;
+  fs.writeFileSync(temp, unitContents(), { encoding: "utf8", mode: 0o644 });
+  fs.renameSync(temp, UNIT_FILE);
+  fs.chmodSync(UNIT_FILE, 0o644);
 }
 
-async function install(input) {
-  if (busy) throw new Error("Another remote-access action is already running.");
-  busy = true;
-  try {
-    const token = extractToken(input);
-    installCloudflared(token);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    return status();
-  } finally {
-    busy = false;
+function installConnector(token) {
+  if (!fs.existsSync(CLOUDFLARED)) {
+    throw new Error("cloudflared is not installed on this Pi. Install the Cloudflare connector package first.");
   }
+  writeToken(token);
+  writeUnit();
+  const reload = systemctl(["daemon-reload"]);
+  if (!reload.ok) throw new Error(reload.stderr || "systemctl daemon-reload failed");
+  const enable = systemctl(["enable", UNIT_NAME]);
+  if (!enable.ok) throw new Error(enable.stderr || "Could not enable KEMS Cloudflare tunnel service");
+  const restart = systemctl(["restart", UNIT_NAME]);
+  if (!restart.ok) throw new Error(restart.stderr || "Could not start KEMS Cloudflare tunnel service");
+  return serviceState();
 }
 
-function action(name) {
-  if (busy) throw new Error("Another remote-access action is already running.");
-  const allowed = new Set(["restart", "enable", "disable", "forget"]);
-  if (!allowed.has(name)) throw new Error("Unsupported remote-access action.");
-  if (name === "restart") requireCommand("systemctl", ["restart", UNIT_NAME], "Restarting connector", 30_000);
-  if (name === "enable") requireCommand("systemctl", ["enable", "--now", UNIT_NAME], "Enabling connector", 30_000);
-  if (name === "disable") requireCommand("systemctl", ["disable", "--now", UNIT_NAME], "Disabling connector", 30_000);
-  if (name === "forget") {
-    commandOutput("systemctl", ["disable", "--now", UNIT_NAME], 30_000);
-    try { fs.unlinkSync(TOKEN_FILE); } catch {}
-    try { fs.unlinkSync(UNIT_FILE); } catch {}
-    commandOutput("systemctl", ["daemon-reload"], 30_000);
-  }
-  return status();
+function removeConnector() {
+  systemctl(["disable", "--now", UNIT_NAME]);
+  if (fs.existsSync(UNIT_FILE)) fs.unlinkSync(UNIT_FILE);
+  if (fs.existsSync(TOKEN_FILE)) fs.unlinkSync(TOKEN_FILE);
+  systemctl(["daemon-reload"]);
+  return serviceState();
 }
 
 const server = http.createServer(async (request, response) => {
-  const url = new URL(request.url, `http://${HOST}:${PORT}`);
   try {
-    if (url.pathname === "/health" && request.method === "GET") return sendJson(response, 200, { ok: true, version: HELPER_VERSION, loopbackOnly: true });
-    if (url.pathname === "/status" && request.method === "GET") return sendJson(response, 200, status());
-    if (url.pathname === "/install" && request.method === "POST") {
-      const body = await readBody(request);
-      return sendJson(response, 200, await install(body.command || body.token || ""));
+    const url = new URL(request.url, `http://${request.headers.host || "127.0.0.1"}`);
+    if (request.method === "GET" && url.pathname === "/health") {
+      sendJson(response, 200, { ok: true, version: HELPER_VERSION });
+      return;
     }
-    if (url.pathname === "/action" && request.method === "POST") {
-      const body = await readBody(request);
-      return sendJson(response, 200, action(String(body.action || "")));
+    if (request.method === "GET" && url.pathname === "/status") {
+      sendJson(response, 200, { ok: true, version: HELPER_VERSION, ...serviceState() });
+      return;
     }
-    return sendJson(response, 404, { error: "Not found." });
+    if (request.method === "POST" && url.pathname === "/install") {
+      if (busy) {
+        sendJson(response, 409, { ok: false, error: "Remote Access setup is already running." });
+        return;
+      }
+      const payload = await readJsonBody(request);
+      const parsed = normaliseToken(payload.token ?? payload.command ?? payload.value);
+      if (!parsed.token) {
+        sendJson(response, 400, { ok: false, error: parsed.error });
+        return;
+      }
+      busy = true;
+      try {
+        sendJson(response, 200, { ok: true, state: installConnector(parsed.token) });
+      } finally {
+        busy = false;
+      }
+      return;
+    }
+    if (request.method === "POST" && url.pathname === "/remove") {
+      if (busy) {
+        sendJson(response, 409, { ok: false, error: "Remote Access setup is already running." });
+        return;
+      }
+      busy = true;
+      try {
+        sendJson(response, 200, { ok: true, state: removeConnector() });
+      } finally {
+        busy = false;
+      }
+      return;
+    }
+    sendJson(response, 404, { ok: false, error: "Not found" });
   } catch (error) {
-    return sendJson(response, 400, { error: redact(error.message) });
+    sendJson(response, 500, { ok: false, error: String(error?.message || error) });
   }
 });
 
 server.listen(PORT, HOST, () => {
-  console.log(`KEMS Web.19 remote-access helper ${HELPER_VERSION} listening on http://${HOST}:${PORT}`);
+  console.log(`KEMS Remote Access setup helper ${HELPER_VERSION} listening on http://${HOST}:${PORT}`);
 });

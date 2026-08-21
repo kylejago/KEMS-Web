@@ -16,9 +16,12 @@ const updater = read("deploy/bin/kems-update");
 const installer = read("install.sh");
 
 const expect = (condition, message) => { if (!condition) throw new Error(message); };
-const webNumber = Number.parseInt(pkg.version.match(/-web\.(\d+)$/)?.[1] || "0", 10);
+const versionMatch = pkg.version.match(/-alpha(\d+)-web\.(\d+)$/);
+expect(Boolean(versionMatch), `Unsupported KEMS Web version ${pkg.version}`);
+const alphaNumber = Number.parseInt(versionMatch?.[1] || "0", 10);
+const webNumber = Number.parseInt(versionMatch?.[2] || "0", 10);
 
-expect(/^0\.7\.0-alpha7-web\.\d+$/.test(pkg.version) && webNumber >= 16, "package.json must identify Web.16 or newer");
+expect(alphaNumber > 7 || webNumber >= 16, "package.json must retain the Web.16+ security baseline");
 expect(project.version === pkg.version, "project.json and package.json version drift");
 expect(pkg.scripts.start === "node gateway.mjs", "Web.16+ must start through the same-origin gateway");
 
@@ -29,6 +32,7 @@ expect(!client.includes(":4175"), "browser must never connect directly to privil
 expect(client.includes('const API = "/api/remote-access"'), "Remote Access client must use same-origin API");
 
 expect(helper.includes('const HOST = "127.0.0.1"'), "privileged helper must bind loopback only");
+expect(helper.includes(`const HELPER_VERSION = "${pkg.version}"`), "remote helper identity must match the coordinated Web/Pi release");
 expect(helper.includes("mode: 0o600"), "tunnel token must be stored mode 0600");
 expect(helper.includes("--token-file"), "cloudflared connector must read its token from a root-only file");
 expect(helper.includes("cloudflared\\s+service\\s+install"), "helper must recognise only the Cloudflare install-command form");
@@ -46,4 +50,4 @@ expect(installer.includes("kems-web-remote-access.service") && installer.include
 expect(page.includes("brand-lockup.svg") && propertyIndex.includes("brand-lockup.svg"), "property pages must retain the shared KEMS lockup surface");
 expect(publicIndex.includes("brand-lockup.svg"), "kems.uk must retain the shared KEMS lockup surface");
 
-console.log(`Web.${webNumber} preserves the Web.16 same-origin Remote Access security contract.`);
+console.log(`${pkg.version} preserves the Web.16 same-origin Remote Access security contract.`);
