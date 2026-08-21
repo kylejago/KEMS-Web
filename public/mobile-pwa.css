@@ -1,4 +1,4 @@
-/* KEMS Web.31 — installed mobile/PWA shell */
+/* KEMS Web.32 — installed mobile/PWA shell */
 :root {
   --kems-safe-bottom: env(safe-area-inset-bottom, 0px);
   --kems-safe-top: env(safe-area-inset-top, 0px);
@@ -65,6 +65,21 @@ input {
   font: inherit;
   font-weight: 800;
   cursor: pointer;
+}
+
+.kems-pwa-diagnostics {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.kems-pwa-diagnostics h3 {
+  margin: 0 0 0.7rem;
+  font-size: 0.95rem;
+}
+
+.kems-pwa-guidance {
+  margin-top: 0.8rem;
 }
 
 .kems-offline .connection-pill i {
