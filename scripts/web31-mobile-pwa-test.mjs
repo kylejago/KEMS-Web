@@ -3,18 +3,21 @@ import fs from "node:fs";
 
 const read = (path) => fs.readFileSync(path, "utf8");
 const pkg = JSON.parse(read("package.json"));
-const webNumber = Number.parseInt(pkg.version.match(/-web\.(\d+)$/)?.[1] || "0", 10);
-const assetVersion = `alpha7web${webNumber}`;
+const versionMatch = pkg.version.match(/-alpha(\d+)-web\.(\d+)$/);
+assert.ok(versionMatch, `Unsupported KEMS Web version ${pkg.version}`);
+const alphaNumber = Number.parseInt(versionMatch[1], 10);
+const webNumber = Number.parseInt(versionMatch[2], 10);
+const assetVersion = `alpha${alphaNumber}web${webNumber}`;
 
-assert.ok(webNumber >= 31, `Expected Web.31 or later, got ${pkg.version}`);
+assert.ok(alphaNumber > 7 || webNumber >= 31, `Expected Web.31 parity or later, got ${pkg.version}`);
 
 const manifestText = read("public/site.webmanifest");
 const manifest = JSON.parse(manifestText);
-assert.equal(manifest.start_url, webNumber >= 32 ? "/#live" : "/");
+assert.equal(manifest.start_url, "/#live");
 assert.equal(manifest.scope, "/");
 assert.equal(manifest.display, "standalone");
 assert.equal(manifest.prefer_related_applications, false);
-assert.doesNotMatch(manifestText, /alpha7web21|logo\.svg/);
+assert.doesNotMatch(manifestText, /logo\.svg/);
 assert.ok(manifest.icons.some((icon) => icon.src.includes("kems-192.png") && icon.sizes === "192x192"));
 assert.ok(manifest.icons.some((icon) => icon.src.includes("kems-512.png") && icon.sizes === "512x512"));
 assert.ok(manifest.icons.some((icon) => icon.src.includes("kems-maskable-512.png") && icon.purpose === "maskable"));
@@ -37,7 +40,7 @@ for (const file of [
 
 const worker = read("public/service-worker.js");
 for (const marker of [
-  `kems-alpha7-web${webNumber}-shell-v1`,
+  `kems-alpha${alphaNumber}-web${webNumber}-shell-v1`,
   `mobile-pwa.css?v=${assetVersion}`,
   `pwa-bootstrap.js?v=${assetVersion}`,
   `icons/kems-192.png?v=${assetVersion}`,
@@ -85,4 +88,4 @@ for (const marker of [
   assert.match(mobileCss, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
 }
 
-console.log(`Web.${webNumber} mobile/PWA contract passed: install icons, safe-area shell, shared worker bootstrap and Cloudflare Access cache guard are present.`);
+console.log(`${pkg.version} mobile/PWA contract passed: install icons, safe-area shell, shared worker bootstrap and Cloudflare Access cache guard are present.`);
