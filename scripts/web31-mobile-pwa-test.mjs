@@ -10,7 +10,7 @@ assert.ok(webNumber >= 31, `Expected Web.31 or later, got ${pkg.version}`);
 
 const manifestText = read("public/site.webmanifest");
 const manifest = JSON.parse(manifestText);
-assert.equal(manifest.start_url, "/");
+assert.equal(manifest.start_url, webNumber >= 32 ? "/#live" : "/");
 assert.equal(manifest.scope, "/");
 assert.equal(manifest.display, "standalone");
 assert.equal(manifest.prefer_related_applications, false);

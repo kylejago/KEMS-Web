@@ -5,8 +5,28 @@ const state = {
     window.navigator.standalone === true,
   online: window.navigator.onLine,
   secureContext: window.isSecureContext,
+  serviceWorkerSupported: "serviceWorker" in navigator,
+  serviceWorkerRegistered: false,
   serviceWorkerReady: false,
+  serviceWorkerControlled: Boolean(navigator.serviceWorker?.controller),
+  manifestChecked: false,
+  manifestValid: false,
+  manifestStandalone: false,
+  manifestIcons: false,
+  manifestName: null,
+  manifestError: null,
 };
+
+function installReason() {
+  if (state.installed) return "installed";
+  if (!state.secureContext) return "https-required";
+  if (!state.manifestChecked) return "checking-manifest";
+  if (!state.manifestValid) return "manifest-invalid";
+  if (!state.serviceWorkerSupported) return "service-worker-unsupported";
+  if (!state.serviceWorkerReady) return "service-worker-not-ready";
+  if (state.installPrompt) return "prompt-ready";
+  return "browser-menu";
+}
 
 function publicState() {
   return {
@@ -14,7 +34,17 @@ function publicState() {
     online: state.online,
     secureContext: state.secureContext,
     installAvailable: Boolean(state.installPrompt),
+    installReason: installReason(),
+    serviceWorkerSupported: state.serviceWorkerSupported,
+    serviceWorkerRegistered: state.serviceWorkerRegistered,
     serviceWorkerReady: state.serviceWorkerReady,
+    serviceWorkerControlled: state.serviceWorkerControlled,
+    manifestChecked: state.manifestChecked,
+    manifestValid: state.manifestValid,
+    manifestStandalone: state.manifestStandalone,
+    manifestIcons: state.manifestIcons,
+    manifestName: state.manifestName,
+    manifestError: state.manifestError,
   };
 }
 
@@ -57,9 +87,57 @@ function hideAuthRequired() {
   if (banner) banner.hidden = true;
 }
 
+function iconHasSize(icons, wanted) {
+  return Array.isArray(icons) && icons.some((icon) =>
+    String(icon?.sizes || "")
+      .split(/\s+/)
+      .includes(wanted),
+  );
+}
+
+async function refreshManifestDiagnostics() {
+  state.manifestChecked = false;
+  state.manifestError = null;
+  emitState();
+
+  try {
+    const response = await fetch("/site.webmanifest", {
+      cache: "no-store",
+      credentials: "same-origin",
+      headers: { Accept: "application/manifest+json,application/json;q=0.9,*/*;q=0.1" },
+    });
+    if (!response.ok) throw new Error(`Manifest request failed (${response.status})`);
+
+    const manifest = await response.json();
+    const startUrl = new URL(manifest.start_url || "/", window.location.href);
+    const scopeUrl = new URL(manifest.scope || "/", window.location.href);
+    const sameOrigin = startUrl.origin === window.location.origin && scopeUrl.origin === window.location.origin;
+    const named = Boolean(String(manifest.name || manifest.short_name || "").trim());
+    const standalone = ["standalone", "fullscreen", "minimal-ui"].includes(String(manifest.display || ""));
+    const icons = iconHasSize(manifest.icons, "192x192") && iconHasSize(manifest.icons, "512x512");
+
+    state.manifestChecked = true;
+    state.manifestStandalone = standalone;
+    state.manifestIcons = icons;
+    state.manifestName = manifest.name || manifest.short_name || null;
+    state.manifestValid = Boolean(named && sameOrigin && standalone && icons);
+    state.manifestError = state.manifestValid ? null : "Manifest is missing an installability requirement.";
+  } catch (error) {
+    state.manifestChecked = true;
+    state.manifestValid = false;
+    state.manifestStandalone = false;
+    state.manifestIcons = false;
+    state.manifestName = null;
+    state.manifestError = error instanceof Error ? error.message : String(error);
+  }
+
+  emitState();
+  return publicState();
+}
+
 async function promptInstall() {
   const prompt = state.installPrompt;
-  if (!prompt) return { outcome: "unavailable" };
+  if (!prompt) return { outcome: "unavailable", reason: installReason() };
 
   state.installPrompt = null;
   emitState();
@@ -74,6 +152,7 @@ async function promptInstall() {
 window.KEMSPWA = Object.freeze({
   getState: publicState,
   promptInstall,
+  refreshDiagnostics: refreshManifestDiagnostics,
   showAuthRequired,
   hideAuthRequired,
 });
@@ -102,18 +181,44 @@ window.addEventListener("offline", () => {
   emitState();
 });
 
+window.addEventListener("pageshow", () => {
+  state.installed =
+    window.matchMedia?.("(display-mode: standalone)")?.matches === true ||
+    window.navigator.standalone === true;
+  state.serviceWorkerControlled = Boolean(navigator.serviceWorker?.controller);
+  emitState();
+});
+
 if (!state.online) document.documentElement.classList.add("kems-offline");
 
-if ("serviceWorker" in navigator) {
+refreshManifestDiagnostics();
+
+if (state.serviceWorkerSupported && state.secureContext) {
   navigator.serviceWorker.addEventListener("message", (event) => {
     if (event.data?.type === "KEMS_AUTH_REQUIRED") showAuthRequired();
+  });
+
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    state.serviceWorkerControlled = Boolean(navigator.serviceWorker.controller);
+    emitState();
   });
 
   navigator.serviceWorker
     .register("/service-worker.js", { scope: "/" })
     .then(async (registration) => {
-      state.serviceWorkerReady = true;
+      state.serviceWorkerRegistered = true;
       emitState();
+
+      try {
+        await navigator.serviceWorker.ready;
+        state.serviceWorkerReady = true;
+        state.serviceWorkerControlled = Boolean(navigator.serviceWorker.controller);
+        emitState();
+      } catch {
+        state.serviceWorkerReady = false;
+        emitState();
+      }
+
       try {
         await registration.update();
       } catch {
@@ -121,7 +226,9 @@ if ("serviceWorker" in navigator) {
       }
     })
     .catch(() => {
+      state.serviceWorkerRegistered = false;
       state.serviceWorkerReady = false;
+      state.serviceWorkerControlled = false;
       emitState();
     });
 }
