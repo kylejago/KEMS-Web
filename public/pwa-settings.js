@@ -13,6 +13,8 @@ function pwaState() {
     serviceWorkerControlled: Boolean(navigator.serviceWorker?.controller),
     manifestChecked: false,
     manifestValid: false,
+    manifestCredentials: false,
+    manifestLinkPresent: false,
   };
 }
 
@@ -30,12 +32,15 @@ function browserGuidance(state) {
     return "This HTTP page can only be added as a normal browser shortcut. Open the authenticated HTTPS KEMS property address first; a real PWA then opens without Chrome's address bar.";
   }
   if (!state.manifestChecked) return "KEMS is checking the install manifest.";
+  if (!state.manifestCredentials) {
+    return "The browser manifest request is not including authenticated-site credentials, so Cloudflare Access can prevent Chrome recognising KEMS as installable.";
+  }
   if (!state.manifestValid) return "KEMS cannot offer a standalone install until the manifest check passes.";
   if (!state.serviceWorkerReady) return "The KEMS app worker is still activating. Wait a moment, then reload this page once if needed.";
   if (state.serviceWorkerReady && !state.serviceWorkerControlled) return "The KEMS app worker is ready but this tab is not controlled yet. Reload this page once, then return to Settings.";
   if (state.installAvailable) return "KEMS is ready for a standalone app install.";
   if (isIos()) return "In Safari, tap Share, then Add to Home Screen.";
-  return "If Chrome does not show the KEMS install prompt here, open Chrome's menu and choose Install app. If it only says Add to Home screen and the shortcut reopens with an address bar, check the diagnostics below.";
+  return "KEMS is presenting Chrome with the authenticated manifest and active service worker. Open Chrome's menu and choose Install app when offered; Create shortcut is not a standalone PWA install.";
 }
 
 function safeRemoteUrl() {
@@ -58,6 +63,7 @@ async function loadSiteDetails() {
 function diagnosticMarkup(state) {
   const secure = state.secureContext ? "HTTPS / secure" : "HTTP / shortcut only";
   const manifest = !state.manifestChecked ? "Checking" : state.manifestValid ? "Valid" : "Problem";
+  const manifestCredentials = state.manifestCredentials ? "Included" : "Missing";
   let worker;
   if (!state.secureContext) worker = "Requires HTTPS";
   else if (!state.serviceWorkerSupported) worker = "Unsupported";
@@ -68,7 +74,7 @@ function diagnosticMarkup(state) {
   const prompt = state.installAvailable ? "Ready" : state.installed ? "Installed" : "Not offered yet";
   const launch = state.installed ? "Standalone app" : "Browser tab";
 
-  return `<div class="kems-pwa-diagnostics"><h3>Install diagnostics</h3><div class="status-list">${valueRow("Page security", secure)}${valueRow("Manifest", manifest)}${valueRow("Service worker", worker)}${valueRow("Current page", control)}${valueRow("Browser install prompt", prompt)}${valueRow("Launch mode", launch)}</div></div>`;
+  return `<div class="kems-pwa-diagnostics"><h3>Install diagnostics</h3><div class="status-list">${valueRow("Page security", secure)}${valueRow("Manifest", manifest)}${valueRow("Manifest credentials", manifestCredentials)}${valueRow("Service worker", worker)}${valueRow("Current page", control)}${valueRow("Browser install prompt", prompt)}${valueRow("Launch mode", launch)}</div></div>`;
 }
 
 function setText(node, text) {

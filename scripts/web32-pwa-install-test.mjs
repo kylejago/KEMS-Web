@@ -27,8 +27,6 @@ for (const marker of [
   "manifestValid",
   "manifestStandalone",
   "manifestIcons",
-  'fetch("/site.webmanifest"',
-  'credentials: "same-origin"',
   "serviceWorkerRegistered",
   "serviceWorkerReady",
   "serviceWorkerControlled",
@@ -39,6 +37,11 @@ for (const marker of [
   "refreshDiagnostics",
 ]) {
   assert.match(bootstrap, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), `PWA bootstrap missing ${marker}`);
+}
+assert.match(bootstrap, /credentials: "(?:same-origin|include)"/, "Manifest diagnostics must fetch with credentials");
+if (webNumber >= 33) {
+  assert.match(bootstrap, /manifestLinkState/);
+  assert.match(bootstrap, /credentials: "include"/);
 }
 
 const settingsHtml = read("public/settings.html");
@@ -77,7 +80,7 @@ assert.match(worker, /url\.pathname === "\/site\.webmanifest"/);
 
 const project = JSON.parse(read("config/project.json"));
 assert.equal(project.version, pkg.version);
-assert.match(project.build, /install|PWA/i);
+assert.match(project.build, /install|PWA|manifest/i);
 assert.ok(project.principles.some((item) => /HTTP Pi address.*browser shortcut/i.test(item)));
 assert.ok(project.principles.some((item) => /secure-context.*runtime-manifest.*service-worker/i.test(item)));
 
