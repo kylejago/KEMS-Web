@@ -1,5 +1,5 @@
 const ids={house:"sensor.kems_house_load",solar:"sensor.kems_solar_power",batteryPower:"sensor.kems_battery_power",batterySoc:"sensor.kems_battery_state_of_charge",gridImport:"sensor.kems_grid_import_power",gridExport:"sensor.kems_grid_export_power",evPower:"sensor.kems_ev_power",evSoc:"sensor.kems_ev_state_of_charge",evStatus:"sensor.kems_ev_status"};
-let latest=null;let rendering=false;
+let latest=null;let rendering=false;let enhanceQueued=false;
 const app=document.querySelector("#app");
 
 function item(snapshot,id){return (snapshot?.entities||[]).find((entry)=>entry.entityId===id)||null}
@@ -35,8 +35,9 @@ function enhance(){
   document.querySelectorAll("#app .energy-flow").forEach((flow)=>{if(flow!==section)flow.classList.add("web21-replaced-flow")});
  }finally{rendering=false}
 }
+function scheduleEnhance(){if(enhanceQueued)return;enhanceQueued=true;requestAnimationFrame(()=>{enhanceQueued=false;enhance()})}
 async function refresh(){try{const response=await fetch("/api/live",{cache:"no-store"});if(response.ok){latest=await response.json();enhance()}}catch{enhance()}}
-const observer=new MutationObserver(()=>queueMicrotask(enhance));if(app)observer.observe(app,{childList:true,subtree:true});
+const observer=new MutationObserver(scheduleEnhance);if(app)observer.observe(app,{childList:true,subtree:false});
 window.addEventListener("hashchange",()=>setTimeout(enhance,0));
 document.addEventListener("click",(event)=>{const button=event.target.closest?.("#settings-button");if(!button)return;event.preventDefault();event.stopImmediatePropagation();location.href="/settings.html"},{capture:true});
 refresh();setInterval(refresh,15000);
