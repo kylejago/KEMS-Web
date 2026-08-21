@@ -1,11 +1,11 @@
 {
   "name": "KEMS",
   "longName": "Kyle Energy Management System",
-  "version": "0.7.0-alpha7-web.26",
+  "version": "0.7.0-alpha7-web.27",
   "tagline": "Your property data first. Full KEMS Agile when you need the detail.",
-  "summary": "A mobile-ready read-only KEMS property companion with an exact live mirror of the physical 16x16 KEMS panel, extended four-strategy comparison periods, Full KEMS Agile live/simulated telemetry, actual commissioned cost and ROI, and consolidated settings.",
+  "summary": "A mobile-ready read-only KEMS property companion with a browser-safe live mirror of the physical 16x16 KEMS panel, extended four-strategy comparison periods, Full KEMS Agile live/simulated telemetry, actual commissioned cost and ROI, and consolidated settings.",
   "repository": "https://github.com/kylejago/KEMS-Web",
-  "build": "Web.26 exact physical-panel mirror and Today/Yesterday/7-day/30-day/Year/All-time comparison · Web.25 clean Live Data and Compare rebuild · corrected Agile simulated graph mappings · responsive PWA shell",
+  "build": "Web.27 browser-safe PNG panel mask with visible face fallback · Web.26 exact physical-panel mirror and Today/Yesterday/7-day/30-day/Year/All-time comparison · Web.25 clean Live Data and Compare rebuild · responsive PWA shell",
   "principles": [
     "Home Assistant and KEMS remain the source of truth for each property.",
     "The user-facing product model is Live Data, Battery & Solar, Full KEMS and Full KEMS Agile.",
@@ -13,6 +13,7 @@
     "Full KEMS Agile is the flagship strategy, but KEMS must report when another strategy wins on the available evidence.",
     "Strategy comparison uses one common bill basis and one period selector, with missing evidence left unavailable rather than guessed.",
     "The Live Data panel mirrors the physical 16x16 front face and LED rules rather than substituting a generic energy-flow diagram.",
+    "The panel uses a browser-safe PNG alpha mask and retains a visible artwork fallback so Chrome/Edge cannot collapse it to a blank black square.",
     "Long-period comparison never scales a shorter replay to invent Year or All-time evidence; unavailable strategies remain visibly unavailable.",
     "Live Data reads the canonical /api/live metrics first rather than duplicating Home Assistant entity identifiers in the browser.",
     "Live, simulated, shadow, forecast and reconstructed evidence are visibly labelled.",
