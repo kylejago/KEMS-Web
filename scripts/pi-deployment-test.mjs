@@ -36,7 +36,13 @@ mustContain("server.mjs", ["/api/site", "/api/maintenance", "/api/system/update-
 mustContain("public/app.js", ["Site identity", "Automatic coordinated updates", "Planned KEMS maintenance", "Host on this KEMS Pi", "Install Home Assistant", "Connect KEMS to local HA"]);
 mustContain("public/brand.css", ["brand-lockup", "loading-brand-lockup", "page-brand-lockup"]);
 mustContain("public/brand-lockup.svg", ["KEMS logo", "viewBox=\"0 0 180 180\""]);
-mustContain("public/remote-access.html", ["Remote access", "Cloudflare Tunnel connector", "http://localhost:4173", "kyle.kems.uk", "Install &amp; connect", `brand-lockup.svg?v=${assetVersion}`, "page-brand-lockup"]);
-mustContain("public/remote-access.js", ["/api/remote-access", "\"/install\"", "\"/action\""]);
+if (webNumber >= 21) {
+  mustContain("public/remote-access.html", ["Remote Access has moved", "/settings.html#remote-access", `brand-lockup.svg?v=${assetVersion}`]);
+  mustContain("public/settings.html", ["Remote Access", "Cloudflare connector", "cloudflare-command", `brand-lockup.svg?v=${assetVersion}`]);
+  mustContain("public/settings-page.js", ["/api/remote-access/status", "/api/remote-access/install", "/api/remote-access/action", "beforeinstallprompt"]);
+} else {
+  mustContain("public/remote-access.html", ["Remote access", "Cloudflare Tunnel connector", "http://localhost:4173", "kyle.kems.uk", "Install &amp; connect", `brand-lockup.svg?v=${assetVersion}`, "page-brand-lockup"]);
+  mustContain("public/remote-access.js", ["/api/remote-access", "\"/install\"", "\"/action\""]);
+}
 
 console.log(`Pi deployment checks passed for Web.${webNumber} branding, delayed demo and retained loopback Remote Access helper.`);
