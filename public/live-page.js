@@ -13,7 +13,10 @@ const POWER_SERIES = [
   { key: "ev", label: "EV", stroke: "#c3ef77" }
 ];
 
+const PANEL_THRESHOLD = 0.03;
+
 function n(value) {
+  if (value === null || value === undefined || value === "") return null;
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
 }
@@ -50,11 +53,13 @@ function snapshotValues() {
     gridImport: gridKnown ? gridImport : null,
     gridExport: gridKnown ? gridExport : null,
     gridDirection: String(metrics.gridFlowDirection || "unavailable"),
+    gridAvailable: Boolean(live?.connected && gridKnown),
     ev: n(metrics.evPower),
     evSoc: n(metrics.evSoc),
     evConnected: Boolean(metrics.evConnected),
     evCharging: Boolean(metrics.evCharging),
-    rate: n(metrics.currentRate)
+    rate: n(metrics.currentRate),
+    costToday: n(live?.observed?.costToday)
   };
 }
 
@@ -62,32 +67,140 @@ function metricCard(label, value, detail = "") {
   return `<article class="web21-card web25-metric"><span>${esc(label)}</span><strong>${esc(value)}</strong>${detail ? `<small>${esc(detail)}</small>` : ""}</article>`;
 }
 
-function node(className, icon, label, value, sub = "") {
-  return `<article class="panel-node ${className}"><span class="panel-icon">${icon}</span><span class="panel-label">${label}</span><span class="panel-value">${esc(value)}</span>${sub ? `<span class="panel-sub">${esc(sub)}</span>` : ""}</article>`;
+function panelCellIndex(column, row) {
+  return (row - 1) * 16 + (column - 1);
 }
 
-function flowSvg(v) {
-  const threshold = 0.01;
-  const line = (name, x1, y1, x2, y2, active, reverse = false) => {
-    const ax1 = reverse ? x2 : x1, ay1 = reverse ? y2 : y1, ax2 = reverse ? x1 : x2, ay2 = reverse ? y1 : y2;
-    return `<line class="live-flow-link ${active ? "active" : "idle"} ${name}" x1="${ax1}" y1="${ay1}" x2="${ax2}" y2="${ay2}" ${active ? 'marker-end="url(#flow-arrow)"' : ""}/>`;
+function panelCells(v) {
+  const cells = Array.from({ length: 256 }, () => ({ colour: "off", pulse: false, flow: false, delay: 0 }));
+  const set = (column, row, colour, options = {}) => {
+    if (column < 1 || column > 16 || row < 1 || row > 16) return;
+    cells[panelCellIndex(column, row)] = { colour, pulse: Boolean(options.pulse), flow: Boolean(options.flow), delay: Number(options.delay || 0) };
   };
-  const solarActive = Number.isFinite(v.solar) && v.solar > threshold;
-  const gridImport = Number.isFinite(v.gridImport) && v.gridImport > threshold;
-  const gridExport = Number.isFinite(v.gridExport) && v.gridExport > threshold;
-  const batteryDischarge = Number.isFinite(v.battery) && v.battery > threshold;
-  const batteryCharge = Number.isFinite(v.battery) && v.battery < -threshold;
-  const evActive = Number.isFinite(v.ev) && v.ev > threshold;
-  return `<svg class="live-flow-links" viewBox="0 0 600 480" aria-hidden="true"><defs><marker id="flow-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z"/></marker></defs>${line("solar-link", 300, 140, 300, 190, solarActive)}${line("grid-link", 180, 240, 240, 240, gridImport || gridExport, gridExport)}${line("battery-link", 360, 240, 420, 240, batteryDischarge || batteryCharge, batteryDischarge)}${line("ev-link", 300, 290, 300, 340, evActive)}</svg>`;
+  const rect = (c1, r1, c2, r2, colour, options = {}) => {
+    for (let row = r1; row <= r2; row += 1) for (let column = c1; column <= c2; column += 1) set(column, row, colour, options);
+  };
+  const flowHorizontal = (c1, r1, c2, r2, topColour, bottomColour, direction) => {
+    const width = c2 - c1 + 1;
+    for (let travel = 0; travel < width; travel += 1) {
+      const column = direction > 0 ? c1 + travel : c2 - travel;
+      set(column, r1, topColour, { flow: true, delay: travel * .45 });
+      set(column, r2, bottomColour, { flow: true, delay: travel * .45 });
+    }
+  };
+  const flowVertical = (c1, r1, c2, r2, leftColour, rightColour, direction) => {
+    const height = r2 - r1 + 1;
+    for (let travel = 0; travel < height; travel += 1) {
+      const row = direction > 0 ? r1 + travel : r2 - travel;
+      set(c1, row, leftColour, { flow: true, delay: travel * .45 });
+      set(c2, row, rightColour, { flow: true, delay: travel * .45 });
+    }
+  };
+
+  const gridImporting = Number.isFinite(v.gridImport) && v.gridImport > PANEL_THRESHOLD;
+  const gridExporting = Number.isFinite(v.gridExport) && v.gridExport > PANEL_THRESHOLD;
+  const solarProducing = Number.isFinite(v.solar) && v.solar > PANEL_THRESHOLD;
+  const batteryDischarging = Number.isFinite(v.battery) && v.battery > PANEL_THRESHOLD;
+  const batteryCharging = Number.isFinite(v.battery) && v.battery < -PANEL_THRESHOLD;
+  const batteryExportComponent = gridExporting && batteryDischarging ? Math.min(v.gridExport, v.battery) : 0;
+  const exportFromBattery = batteryExportComponent > PANEL_THRESHOLD;
+  const exportFromSolar = gridExporting && ((Number.isFinite(v.gridExport) ? v.gridExport : 0) - batteryExportComponent > PANEL_THRESHOLD || solarProducing);
+  const batteryChargeFromGrid = batteryCharging && gridImporting;
+  const batteryChargeFromSolar = batteryCharging && solarProducing;
+  const solarBusActive = solarProducing;
+  const batteryToBusActive = batteryDischarging || exportFromBattery;
+  const evFromGrid = v.evCharging && gridImporting;
+  const evFromSolar = v.evCharging && solarBusActive;
+  const evFromBattery = v.evCharging && batteryToBusActive;
+
+  rect(2, 2, 5, 3, "rainbow");
+  rect(12, 2, 15, 3, "rainbow");
+  rect(2, 12, 5, 13, "rainbow");
+  rect(12, 12, 15, 13, "rainbow");
+  rect(7, 7, 10, 10, "rainbow");
+
+  if (v.gridAvailable) rect(2, 4, 3, 5, "green"); else rect(4, 4, 5, 5, "red");
+  if (Number.isFinite(v.costToday)) {
+    if (v.costToday < 0) rect(12, 4, 13, 5, "green");
+    else if (v.costToday > 0) rect(14, 4, 15, 5, "red");
+  }
+  if (gridImporting) rect(2, 14, 3, 15, "green"); else rect(4, 14, 5, 15, "red");
+  if (gridExporting) rect(12, 14, 13, 15, "green"); else rect(14, 14, 15, 15, "red");
+
+  if (solarBusActive) {
+    rect(7, 1, 10, 2, "yellow", { pulse: true });
+    flowVertical(8, 3, 9, 6, "yellow", "yellow", +1);
+  }
+
+  if (gridImporting) {
+    rect(1, 7, 2, 10, "blue", { pulse: true });
+    flowHorizontal(3, 8, 6, 9, "blue", "blue", +1);
+  } else if (gridExporting) {
+    rect(1, 7, 2, 10, "blue", { pulse: true });
+    if (exportFromSolar && exportFromBattery) flowHorizontal(3, 8, 6, 9, "yellow", "green", -1);
+    else if (exportFromSolar) flowHorizontal(3, 8, 6, 9, "yellow", "yellow", -1);
+    else if (exportFromBattery) flowHorizontal(3, 8, 6, 9, "green", "green", -1);
+    else flowHorizontal(3, 8, 6, 9, "white", "white", -1);
+  }
+
+  if (Number.isFinite(v.batterySoc)) {
+    const soc = Math.max(0, Math.min(100, v.batterySoc));
+    const batteryCells = [[15,11],[16,11],[15,10],[16,10],[15,9],[16,9],[15,8],[16,8],[15,7],[16,7]];
+    if (soc >= 100) {
+      batteryCells.forEach(([column, row]) => set(column, row, "green"));
+    } else if (soc < 10) {
+      set(15, 11, "red", { pulse: true });
+    } else {
+      const fullCells = Math.floor(soc / 10);
+      for (let index = 0; index < fullCells; index += 1) {
+        const [column, row] = batteryCells[index];
+        set(column, row, soc < 20 && index === 0 ? "orange" : "green");
+      }
+      if (fullCells < 10) {
+        const [column, row] = batteryCells[fullCells];
+        set(column, row, "green", { pulse: true });
+      }
+    }
+  }
+
+  if (batteryCharging) {
+    if (batteryChargeFromSolar && batteryChargeFromGrid) flowHorizontal(11, 8, 14, 9, "yellow", "blue", +1);
+    else if (batteryChargeFromGrid) flowHorizontal(11, 8, 14, 9, "blue", "blue", +1);
+    else if (batteryChargeFromSolar) flowHorizontal(11, 8, 14, 9, "yellow", "yellow", +1);
+    else flowHorizontal(11, 8, 14, 9, "white", "white", +1);
+  } else if (batteryToBusActive) {
+    flowHorizontal(11, 8, 14, 9, "green", "green", -1);
+  }
+
+  if (v.evCharging) {
+    rect(7, 15, 10, 16, "magenta", { pulse: true });
+    if (evFromGrid && evFromSolar && evFromBattery) flowVertical(8, 11, 9, 14, "blue", "green", +1);
+    else if (evFromGrid && evFromSolar) flowVertical(8, 11, 9, 14, "blue", "yellow", +1);
+    else if (evFromSolar && evFromBattery) flowVertical(8, 11, 9, 14, "yellow", "green", +1);
+    else if (evFromGrid && evFromBattery) flowVertical(8, 11, 9, 14, "blue", "green", +1);
+    else if (evFromGrid) flowVertical(8, 11, 9, 14, "blue", "blue", +1);
+    else if (evFromSolar) flowVertical(8, 11, 9, 14, "yellow", "yellow", +1);
+    else if (evFromBattery) flowVertical(8, 11, 9, 14, "green", "green", +1);
+    else flowVertical(8, 11, 9, 14, "magenta", "magenta", +1);
+  } else if (v.evConnected) {
+    rect(7, 15, 10, 16, "magenta");
+  }
+
+  return { cells, gridImporting, gridExporting, solarBusActive, batteryCharging, batteryDischarging };
 }
 
-function energyFlow(v) {
-  const batterySub = Number.isFinite(v.batterySoc) ? `SoC ${pct(v.batterySoc)}` : "Physical battery unavailable";
-  const gridSub = Number.isFinite(v.gridImport) || Number.isFinite(v.gridExport)
-    ? (v.gridImport > 0.01 ? "Importing" : v.gridExport > 0.01 ? "Exporting" : "Balanced")
-    : "Grid telemetry unavailable";
-  const evSub = v.evConnected ? (v.evCharging ? "Connected · charging" : "Connected") : (Number.isFinite(v.ev) ? "Not charging" : "EV telemetry unavailable");
-  return `<section class="web21-section"><div class="web21-kicker">16×16 panel layout</div><h2>Energy flow now</h2><p class="web21-muted">The website uses the same five data points as the KEMS panel: Solar above, Grid left, Home centre, Battery right and EV below. Animated flow appears only when the corresponding live telemetry is available.</p><div class="live-flow">${flowSvg(v)}${node("solar", "☀", "SOLAR", kw(v.solar), Number.isFinite(v.solarToday) ? `Today ${kwh(v.solarToday)}` : "Physical solar unavailable")}${node("grid", "⌁", "GRID", Number.isFinite(v.gridImport) || Number.isFinite(v.gridExport) ? (v.gridImport > 0.01 ? kw(v.gridImport) : v.gridExport > 0.01 ? kw(v.gridExport) : "0.00 kW") : "—", gridSub)}${node("home", "⌂", "HOME", kw(v.home), "Live house load")}${node("battery", "▰", "BATTERY", kw(v.battery), batterySub)}${node("ev", "▱", "EV", kw(v.ev), Number.isFinite(v.evSoc) ? `${evSub} · SoC ${pct(v.evSoc)}` : evSub)}</div></section>`;
+function panelReplica(v) {
+  const state = panelCells(v);
+  const cells = state.cells.map((cell) => {
+    const classes = ["kems-panel-led", cell.colour];
+    if (cell.pulse) classes.push("pulse");
+    if (cell.flow) classes.push("flow");
+    const style = cell.flow ? ` style="--flow-delay:-${cell.delay.toFixed(2)}s"` : "";
+    return `<span class="${classes.join(" ")}"${style}></span>`;
+  }).join("");
+  const gridText = state.gridImporting ? `Grid importing ${kw(v.gridImport)}` : state.gridExporting ? `Grid exporting ${kw(v.gridExport)}` : "Grid balanced";
+  const batteryText = Number.isFinite(v.batterySoc) ? `Battery ${pct(v.batterySoc)}` : "Battery unavailable";
+  return `<section class="web21-section"><div class="web21-kicker">Physical panel mirror</div><h2>16×16 KEMS panel</h2><p class="web21-muted">This is the same front face and the same live LED rules as the physical panel: GRID, COST, IMPORT and EXPORT status blocks, source colours, moving two-row flow dots, battery cells and EV state.</p><div class="kems-panel-shell"><div class="kems-panel-replica" role="img" aria-label="${esc(`KEMS panel. ${gridText}. ${batteryText}.`)}"><div class="kems-panel-led-mask">${cells}</div><div class="kems-panel-glass"></div></div></div><div class="kems-panel-caption"><span class="kems-panel-state-dot"></span><b>Live Data mode</b><span>·</span><span>${esc(gridText)}</span><span>·</span><span>${esc(batteryText)}</span></div></section>`;
 }
 
 function chart() {
@@ -125,7 +238,7 @@ function render() {
   if (!app || !live) return;
   const v = snapshotValues();
   const updated = live.updatedAt ? new Date(live.updatedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "—";
-  app.innerHTML = `<header class="page-heading"><div><p class="eyebrow">LIVE DATA</p><h1>${esc(live.site?.name || "Your home")}</h1><p>Measured property data only. Missing physical solar or battery sources stay unavailable rather than being replaced with simulated values.</p></div></header><section class="web21-section"><div class="web21-kicker">Live now · updated ${esc(updated)}</div><h2>Property at a glance</h2><div class="web21-grid">${metricCard("Home load", kw(v.home))}${metricCard("Solar generation", kw(v.solar), v.solar === null ? "Waiting for physical solar" : "Live PV output")}${metricCard("Battery SoC", pct(v.batterySoc), v.batterySoc === null ? "Waiting for physical battery" : "Live battery")}${metricCard("Battery power", kw(v.battery), Number.isFinite(v.battery) ? (v.battery > 0.01 ? "Discharging" : v.battery < -0.01 ? "Charging" : "Idle") : "Unavailable")}${metricCard("Grid import", kw(v.gridImport))}${metricCard("Grid export", kw(v.gridExport))}${metricCard("EV power", kw(v.ev))}${metricCard("Import rate", penceRate(v.rate))}</div></section>${energyFlow(v)}${todaySection(v)}`;
+  app.innerHTML = `<header class="page-heading"><div><p class="eyebrow">LIVE DATA</p><h1>${esc(live.site?.name || "Your home")}</h1><p>Measured property data only. Missing physical solar or battery sources stay unavailable rather than being replaced with simulated values.</p></div></header><section class="web21-section"><div class="web21-kicker">Live now · updated ${esc(updated)}</div><h2>Property at a glance</h2><div class="web21-grid">${metricCard("Home load", kw(v.home))}${metricCard("Solar generation", kw(v.solar), v.solar === null ? "Waiting for physical solar" : "Live PV output")}${metricCard("Battery SoC", pct(v.batterySoc), v.batterySoc === null ? "Waiting for physical battery" : "Live battery")}${metricCard("Battery power", kw(v.battery), Number.isFinite(v.battery) ? (v.battery > 0.01 ? "Discharging" : v.battery < -0.01 ? "Charging" : "Idle") : "Unavailable")}${metricCard("Grid import", kw(v.gridImport))}${metricCard("Grid export", kw(v.gridExport))}${metricCard("EV power", kw(v.ev))}${metricCard("Import rate", penceRate(v.rate))}</div></section>${panelReplica(v)}${todaySection(v)}`;
   if (connectionPill) {
     connectionPill.classList.toggle("offline", !live.connected);
     const label = connectionPill.querySelector("span");
