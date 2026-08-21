@@ -13,6 +13,8 @@ const state = {
   manifestValid: false,
   manifestStandalone: false,
   manifestIcons: false,
+  manifestCredentials: false,
+  manifestLinkPresent: false,
   manifestName: null,
   manifestError: null,
 };
@@ -21,6 +23,7 @@ function installReason() {
   if (state.installed) return "installed";
   if (!state.secureContext) return "https-required";
   if (!state.manifestChecked) return "checking-manifest";
+  if (!state.manifestCredentials) return "manifest-credentials-missing";
   if (!state.manifestValid) return "manifest-invalid";
   if (!state.serviceWorkerSupported) return "service-worker-unsupported";
   if (!state.serviceWorkerReady) return "service-worker-not-ready";
@@ -43,6 +46,8 @@ function publicState() {
     manifestValid: state.manifestValid,
     manifestStandalone: state.manifestStandalone,
     manifestIcons: state.manifestIcons,
+    manifestCredentials: state.manifestCredentials,
+    manifestLinkPresent: state.manifestLinkPresent,
     manifestName: state.manifestName,
     manifestError: state.manifestError,
   };
@@ -95,15 +100,34 @@ function iconHasSize(icons, wanted) {
   );
 }
 
+function manifestLinkState() {
+  const link = document.querySelector('link[rel="manifest"]');
+  return {
+    link,
+    present: Boolean(link),
+    credentialed:
+      link?.crossOrigin === "use-credentials" ||
+      link?.getAttribute("crossorigin") === "use-credentials",
+  };
+}
+
 async function refreshManifestDiagnostics() {
   state.manifestChecked = false;
   state.manifestError = null;
+  const manifestLink = manifestLinkState();
+  state.manifestLinkPresent = manifestLink.present;
+  state.manifestCredentials = manifestLink.credentialed;
   emitState();
 
   try {
-    const response = await fetch("/site.webmanifest", {
+    if (!manifestLink.link) throw new Error("Manifest link is missing from this page.");
+    if (!manifestLink.credentialed) {
+      throw new Error("Manifest link is not configured to include Cloudflare Access credentials.");
+    }
+
+    const response = await fetch(manifestLink.link.href || "/site.webmanifest", {
       cache: "no-store",
-      credentials: "same-origin",
+      credentials: "include",
       headers: { Accept: "application/manifest+json,application/json;q=0.9,*/*;q=0.1" },
     });
     if (!response.ok) throw new Error(`Manifest request failed (${response.status})`);
@@ -120,7 +144,7 @@ async function refreshManifestDiagnostics() {
     state.manifestStandalone = standalone;
     state.manifestIcons = icons;
     state.manifestName = manifest.name || manifest.short_name || null;
-    state.manifestValid = Boolean(named && sameOrigin && standalone && icons);
+    state.manifestValid = Boolean(named && sameOrigin && standalone && icons && state.manifestCredentials);
     state.manifestError = state.manifestValid ? null : "Manifest is missing an installability requirement.";
   } catch (error) {
     state.manifestChecked = true;
