@@ -2,7 +2,7 @@
   "id": "/",
   "name": "KEMS Energy",
   "short_name": "KEMS",
-  "description": "Live Data, Battery & Solar, Full KEMS, Full KEMS Agile, comparison and long-term energy performance.",
+  "description": "Mobile-ready KEMS property dashboard for live data, four-strategy comparison, Full KEMS Agile, actual cost and ROI, and settings.",
   "start_url": "/#live",
   "scope": "/",
   "display": "standalone",
@@ -10,14 +10,12 @@
   "background_color": "#071117",
   "theme_color": "#071117",
   "categories": ["utilities", "productivity"],
-  "icons": [
-    {"src":"logo.svg?v=alpha7web19","sizes":"any","type":"image/svg+xml","purpose":"any"}
-  ],
+  "icons": [{"src":"logo.svg?v=alpha7web21","sizes":"any","type":"image/svg+xml","purpose":"any"}],
   "shortcuts": [
-    {"name":"Live Data","short_name":"Live","url":"/#live","icons":[{"src":"logo.svg?v=alpha7web19","sizes":"any","type":"image/svg+xml"}]},
-    {"name":"KEMS products","short_name":"Products","url":"/products.html","icons":[{"src":"logo.svg?v=alpha7web19","sizes":"any","type":"image/svg+xml"}]},
-    {"name":"Compare products","short_name":"Compare","url":"/compare.html","icons":[{"src":"logo.svg?v=alpha7web19","sizes":"any","type":"image/svg+xml"}]},
-    {"name":"Full KEMS Agile","short_name":"Agile","url":"/agile.html","icons":[{"src":"logo.svg?v=alpha7web19","sizes":"any","type":"image/svg+xml"}]},
-    {"name":"Cost & ROI","short_name":"ROI","url":"/#performance","icons":[{"src":"logo.svg?v=alpha7web19","sizes":"any","type":"image/svg+xml"}]}
+    {"name":"Live Data","short_name":"Live","url":"/#live","icons":[{"src":"logo.svg?v=alpha7web21","sizes":"any","type":"image/svg+xml"}]},
+    {"name":"Compare strategies","short_name":"Compare","url":"/compare.html","icons":[{"src":"logo.svg?v=alpha7web21","sizes":"any","type":"image/svg+xml"}]},
+    {"name":"Full KEMS Agile","short_name":"Agile","url":"/agile.html","icons":[{"src":"logo.svg?v=alpha7web21","sizes":"any","type":"image/svg+xml"}]},
+    {"name":"Actual Cost & ROI","short_name":"Cost","url":"/performance.html","icons":[{"src":"logo.svg?v=alpha7web21","sizes":"any","type":"image/svg+xml"}]},
+    {"name":"Settings","short_name":"Settings","url":"/settings.html","icons":[{"src":"logo.svg?v=alpha7web21","sizes":"any","type":"image/svg+xml"}]}
   ]
 }

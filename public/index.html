@@ -4,28 +4,25 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#071217" />
-  <meta name="description" content="Live Data, Battery & Solar, Full KEMS and Full KEMS Agile comparison, history and ROI dashboard for KEMS Alpha7." />
+  <meta name="description" content="Mobile-ready KEMS property dashboard for live energy, strategy comparison, Full KEMS Agile and actual cost and ROI." />
   <title>KEMS — Energy Dashboard</title>
-  <link rel="icon" href="logo.svg?v=alpha7web20" type="image/svg+xml" />
+  <link rel="icon" href="logo.svg?v=alpha7web21" type="image/svg+xml" />
   <link rel="manifest" href="site.webmanifest" />
-  <link rel="apple-touch-icon" href="logo.svg?v=alpha7web20" />
-  <link rel="stylesheet" href="styles.css?v=alpha7web20" />
-  <link rel="stylesheet" href="brand.css?v=alpha7web20" />
+  <link rel="apple-touch-icon" href="logo.svg?v=alpha7web21" />
+  <link rel="stylesheet" href="styles.css?v=alpha7web21" />
+  <link rel="stylesheet" href="brand.css?v=alpha7web21" />
+  <link rel="stylesheet" href="web21.css?v=alpha7web21" />
 </head>
 <body>
   <div class="ambient" aria-hidden="true"><span></span><span></span><span></span></div>
   <header class="topbar">
-    <a class="brand" href="#live" aria-label="KEMS live dashboard">
-      <img class="brand-lockup" src="brand-lockup.svg?v=alpha7web20" alt="KEMS" />
-    </a>
+    <a class="brand" href="#live" aria-label="KEMS live dashboard"><img class="brand-lockup" src="brand-lockup.svg?v=alpha7web21" alt="KEMS" /></a>
     <nav class="primary-nav" aria-label="Primary navigation">
       <a href="#live" data-route="live">Live Data</a>
-      <a href="/products.html">Products</a>
       <a href="/compare.html">Compare</a>
       <a href="/agile.html">Full KEMS Agile</a>
-      <a href="#scenarios" data-route="scenarios">History &amp; scenarios</a>
-      <a href="#performance" data-route="performance">Cost &amp; ROI</a>
-      <a href="/remote-access.html">Remote Access</a>
+      <a href="/performance.html">Cost &amp; ROI</a>
+      <a href="/settings.html">Settings</a>
     </nav>
     <div class="top-actions">
       <span class="connection-pill" id="connection-pill"><i></i><span>Starting</span></span>
@@ -36,20 +33,15 @@
   </header>
   <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile navigation">
     <a href="#live" data-route="live">Live Data</a>
-    <a href="/products.html">Products</a>
     <a href="/compare.html">Compare</a>
     <a href="/agile.html">Full KEMS Agile</a>
-    <a href="#scenarios" data-route="scenarios">History &amp; scenarios</a>
-    <a href="#performance" data-route="performance">Cost &amp; ROI</a>
-    <a href="/remote-access.html">Remote Access</a>
+    <a href="/performance.html">Cost &amp; ROI</a>
+    <a href="/settings.html">Settings</a>
   </nav>
-  <main id="app" class="app" tabindex="-1">
-    <section class="loading-screen"><img class="loading-brand-lockup" src="brand-lockup.svg?v=alpha7web20" alt="KEMS" /><h1>Starting KEMS</h1><p>Preparing Live Data and product comparisons…</p></section>
-  </main>
-  <div id="drawer-root"></div>
-  <div id="modal-root"></div>
-  <div id="toast-root" class="toast-root" aria-live="polite"></div>
-  <script type="module" src="app.js?v=alpha7web20"></script>
-  <script type="module" src="platform-label.js?v=alpha7web20"></script>
+  <main id="app" class="app" tabindex="-1"><section class="loading-screen"><img class="loading-brand-lockup" src="brand-lockup.svg?v=alpha7web21" alt="KEMS" /><h1>Starting KEMS</h1><p>Preparing live property data and comparison evidence…</p></section></main>
+  <div id="drawer-root"></div><div id="modal-root"></div><div id="toast-root" class="toast-root" aria-live="polite"></div>
+  <script type="module" src="app.js?v=alpha7web21"></script>
+  <script type="module" src="platform-label.js?v=alpha7web21"></script>
+  <script type="module" src="web21-live.js?v=alpha7web21"></script>
 </body>
 </html>
