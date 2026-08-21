@@ -61,6 +61,9 @@ for (const marker of [
   "Chrome's address bar",
   'event.stopImmediatePropagation()',
   'fetch("/api/site"',
+  "kemsPwaBound",
+  "alreadyBound",
+  "setText",
 ]) {
   assert.match(settings, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), `PWA Settings bridge missing ${marker}`);
 }
@@ -78,4 +81,4 @@ assert.match(project.build, /install|PWA/i);
 assert.ok(project.principles.some((item) => /HTTP Pi address.*browser shortcut/i.test(item)));
 assert.ok(project.principles.some((item) => /secure-context.*runtime-manifest.*service-worker/i.test(item)));
 
-console.log(`Web.${webNumber} install-state contract passed: HTTPS vs shortcut guidance, runtime diagnostics, shared prompt state and worker activation checks are present.`);
+console.log(`Web.${webNumber} install-state contract passed: HTTPS vs shortcut guidance, runtime diagnostics, shared prompt state, observer guard and worker activation checks are present.`);
