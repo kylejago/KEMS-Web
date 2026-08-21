@@ -1,3 +1,9 @@
+import {
+  PANEL_POWER_THRESHOLD_KW,
+  derivePanelState,
+  numberOrNull as n,
+} from "./panel-state.js?v=alpha8web0";
+
 const app = document.querySelector("#live-app");
 const refreshButton = document.querySelector("#refresh-button");
 const connectionPill = document.querySelector("#connection-pill");
@@ -13,13 +19,8 @@ const POWER_SERIES = [
   { key: "ev", label: "EV", stroke: "#c3ef77" }
 ];
 
-const PANEL_THRESHOLD = 0.03;
+const PANEL_THRESHOLD = PANEL_POWER_THRESHOLD_KW;
 
-function n(value) {
-  if (value === null || value === undefined || value === "") return null;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
-}
 function esc(value = "") {
   return String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" })[char]);
 }
@@ -37,29 +38,14 @@ async function getJson(url) {
 
 function snapshotValues() {
   const metrics = live?.metrics || {};
-  const availability = live?.availability || {};
-  const gridNet = n(metrics.gridPower);
-  const gridKnown = availability.liveGrid !== false && (n(metrics.gridImportPower) !== null || n(metrics.gridExportPower) !== null || gridNet !== null);
-  const gridImport = n(metrics.gridImportPower) ?? (gridNet !== null ? Math.max(0, gridNet) : null);
-  const gridExport = n(metrics.gridExportPower) ?? (gridNet !== null ? Math.max(0, -gridNet) : null);
-  const solarKnown = metrics.solarDataAvailable !== false && availability.liveSolar !== false;
-  const batteryKnown = metrics.batteryDataAvailable !== false && availability.liveBattery !== false;
+  const base = derivePanelState(live, PANEL_THRESHOLD);
   return {
-    home: n(metrics.housePower),
-    solar: solarKnown ? n(metrics.solarPower) : null,
-    solarToday: solarKnown ? n(metrics.solarEnergyToday) : null,
-    battery: batteryKnown ? n(metrics.batteryPower) : null,
-    batterySoc: batteryKnown ? n(metrics.batterySoc) : null,
-    gridImport: gridKnown ? gridImport : null,
-    gridExport: gridKnown ? gridExport : null,
+    ...base,
+    solarToday: base.solar === null ? null : n(metrics.solarEnergyToday),
     gridDirection: String(metrics.gridFlowDirection || "unavailable"),
-    gridAvailable: Boolean(live?.connected && gridKnown),
-    ev: n(metrics.evPower),
-    evSoc: n(metrics.evSoc),
     evConnected: Boolean(metrics.evConnected),
     evCharging: Boolean(metrics.evCharging),
     rate: n(metrics.currentRate),
-    costToday: n(live?.observed?.costToday)
   };
 }
 
@@ -269,7 +255,6 @@ async function refreshLive() {
 }
 
 refreshButton?.addEventListener("click", refreshAll);
-if ("serviceWorker" in navigator) navigator.serviceWorker.register("/service-worker.js").catch(() => {});
 refreshAll();
 setInterval(() => document.visibilityState === "visible" && refreshLive(), 8000);
 setInterval(() => document.visibilityState === "visible" && refreshAll(), 60000);
