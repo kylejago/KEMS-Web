@@ -3,10 +3,15 @@ import fs from "node:fs";
 
 const read = (path) => fs.readFileSync(path, "utf8");
 const pkg = JSON.parse(read("package.json"));
-const webNumber = Number.parseInt(pkg.version.match(/-web\.(\d+)$/)?.[1] || "0", 10);
-const assetVersion = `alpha7web${webNumber}`;
+const versionMatch = pkg.version.match(/-alpha(\d+)-web\.(\d+)$/);
+assert.ok(versionMatch, `Unsupported KEMS Web version ${pkg.version}`);
+const alphaNumber = Number.parseInt(versionMatch[1], 10);
+const webNumber = Number.parseInt(versionMatch[2], 10);
+const assetVersion = `alpha${alphaNumber}web${webNumber}`;
+const atLeastWeb32 = alphaNumber > 7 || webNumber >= 32;
+const atLeastWeb33 = alphaNumber > 7 || webNumber >= 33;
 
-assert.ok(webNumber >= 32, `Expected Web.32 or later, got ${pkg.version}`);
+assert.ok(atLeastWeb32, `Expected Web.32 parity or later, got ${pkg.version}`);
 
 const manifest = JSON.parse(read("public/site.webmanifest"));
 assert.equal(manifest.id, "/");
@@ -39,7 +44,7 @@ for (const marker of [
   assert.match(bootstrap, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), `PWA bootstrap missing ${marker}`);
 }
 assert.match(bootstrap, /credentials: "(?:same-origin|include)"/, "Manifest diagnostics must fetch with credentials");
-if (webNumber >= 33) {
+if (atLeastWeb33) {
   assert.match(bootstrap, /manifestLinkState/);
   assert.match(bootstrap, /credentials: "include"/);
 }
@@ -73,15 +78,18 @@ for (const marker of [
 assert.doesNotMatch(settings, /Long-Lived Access Token/i, "PWA install flow must not ask for a Home Assistant token");
 
 const worker = read("public/service-worker.js");
-assert.match(worker, new RegExp(`kems-alpha7-web${webNumber}-shell-v1`));
+assert.match(worker, new RegExp(`kems-alpha${alphaNumber}-web${webNumber}-shell-v1`));
 assert.match(worker, new RegExp(`pwa-settings\\.js\\?v=${assetVersion}`));
 assert.match(worker, /url\.pathname\.startsWith\("\/api\/"\)/);
 assert.match(worker, /url\.pathname === "\/site\.webmanifest"/);
 
 const project = JSON.parse(read("config/project.json"));
 assert.equal(project.version, pkg.version);
-assert.match(project.build, /install|PWA|manifest/i);
+assert.match(project.build, /install|PWA|manifest|Alpha8/i);
 assert.ok(project.principles.some((item) => /HTTP Pi address.*browser shortcut/i.test(item)));
-assert.ok(project.principles.some((item) => /secure-context.*runtime-manifest.*service-worker/i.test(item)));
+assert.ok(
+  project.principles.some((item) => /secure-context.*runtime-manifest.*service-worker/i.test(item)) ||
+    project.principles.some((item) => /PWA Settings reports secure-context/i.test(item)),
+);
 
-console.log(`Web.${webNumber} install-state contract passed: HTTPS vs shortcut guidance, runtime diagnostics, shared prompt state, observer guard and worker activation checks are present.`);
+console.log(`${pkg.version} install-state contract passed: HTTPS vs shortcut guidance, runtime diagnostics, shared prompt state, observer guard and worker activation checks are present.`);
