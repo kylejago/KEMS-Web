@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="description" content="Sign in to KEMS property access through Cloudflare Access." />
+  <meta name="description" content="How KEMS property access works through Cloudflare Access." />
   <meta name="robots" content="noindex,nofollow" />
   <meta name="theme-color" content="#071217" />
   <title>KEMS — Sign in</title>
@@ -11,20 +11,69 @@
   <link rel="stylesheet" href="styles.css?v=alpha7web20" />
 </head>
 <body>
-  <div class="glow glow-a" aria-hidden="true"></div><div class="glow glow-b" aria-hidden="true"></div>
-  <header class="shell nav"><a class="brand" href="index.html"><img src="brand-lockup.svg?v=alpha7web20" alt="KEMS" /></a><nav><a href="demo.html">Demo</a><a href="privacy.html">Privacy</a><a class="button small" href="https://github.com/kylejago/KEMS">GitHub</a></nav></header>
-  <main>
-    <section class="shell hero" style="min-height:620px;grid-template-columns:1fr .72fr">
+  <div class="ambient" aria-hidden="true"><span></span><span></span><span></span></div>
+
+  <header class="topbar">
+    <a class="brand" href="index.html" aria-label="KEMS home"><img src="brand-lockup.svg?v=alpha7web20" alt="KEMS" /></a>
+    <nav class="primary-nav" aria-label="Primary navigation">
+      <a href="index.html">Home</a>
+      <a href="demo.html">Demo</a>
+      <a class="active" aria-current="page" href="login.html">Sign in</a>
+      <a href="privacy.html">Privacy</a>
+    </nav>
+    <div class="top-actions">
+      <span class="connection-pill secure"><i></i><span>Cloudflare Access</span></span>
+      <a class="icon-button github-button" href="https://github.com/kylejago/KEMS" aria-label="KEMS on GitHub">GH</a>
+    </div>
+  </header>
+
+  <nav class="mobile-nav" aria-label="Mobile navigation">
+    <a href="index.html">Home</a><a href="demo.html">Demo</a><a class="active" href="login.html">Sign in</a><a href="privacy.html">Privacy</a>
+  </nav>
+
+  <main class="app public-app">
+    <section class="page-hero login-hero">
       <div>
         <p class="eyebrow">Private property access</p>
-        <h1>Sign in once. Open only the KEMS properties you are allowed to see.</h1>
-        <p class="lead">KEMS uses Cloudflare Access as the authentication boundary. kems.uk does not store a separate KEMS password database, Home Assistant credentials or property access tokens.</p>
-        <div class="actions"><a class="button" href="https://kems-uk.cloudflareaccess.com/">Sign in to KEMS</a><a class="button ghost" href="demo.html">View delayed demo</a></div>
-        <p class="boundary">After authentication, the KEMS property launcher shows only the Access applications your account is permitted to open. Each property remains behind its own outbound Cloudflare Tunnel.</p>
+        <h1>One sign in. Only the KEMS properties you are allowed to see.</h1>
+        <p class="lead">KEMS uses Cloudflare Access as the identity boundary. The public KEMS website does not keep its own password database, Home Assistant credentials or property access tokens.</p>
+        <div class="hero-actions"><a class="button" href="https://kems-uk.cloudflareaccess.com/">Continue to Cloudflare sign in</a><a class="button ghost" href="demo.html">View public demo instead</a></div>
       </div>
-      <aside class="hero-card"><div class="pulse"></div><span>Secure property access</span><strong>Cloudflare identity → KEMS property launcher → authorised property → outbound tunnel → read-only Pi dashboard</strong><p>Local Pi maintenance, Remote Access setup, Home Assistant and hardware-control endpoints remain unavailable through the public property route.</p></aside>
+      <aside class="status-card">
+        <span class="status-kicker">Access path</span>
+        <strong>Cloudflare identity → authorised apps → KEMS property</strong>
+        <p>After you authenticate, Cloudflare shows the property applications your account is permitted to access. A different account can see a different set.</p>
+      </aside>
+    </section>
+
+    <section class="section-block">
+      <div class="section-heading"><p class="eyebrow">How sign in works</p><h2>Authentication and property permission are separate on purpose.</h2></div>
+      <div class="steps-grid">
+        <article class="step-card"><b>1</b><h3>Sign in with Cloudflare</h3><p>Your identity is checked by the Cloudflare Access policy configured for KEMS.</p></article>
+        <article class="step-card"><b>2</b><h3>Cloudflare checks access</h3><p>Each property remains its own protected application. Being signed in does not automatically grant access to every property.</p></article>
+        <article class="step-card"><b>3</b><h3>Open an authorised property</h3><p>The launcher presents only what your identity is allowed to open, then routes through that property's outbound tunnel to its read-only KEMS dashboard.</p></article>
+      </div>
+    </section>
+
+    <section class="section-block two-column">
+      <article class="content-card">
+        <p class="eyebrow">What remote users can reach</p>
+        <h2>The property dashboard.</h2>
+        <div class="feature-list"><span>Live Data</span><span>Compare</span><span>Full KEMS Agile</span><span>Read-only property evidence</span></div>
+      </article>
+      <article class="content-card">
+        <p class="eyebrow">What stays local</p>
+        <h2>Maintenance and credentials.</h2>
+        <div class="feature-list"><span>Home Assistant credentials</span><span>Pi update/admin controls</span><span>Remote Access setup</span><span>Hardware-control surfaces</span></div>
+      </article>
+    </section>
+
+    <section class="section-block login-callout">
+      <div><p class="eyebrow">Ready to open your property?</p><h2>Continue to the Cloudflare App Launcher.</h2><p>If your identity has access to one or more KEMS properties, they will be available after authentication.</p></div>
+      <a class="button" href="https://kems-uk.cloudflareaccess.com/">Sign in to KEMS</a>
     </section>
   </main>
-  <footer class="shell footer"><div class="brand"><img src="brand-lockup.svg?v=alpha7web20" alt="KEMS" /></div><p><a href="privacy.html">Privacy</a> · <a href="https://github.com/kylejago/KEMS">Open project</a></p></footer>
+
+  <footer class="footer"><div class="brand"><img src="brand-lockup.svg?v=alpha7web20" alt="KEMS" /></div><p><a href="index.html">Home</a> · <a href="demo.html">Demo</a> · <a href="privacy.html">Privacy</a> · <a href="https://github.com/kylejago/KEMS">GitHub</a></p></footer>
 </body>
 </html>
