@@ -1,11 +1,11 @@
 {
   "name": "KEMS",
   "longName": "Kyle Energy Management System",
-  "version": "0.7.0-alpha7-web.23",
+  "version": "0.7.0-alpha7-web.24",
   "tagline": "Your property data first. Full KEMS Agile when you need the detail.",
   "summary": "A mobile-ready read-only KEMS property companion with live 16x16-panel flow parity, four-strategy comparison, Full KEMS Agile live/simulated telemetry, actual commissioned cost and ROI, and one consolidated settings page.",
   "repository": "https://github.com/kylejago/KEMS-Web",
-  "build": "Web.23 manual update controls · Web.22 live-dashboard freeze hotfix · Web.21 property-first navigation · 16x16 flow parity · four-strategy winner/cost/ROI comparison · Agile live/simulated telemetry · actual-only ROI · consolidated settings · PWA mobile shell",
+  "build": "Web.24 maintenance window and automatic update policy controls · Web.23 manual update controls · Web.22 live-dashboard freeze hotfix · Web.21 property-first navigation · 16x16 flow parity · four-strategy winner/cost/ROI comparison · Agile live/simulated telemetry · actual-only ROI · consolidated settings · PWA mobile shell",
   "principles": [
     "Home Assistant and KEMS remain the source of truth for each property.",
     "The user-facing product model is Live Data, Battery & Solar, Full KEMS and Full KEMS Agile.",
@@ -17,6 +17,7 @@
     "Cost & ROI uses commissioned live evidence only; simulated ROI stays on comparison/forecast surfaces.",
     "The property website is read-only and cannot call Home Assistant services.",
     "Pi update controls are local-network-only and use the appliance manager; they never call Home Assistant services.",
+    "Maintenance windows, automatic coordinated updates, automatic reboot permission and maintenance notices are configurable from local Settings.",
     "Mobile uses the same responsive PWA property website so no app-store publication is required for the current phase.",
     "The public kems.uk site receives no Home Assistant credentials, live control API or precise live household power.",
     "Private property sign-in is delegated to Cloudflare Access and the KEMS App Launcher.",
