@@ -1,9 +1,9 @@
 {
   "name": "kems-web-companion",
-  "version": "0.7.0-alpha7-web.26",
+  "version": "0.7.0-alpha7-web.27",
   "private": true,
   "type": "module",
-  "description": "Mobile-ready KEMS property dashboard with exact physical 16x16 panel mirroring, extended four-strategy comparison, Agile live/simulated telemetry, actual ROI and consolidated settings",
+  "description": "Mobile-ready KEMS property dashboard with browser-safe physical 16x16 panel mirroring, extended four-strategy comparison, Agile live/simulated telemetry, actual ROI and consolidated settings",
   "scripts": {
     "sync-brand": "node scripts/sync-approved-logo.mjs",
     "prestart": "npm run sync-brand",
