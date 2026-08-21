@@ -2,22 +2,26 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#071217" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="KEMS" />
   <meta name="description" content="Live KEMS property data with a panel-inspired live energy view using the same core functions as the physical KEMS panel." />
   <title>KEMS — Live Data</title>
-  <link rel="icon" href="logo.svg?v=alpha7web30" type="image/svg+xml" />
+  <link rel="icon" href="logo.svg?v=alpha7web31" type="image/svg+xml" />
   <link rel="manifest" href="site.webmanifest" />
-  <link rel="apple-touch-icon" href="logo.svg?v=alpha7web30" />
-  <link rel="stylesheet" href="styles.css?v=alpha7web30" />
-  <link rel="stylesheet" href="brand.css?v=alpha7web30" />
-  <link rel="stylesheet" href="web21.css?v=alpha7web30" />
-  <link rel="stylesheet" href="web26.css?v=alpha7web30" />
+  <link rel="apple-touch-icon" href="icons/kems-192.png?v=alpha7web31" />
+  <link rel="stylesheet" href="styles.css?v=alpha7web31" />
+  <link rel="stylesheet" href="brand.css?v=alpha7web31" />
+  <link rel="stylesheet" href="web21.css?v=alpha7web31" />
+  <link rel="stylesheet" href="web26.css?v=alpha7web31" />
 </head>
 <body>
   <div class="ambient" aria-hidden="true"><span></span><span></span><span></span></div>
   <header class="topbar">
-    <a class="brand" href="/" aria-label="KEMS live dashboard"><img class="brand-lockup" src="brand-lockup.svg?v=alpha7web30" alt="KEMS" /></a>
+    <a class="brand" href="/" aria-label="KEMS live dashboard"><img class="brand-lockup" src="brand-lockup.svg?v=alpha7web31" alt="KEMS" /></a>
     <nav class="primary-nav" aria-label="Primary navigation">
       <a class="active" aria-current="page" href="/">Live Data</a>
       <a href="/compare.html">Compare</a>
@@ -33,8 +37,9 @@
   <nav class="web21-mobile-nav" aria-label="Mobile navigation">
     <a class="active" aria-current="page" href="/">Live</a><a href="/compare.html">Compare</a><a href="/agile.html">Agile</a><a href="/performance.html">Cost</a><a href="/settings.html">Settings</a>
   </nav>
-  <main id="live-app" class="app" tabindex="-1"><section class="loading-screen"><img class="loading-brand-lockup" src="brand-lockup.svg?v=alpha7web30" alt="KEMS" /><h1>Loading live property data</h1><p>Reading Home Assistant and KEMS without substituting simulated hardware…</p></section></main>
-  <script type="module" src="live-page.js?v=alpha7web30"></script>
-  <script type="module" src="panel-widget.js?v=alpha7web30"></script>
+  <main id="live-app" class="app" tabindex="-1"><section class="loading-screen"><img class="loading-brand-lockup" src="brand-lockup.svg?v=alpha7web31" alt="KEMS" /><h1>Loading live property data</h1><p>Reading Home Assistant and KEMS without substituting simulated hardware…</p></section></main>
+  <script type="module" src="pwa-bootstrap.js?v=alpha7web31"></script>
+  <script type="module" src="live-page.js?v=alpha7web31"></script>
+  <script type="module" src="panel-widget.js?v=alpha7web31"></script>
 </body>
 </html>
