@@ -2,7 +2,7 @@
   <img src="brand/kems-logo.svg" alt="KEMS" width="180">
 </p>
 
-# KEMS Web — 0.7.0-alpha7-web.32
+# KEMS Web — 0.7.0-alpha7-web.33
 
 KEMS Web is the read-only property companion, installable mobile PWA and public-site source for the **KEMS Alpha7** platform. Home Assistant/KEMS remains the source of truth for each property.
 
@@ -24,11 +24,11 @@ Real Home Assistant/inverter control remains outside KEMS Web.
 
 ## Mobile / installed app
 
-Web.32 makes the authenticated HTTPS property website the primary KEMS mobile application surface and fixes the install-state ambiguity found during the first Web.31 real-phone test.
+Web.33 fixes the authenticated-PWA manifest path exposed by the Web.32 real-phone acceptance test. Every property page now loads `site.webmanifest` with `crossorigin="use-credentials"`, so the browser includes the Cloudflare Access session when it performs its own manifest request.
 
 The same property UI can be installed as a standalone PWA on Android and added to the home screen on iPhone/iPad. It includes proper 192px, 512px and maskable icons, standalone mode, mobile safe-area handling and a shared service-worker bootstrap across all primary pages.
 
-Settings now reports the actual install prerequisites and state: secure context, runtime manifest validity, service-worker readiness/control, browser install prompt and standalone launch mode. The browser install prompt is captured once by the shared bootstrap so Settings cannot miss it because of page-load timing.
+Settings reports the actual install prerequisites and state: secure context, runtime manifest validity, **manifest credentials**, service-worker readiness/control, browser install prompt and standalone launch mode. The diagnostic manifest fetch also uses credential inclusion, matching the authenticated browser-install path rather than producing a false positive from an authenticated JavaScript-only fetch.
 
 The local `http://kems-pi.local:4173` page remains useful for LAN access, but Chrome may only create a normal shortcut from that HTTP address. A shortcut reopens with Chrome's address bar. The standalone KEMS app is installed from the authenticated HTTPS property hostname through Cloudflare Access.
 
@@ -66,7 +66,7 @@ Persistent data stays under `/var/lib/kems-web`; versioned releases stay under `
 
 ## Legacy Android app
 
-The separate Flutter `KEMS-Android` 1.4.1 app remains a frozen legacy implementation while the Web.32 PWA completes real-device acceptance. New dashboard work belongs in KEMS Web so Live, Compare and Full KEMS Agile are maintained once. A future Play Store package, if required, should be a thin wrapper around the verified PWA rather than a second dashboard implementation.
+The separate Flutter `KEMS-Android` 1.4.1 app remains a frozen legacy implementation while the Web.33 PWA completes real-device acceptance. New dashboard work belongs in KEMS Web so Live, Compare and Full KEMS Agile are maintained once. A future Play Store package, if required, should be a thin wrapper around the verified PWA rather than a second dashboard implementation.
 
 ## Validation
 
@@ -74,4 +74,4 @@ The separate Flutter `KEMS-Android` 1.4.1 app remains a frozen legacy implementa
 npm test
 ```
 
-The suite checks syntax, brand identity, public-demo isolation and delay, Cloudflare-login boundaries, fixture compatibility, Alpha7 Agile evidence, comparison/ROI, Pi deployment behaviour, the Web.31 mobile shell contract, the Web.32 install-state contract and the actual runtime `/site.webmanifest` served by the Pi stack.
+The suite checks syntax, brand identity, public-demo isolation and delay, Cloudflare-login boundaries, fixture compatibility, Alpha7 Agile evidence, comparison/ROI, Pi deployment behaviour, the Web.31 mobile shell contract, the Web.32 install-state contract, the Web.33 Cloudflare manifest-credential contract and the actual runtime `/site.webmanifest` served by the Pi stack.
