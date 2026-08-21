@@ -3,10 +3,13 @@ import fs from "node:fs";
 
 const read = (path) => fs.readFileSync(path, "utf8");
 const pkg = JSON.parse(read("package.json"));
-const webNumber = Number.parseInt(pkg.version.match(/-web\.(\d+)$/)?.[1] || "0", 10);
-const assetVersion = `alpha7web${webNumber}`;
+const versionMatch = pkg.version.match(/-alpha(\d+)-web\.(\d+)$/);
+assert.ok(versionMatch, `Unsupported KEMS Web version ${pkg.version}`);
+const alphaNumber = Number.parseInt(versionMatch[1], 10);
+const webNumber = Number.parseInt(versionMatch[2], 10);
+const assetVersion = `alpha${alphaNumber}web${webNumber}`;
 
-assert.ok(webNumber >= 33, `Expected Web.33 or later, got ${pkg.version}`);
+assert.ok(alphaNumber > 7 || webNumber >= 33, `Expected Web.33 parity or later, got ${pkg.version}`);
 
 const propertyPages = [
   "public/index.html",
@@ -25,7 +28,7 @@ for (const file of propertyPages) {
     /<link rel="manifest" href="site\.webmanifest" crossorigin="use-credentials" \/>/,
     `${file} must include Cloudflare Access credentials in the browser manifest request`,
   );
-  assert.match(html, new RegExp(assetVersion), `${file} must use the current Web.${webNumber} cache key`);
+  assert.match(html, new RegExp(assetVersion), `${file} must use the current ${pkg.version} cache key`);
   assert.doesNotMatch(
     html,
     /<link rel="manifest" href="site\.webmanifest" \/>/,
@@ -68,10 +71,9 @@ for (const marker of [
 
 const manifestText = read("public/site.webmanifest");
 assert.match(manifestText, new RegExp(assetVersion));
-assert.doesNotMatch(manifestText, /alpha7web32/);
 
 const worker = read("public/service-worker.js");
-assert.match(worker, new RegExp(`kems-alpha7-web${webNumber}-shell-v1`));
+assert.match(worker, new RegExp(`kems-alpha${alphaNumber}-web${webNumber}-shell-v1`));
 assert.match(worker, new RegExp(`pwa-bootstrap\\.js\\?v=${assetVersion}`));
 
 const project = JSON.parse(read("config/project.json"));
@@ -82,5 +84,5 @@ assert.ok(
 );
 
 console.log(
-  `Web.${webNumber} Cloudflare manifest contract passed: every property page uses credentialed browser manifest loading and diagnostics verify the same installability path.`,
+  `${pkg.version} Cloudflare manifest contract passed: every property page uses credentialed browser manifest loading and diagnostics verify the same installability path.`,
 );
