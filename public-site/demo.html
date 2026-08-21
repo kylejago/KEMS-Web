@@ -3,39 +3,39 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="description" content="See KEMS in action using deliberately sanitised property evidence delayed by at least seven days." />
+  <meta name="description" content="Full KEMS Agile demo using sanitised property evidence deliberately delayed by at least seven days." />
   <meta name="theme-color" content="#071217" />
-  <title>KEMS — Delayed demo property</title>
+  <title>KEMS — Full KEMS Agile demo</title>
   <link rel="icon" href="logo.svg?v=alpha7web20" type="image/svg+xml" />
   <link rel="stylesheet" href="styles.css?v=alpha7web20" />
   <link rel="stylesheet" href="demo.css?v=alpha7web20" />
 </head>
-<body>
-  <div class="glow glow-a" aria-hidden="true"></div><div class="glow glow-b" aria-hidden="true"></div>
-  <header class="shell nav">
-    <a class="brand" href="index.html"><img src="brand-lockup.svg?v=alpha7web20" alt="KEMS" /></a>
-    <nav><a href="index.html#how">How it works</a><a href="demo.html" aria-current="page">Demo</a><a href="login.html">Sign in</a><a class="button small" href="https://github.com/kylejago/KEMS">GitHub</a></nav>
+<body data-demo-view="agile">
+  <div class="ambient" aria-hidden="true"><span></span><span></span><span></span></div>
+
+  <header class="topbar">
+    <a class="brand" href="index.html" aria-label="KEMS home"><img src="brand-lockup.svg?v=alpha7web20" alt="KEMS" /></a>
+    <nav class="primary-nav" aria-label="Demo navigation">
+      <a href="index.html">Home</a>
+      <a class="active" aria-current="page" href="demo.html">Full KEMS Agile</a>
+      <a href="demo-compare.html">Compare</a>
+      <a href="login.html">Sign in</a>
+    </nav>
+    <div class="top-actions">
+      <span class="connection-pill" id="demo-status"><i></i><span>Loading demo</span></span>
+      <button class="icon-button" id="refresh-button" type="button" aria-label="Refresh demo">↻</button>
+    </div>
   </header>
 
-  <main class="demo-shell">
-    <section class="demo-hero">
-      <p class="eyebrow">See KEMS in action</p>
-      <h1>Real property evidence, deliberately seven days late.</h1>
-      <p class="lead">This page now reads a live sanitised feed from the KEMS Pi. Only retained daily totals old enough to satisfy the seven-day privacy delay are eligible. No live house power, Home Assistant credentials or control endpoints are exposed.</p>
-      <p class="demo-warning"><strong>Demo property — data delayed by at least 7 days.</strong> Precise live power, entity IDs, device identifiers and remote-control surfaces are excluded from this feed.</p>
-    </section>
+  <nav class="mobile-nav" aria-label="Demo mobile navigation">
+    <a href="index.html">Home</a><a class="active" href="demo.html">Agile</a><a href="demo-compare.html">Compare</a><a href="login.html">Sign in</a>
+  </nav>
 
-    <section class="demo-controls" aria-label="Demo period controls">
-      <label for="demo-period">Evidence window
-        <select id="demo-period"><option value="day">Latest delayed day</option><option value="week" selected>Last 7 published days</option><option value="month">Last 30 published days</option><option value="year">Last 365 published days</option><option value="all">All published evidence</option></select>
-      </label>
-      <div class="demo-status" id="demo-status">Loading delayed KEMS feed…</div>
-    </section>
-
-    <section class="demo-root" id="demo-root" aria-live="polite"></section>
+  <main id="demo-root" class="app demo-app" aria-live="polite">
+    <section class="loading-screen"><img src="brand-lockup.svg?v=alpha7web20" alt="KEMS" /><h1>Loading Full KEMS Agile demo</h1><p>Reading delayed, sanitised property evidence…</p></section>
   </main>
 
-  <footer class="shell footer"><div class="brand"><img src="brand-lockup.svg?v=alpha7web20" alt="KEMS" /></div><p><a href="index.html">Home</a> · <a href="privacy.html">Privacy</a> · <a href="https://github.com/kylejago/KEMS">Open project</a></p></footer>
+  <footer class="footer"><div class="brand"><img src="brand-lockup.svg?v=alpha7web20" alt="KEMS" /></div><p>Public demo · minimum 7-day privacy delay · <a href="privacy.html">Privacy</a></p></footer>
   <script type="module" src="demo.js?v=alpha7web20"></script>
 </body>
 </html>
