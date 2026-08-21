@@ -3,32 +3,102 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="description" content="KEMS — a Home Assistant-first energy management system that observes, learns, advises, simulates and safely validates smarter home-energy decisions." />
+  <meta name="description" content="KEMS is a Home Assistant-first energy management system that observes, learns, simulates and proves smarter home-energy decisions before control." />
   <meta name="theme-color" content="#071217" />
   <title>KEMS — Smarter home energy, proven before control</title>
   <link rel="icon" href="logo.svg?v=alpha7web20" type="image/svg+xml" />
   <link rel="stylesheet" href="styles.css?v=alpha7web20" />
 </head>
 <body>
-  <div class="glow glow-a" aria-hidden="true"></div><div class="glow glow-b" aria-hidden="true"></div>
-  <header class="shell nav"><a class="brand" href="#top"><img src="brand-lockup.svg?v=alpha7web20" alt="KEMS" /></a><nav><a href="#products">Products</a><a href="demo.html">Demo</a><a href="#privacy">Privacy</a><a href="login.html">Sign in</a><a class="button small" href="https://github.com/kylejago/KEMS">GitHub</a></nav></header>
-  <main id="top">
-    <section class="shell hero"><div><p class="eyebrow">Kyle Energy Management System</p><h1>Make energy decisions with evidence, not guesswork.</h1><p class="lead">KEMS works with Home Assistant to observe your real home, learn its demand, model solar and storage, compare strategies and validate every proposed control action in a digital twin before physical hardware is allowed to act.</p><div class="actions"><a class="button" href="demo.html">See KEMS in action</a><a class="button ghost" href="#products">Explore products</a></div><p class="boundary">Home Assistant remains private. The public kems.uk website does not receive household credentials, live control APIs or precise live household power.</p></div><aside class="hero-card"><div class="pulse"></div><span>Current development stage</span><strong>Observe → Learn → Advise → Simulate → Shadow</strong><p>Alpha7 is proving tariff-aware battery/export decisions against strict safety and digital-twin parity before live hardware control is commissioned.</p></aside></section>
+  <div class="ambient" aria-hidden="true"><span></span><span></span><span></span></div>
 
-    <section class="shell stats" aria-label="KEMS design principles"><article><strong>4</strong><span>Clear KEMS product levels</span></article><article><strong>7 days</strong><span>Minimum public demo delay</span></article><article><strong>Local</strong><span>Property credentials stay at home</span></article><article><strong>Access</strong><span>Cloudflare-authenticated property login</span></article></section>
+  <header class="topbar">
+    <a class="brand" href="index.html" aria-label="KEMS home"><img src="brand-lockup.svg?v=alpha7web20" alt="KEMS" /></a>
+    <nav class="primary-nav" aria-label="Primary navigation">
+      <a class="active" aria-current="page" href="index.html">Home</a>
+      <a href="demo.html">Demo</a>
+      <a href="login.html">Sign in</a>
+      <a href="privacy.html">Privacy</a>
+    </nav>
+    <div class="top-actions">
+      <span class="connection-pill public"><i></i><span>Public site</span></span>
+      <a class="icon-button github-button" href="https://github.com/kylejago/KEMS" aria-label="KEMS on GitHub">GH</a>
+    </div>
+  </header>
 
-    <section class="shell section" id="products"><p class="eyebrow">One platform, four product levels</p><h2>Start with reality. Add only the optimisation you need.</h2><div class="cards"><article><b>01</b><h3>Live Data</h3><p>Measured Home Assistant and KEMS data, history and cost evidence with no simulated system required.</p></article><article><b>02</b><h3>Battery &amp; Solar</h3><p>Replay the property with configured solar and storage to see import reduction, export and battery routing.</p></article><article><b>03</b><h3>Full KEMS</h3><p>Add demand and solar forecasting, smart import and reserve-aware whole-home optimisation.</p></article><article><b>04</b><h3>Full KEMS Agile</h3><p>Add dynamic export-price optimisation, price-horizon planning and Alpha7 digital-twin evidence.</p></article></div></section>
+  <nav class="mobile-nav" aria-label="Mobile navigation">
+    <a class="active" href="index.html">Home</a><a href="demo.html">Demo</a><a href="login.html">Sign in</a><a href="privacy.html">Privacy</a>
+  </nav>
 
-    <section class="shell section" id="how"><p class="eyebrow">One system, clear progression</p><h2>Prove the model before trusting the control.</h2><div class="cards"><article><b>01</b><h3>Observe</h3><p>Collect live import, house demand, EV, tariff and later inverter/solar/battery data without creating circular KEMS inputs.</p></article><article><b>02</b><h3>Learn &amp; forecast</h3><p>Build a demand profile and combine solar forecasting with the physical limits of the configured system.</p></article><article><b>03</b><h3>Compare</h3><p>Replay the same property through the user-facing KEMS product levels on a common cost and energy basis.</p></article><article><b>04</b><h3>Shadow</h3><p>Construct the exact inverter-shaped command, apply it to the digital twin and require independent safety and outcome parity.</p></article></div></section>
+  <main class="app public-app">
+    <section class="page-hero home-hero">
+      <div>
+        <p class="eyebrow">Kyle Energy Management System</p>
+        <h1>Know what your home could do before KEMS ever takes control.</h1>
+        <p class="lead">KEMS works with Home Assistant to observe real household demand, learn how the property behaves, replay solar and battery strategies, compare costs, and prove proposed control decisions in a digital twin first.</p>
+        <div class="hero-actions">
+          <a class="button" href="demo.html">Open the delayed demo</a>
+          <a class="button ghost" href="login.html">Property sign in</a>
+        </div>
+      </div>
+      <aside class="status-card">
+        <span class="status-kicker">KEMS progression</span>
+        <strong>Observe → Learn → Advise → Simulate → Shadow</strong>
+        <p>Control is the last step, not the first. KEMS is designed to build evidence before physical hardware writes are enabled.</p>
+        <div class="status-row"><span>Home Assistant first</span><b>Source of truth</b></div>
+        <div class="status-row"><span>Property dashboard</span><b>Read only</b></div>
+        <div class="status-row"><span>Public demo</span><b>7+ days delayed</b></div>
+      </aside>
+    </section>
 
-    <section class="shell split" id="agile"><div><p class="eyebrow">Full KEMS Agile</p><h2>Export when the price is worth it — without forgetting the house.</h2><p>KEMS ranks known export settlement periods, protects future house demand and battery reserve, respects the shared inverter headroom used by solar and battery, and reserves capacity when future price data has not yet been published.</p><ul><li>Current house demand is protected first.</li><li>Unknown prices reserve capacity; they never receive an invented price.</li><li>Solar + battery output stays inside the configured inverter ceiling.</li><li>A genuine non-zero export must reproduce at strict tracking tolerance before it can be considered proven.</li></ul></div><div class="diagram"><div class="node sun">Solar</div><div class="node battery">Battery</div><div class="node home">Home</div><div class="node grid">Grid</div><div class="core">KEMS<br><small>observe · predict · prove</small></div></div></section>
+    <section class="section-block">
+      <div class="section-heading">
+        <p class="eyebrow">What KEMS does</p>
+        <h2>One platform, four levels of energy intelligence.</h2>
+        <p>KEMS keeps measured reality separate from simulation, then lets you see exactly what additional hardware and optimisation could change.</p>
+      </div>
+      <div class="strategy-grid">
+        <article class="strategy-card"><span>01</span><h3>Live Data</h3><p>Measured household energy, import, export, EV and tariff evidence from Home Assistant and KEMS.</p><small>Reality first</small></article>
+        <article class="strategy-card"><span>02</span><h3>Battery &amp; Solar</h3><p>Replay the same property with configured solar and storage to understand routing, import reduction and export.</p><small>Hardware scenario</small></article>
+        <article class="strategy-card"><span>03</span><h3>Full KEMS</h3><p>Add forecasting, reserve protection and smarter whole-home import decisions around the property's real demand.</p><small>Forecast-led</small></article>
+        <article class="strategy-card featured"><span>04</span><h3>Full KEMS Agile</h3><p>Add dynamic export-price optimisation, rolling price-horizon planning and digital-twin proof before control.</p><small>Flagship strategy</small></article>
+      </div>
+    </section>
 
-    <section class="shell section"><p class="eyebrow">See KEMS in action</p><h2>Delayed public evidence without exposing a live house.</h2><p class="lead narrow">The demo page reads a dedicated Pi feed that publishes only sanitised daily totals at least seven days old. The demo hostname cannot reach the normal property dashboard, Pi management, Home Assistant or hardware control.</p><div class="actions"><a class="button" href="demo.html">Open delayed demo</a><a class="button ghost" href="login.html">Sign in to KEMS</a></div></section>
+    <section class="section-block two-column">
+      <article class="content-card">
+        <p class="eyebrow">Observe and learn</p>
+        <h2>Start with the home you actually have.</h2>
+        <p>KEMS records real demand and tariff behaviour instead of starting with an idealised model. That evidence becomes the baseline used by every later comparison.</p>
+        <div class="feature-list"><span>Measured home demand</span><span>Grid import and export</span><span>EV and tariff context</span><span>Retained historical evidence</span></div>
+      </article>
+      <article class="content-card">
+        <p class="eyebrow">Simulate and compare</p>
+        <h2>Test changes against the same house.</h2>
+        <p>Battery, solar and KEMS strategies are replayed against the same demand so the comparison is about the strategy, not a different set of assumptions.</p>
+        <div class="feature-list"><span>Battery &amp; solar replay</span><span>Full KEMS replay</span><span>Agile export optimisation</span><span>Common cost basis</span></div>
+      </article>
+    </section>
 
-    <section class="shell section"><p class="eyebrow">Designed around your existing smart home</p><h2>Home Assistant stays the source of truth.</h2><div class="bands"><div><strong>Property</strong><span>Home Assistant + KEMS integration + optional KEMS Pi + ESP32 panel.</span></div><div><strong>Public web</strong><span>kems.uk explains the platform and receives only deliberately sanitised delayed demo evidence.</span></div><div><strong>Remote access</strong><span>Cloudflare account → property launcher → authorised property → outbound tunnel → read-only Pi dashboard. Local Pi management remains LAN-only.</span></div></div></section>
+    <section class="section-block proof-banner">
+      <div>
+        <p class="eyebrow">Prove before control</p>
+        <h2>KEMS is built around a deliberate safety boundary.</h2>
+        <p>On kems.uk, Home Assistant remains private. Live property data and credentials stay with the property. The public website receives only deliberately sanitised delayed evidence, while authenticated property access is handled through Cloudflare Access and outbound tunnels.</p>
+      </div>
+      <div class="boundary-grid">
+        <div><strong>Property</strong><span>Home Assistant + KEMS remain the source of truth.</span></div>
+        <div><strong>Public demo</strong><span>Sanitised totals only, at least seven days old.</span></div>
+        <div><strong>Remote access</strong><span>Only properties your Cloudflare identity is authorised to open.</span></div>
+      </div>
+    </section>
 
-    <section class="shell section" id="privacy"><p class="eyebrow">Privacy by architecture</p><h2>Your energy data belongs at home.</h2><p class="lead narrow">The public site never needs a Home Assistant token. A KEMS property appliance keeps its own connection material locally. Cloudflare Access provides the identity boundary for private property access; KEMS does not maintain a separate public password store.</p><a class="text-link" href="privacy.html">Read the public-site privacy note →</a></section>
+    <section class="section-block callout-grid">
+      <a class="callout-card" href="demo.html"><span>DEMO</span><strong>See Full KEMS Agile and Compare using delayed property evidence.</strong><b>Open demo →</b></a>
+      <a class="callout-card" href="login.html"><span>PROPERTY ACCESS</span><strong>Understand how Cloudflare sign in protects each KEMS property.</strong><b>How sign in works →</b></a>
+    </section>
   </main>
-  <footer class="shell footer"><div class="brand"><img src="brand-lockup.svg?v=alpha7web20" alt="KEMS" /></div><p>Home Assistant-first energy intelligence · <a href="demo.html">Demo</a> · <a href="login.html">Sign in</a> · <a href="https://github.com/kylejago/KEMS">Open project</a> · <a href="privacy.html">Privacy</a></p></footer>
+
+  <footer class="footer"><div class="brand"><img src="brand-lockup.svg?v=alpha7web20" alt="KEMS" /></div><p>Home Assistant-first energy intelligence · <a href="demo.html">Demo</a> · <a href="login.html">Sign in</a> · <a href="privacy.html">Privacy</a> · <a href="https://github.com/kylejago/KEMS">GitHub</a></p></footer>
 </body>
 </html>
