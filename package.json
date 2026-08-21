@@ -1,9 +1,9 @@
 {
   "name": "kems-web-companion",
-  "version": "0.7.0-alpha7-web.28",
+  "version": "0.7.0-alpha7-web.29",
   "private": true,
   "type": "module",
-  "description": "Mobile-ready KEMS property dashboard with a robust panel-inspired live energy view, extended four-strategy comparison, Agile live/simulated telemetry, actual ROI and consolidated settings",
+  "description": "Mobile-ready KEMS property dashboard with panel-inspired Live Data and Full KEMS Agile live/simulated energy views, extended four-strategy comparison, actual ROI and consolidated settings",
   "scripts": {
     "sync-brand": "node scripts/sync-approved-logo.mjs",
     "prestart": "npm run sync-brand",
