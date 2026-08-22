@@ -89,7 +89,7 @@ function render(){
     : "Latest-safe evidence still building";
 
   app.innerHTML=`
-    <section class="agile-hero"><div><p class="eyebrow">KEMS Alpha7.40 · flagship strategy · read-only evidence</p><h1>Full KEMS Agile</h1><p>KEMS' primary optimisation view: live property demand, current routing, Region L Agile prices, rolling export plan, latest-safe protection, economic early-export guard and independent shadow proof.</p></div>${badge(state(IDS.status))}</section>
+    <section class="agile-hero"><div><p class="eyebrow">KEMS · flagship strategy · read-only evidence</p><h1>Full KEMS Agile</h1><p>KEMS' primary optimisation view: live property demand, current routing, Region L Agile prices, rolling export plan, latest-safe protection, economic early-export guard and independent shadow proof.</p></div>${badge(state(IDS.status))}</section>
     <section class="agile-card agile-section"><h2>Decision now</h2><strong>${escapeHtml(decision||"Building plan")}</strong><p>${escapeHtml(guardDetail)} ${escapeHtml(deadlineDetail)}.</p></section>
     <section class="agile-grid">
       ${metric("Agile export rate",fmt(state(IDS.rate),"p/kWh",2),"Current Region L settlement rate")}
@@ -130,7 +130,7 @@ function render(){
       </div></article>
     </section>
     <section class="proof-grid">
-      <article class="agile-card"><small>Non-zero export proof</small><strong>${escapeHtml(p.state||state(IDS.shadowStatus))}</strong><p class="safety-note">Hardware writes remain <b>blocked</b>. This page reports the proven Alpha7 shadow chain; it cannot issue a FoxESS command.</p><div class="proof-list">
+      <article class="agile-card"><small>Non-zero export proof</small><strong>${escapeHtml(p.state||state(IDS.shadowStatus))}</strong><p class="safety-note">Hardware writes remain <b>blocked</b>. This page reports the proven digital-twin shadow chain; it cannot issue a FoxESS command.</p><div class="proof-list">
         <div><span>Candidate export</span><b>${fmt(p.candidate_export_kw,"kW")}</b></div>
         <div><span>Replay export</span><b>${fmt(strict.outcome?.battery_export_kw,"kW")}</b></div>
         <div><span>Strict tracking</span><b>${fmt(strict.tracking_score_percent,"%",1)}</b></div>
