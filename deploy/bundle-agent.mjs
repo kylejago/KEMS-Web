@@ -15,7 +15,7 @@ const MANIFEST_NAME = "kems-bundle.json";
 const CHECKSUM_NAME = `${MANIFEST_NAME}.sha256`;
 const CHECK_INTERVAL_MS = Math.max(60_000, Number.parseInt(process.env.KEMS_BUNDLE_CHECK_MS || "300000", 10) || 300000);
 const INITIAL_DELAY_MS = Math.max(5_000, Number.parseInt(process.env.KEMS_BUNDLE_INITIAL_DELAY_MS || "30000", 10) || 30000);
-const AGENT_VERSION = "0.7.0-alpha7-web.15";
+const AGENT_VERSION = installedVersion();
 
 const DEFAULT_POLICY = Object.freeze({
   automaticUpdates: false,
@@ -104,7 +104,7 @@ function sameVersion(first, second) {
 
 function applianceVersionKey(value) {
   const text = normaliseVersion(value);
-  const match = /^(\d+)\.(\d+)\.(\d+)(?:-(alpha|beta|rc)(\d+))?-web\.(\d+)$/i.exec(text);
+  const match = /^(\d+)\.(\d+)\.(\d+)(?:-(alpha|beta|rc)(?:\.?([0-9]+))?)?-web\.(\d+)$/i.exec(text);
   if (!match) return null;
   const stageOrder = { alpha: 0, beta: 1, rc: 2 };
   const stage = match[4]?.toLowerCase();
