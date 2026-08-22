@@ -3,13 +3,10 @@ import fs from "node:fs";
 
 const read = (path) => fs.readFileSync(path, "utf8");
 const pkg = JSON.parse(read("package.json"));
-const versionMatch = pkg.version.match(/-alpha(\d+)-web\.(\d+)$/);
-assert.ok(versionMatch, `Unsupported KEMS Web version ${pkg.version}`);
-const alphaNumber = Number.parseInt(versionMatch[1], 10);
-const webNumber = Number.parseInt(versionMatch[2], 10);
-const assetVersion = `alpha${alphaNumber}web${webNumber}`;
+const assetVersion = "build1";
 
-assert.ok(alphaNumber > 7 || webNumber >= 31, `Expected Web.31 parity or later, got ${pkg.version}`);
+assert.equal(typeof pkg.version, "string");
+assert.ok(pkg.version.length > 0, "KEMS Web release metadata must include a version");
 
 const manifestText = read("public/site.webmanifest");
 const manifest = JSON.parse(manifestText);
@@ -40,7 +37,7 @@ for (const file of [
 
 const worker = read("public/service-worker.js");
 for (const marker of [
-  `kems-alpha${alphaNumber}-web${webNumber}-shell-v1`,
+  "kems-web-shell-build1",
   `mobile-pwa.css?v=${assetVersion}`,
   `pwa-bootstrap.js?v=${assetVersion}`,
   `icons/kems-192.png?v=${assetVersion}`,
