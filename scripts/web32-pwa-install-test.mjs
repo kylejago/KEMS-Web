@@ -3,15 +3,10 @@ import fs from "node:fs";
 
 const read = (path) => fs.readFileSync(path, "utf8");
 const pkg = JSON.parse(read("package.json"));
-const versionMatch = pkg.version.match(/-alpha(\d+)-web\.(\d+)$/);
-assert.ok(versionMatch, `Unsupported KEMS Web version ${pkg.version}`);
-const alphaNumber = Number.parseInt(versionMatch[1], 10);
-const webNumber = Number.parseInt(versionMatch[2], 10);
-const assetVersion = `alpha${alphaNumber}web${webNumber}`;
-const atLeastWeb32 = alphaNumber > 7 || webNumber >= 32;
-const atLeastWeb33 = alphaNumber > 7 || webNumber >= 33;
+const assetVersion = "build1";
 
-assert.ok(atLeastWeb32, `Expected Web.32 parity or later, got ${pkg.version}`);
+assert.equal(typeof pkg.version, "string");
+assert.ok(pkg.version.length > 0, "KEMS Web release metadata must include a version");
 
 const manifest = JSON.parse(read("public/site.webmanifest"));
 assert.equal(manifest.id, "/");
@@ -40,14 +35,12 @@ for (const marker of [
   'window.addEventListener("beforeinstallprompt"',
   "promptInstall",
   "refreshDiagnostics",
+  "manifestLinkState",
+  'credentials: "include"',
 ]) {
   assert.match(bootstrap, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), `PWA bootstrap missing ${marker}`);
 }
-assert.match(bootstrap, /credentials: "(?:same-origin|include)"/, "Manifest diagnostics must fetch with credentials");
-if (atLeastWeb33) {
-  assert.match(bootstrap, /manifestLinkState/);
-  assert.match(bootstrap, /credentials: "include"/);
-}
+assert.match(bootstrap, /credentials: "include"/, "Manifest diagnostics must fetch with credentials");
 
 const settingsHtml = read("public/settings.html");
 assert.match(settingsHtml, new RegExp(`pwa-settings\\.js\\?v=${assetVersion}`));
@@ -78,14 +71,14 @@ for (const marker of [
 assert.doesNotMatch(settings, /Long-Lived Access Token/i, "PWA install flow must not ask for a Home Assistant token");
 
 const worker = read("public/service-worker.js");
-assert.match(worker, new RegExp(`kems-alpha${alphaNumber}-web${webNumber}-shell-v1`));
+assert.match(worker, /kems-web-shell-build1/);
 assert.match(worker, new RegExp(`pwa-settings\\.js\\?v=${assetVersion}`));
 assert.match(worker, /url\.pathname\.startsWith\("\/api\/"\)/);
 assert.match(worker, /url\.pathname === "\/site\.webmanifest"/);
 
 const project = JSON.parse(read("config/project.json"));
 assert.equal(project.version, pkg.version);
-assert.match(project.build, /install|PWA|manifest|Alpha8/i);
+assert.match(project.build, /install|PWA|manifest/i);
 assert.ok(project.principles.some((item) => /HTTP Pi address.*browser shortcut/i.test(item)));
 assert.ok(
   project.principles.some((item) => /secure-context.*runtime-manifest.*service-worker/i.test(item)) ||
