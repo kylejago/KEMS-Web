@@ -19,14 +19,7 @@ const manifest = read("public/site.webmanifest");
 const worker = read("public/service-worker.js");
 const css = read("public/web21.css");
 const web26 = read("public/web26.css");
-
-const versionMatch = pkg.version.match(/-alpha(\d+)-web\.(\d+)$/);
-assert.ok(versionMatch, `Unexpected KEMS Web version ${pkg.version}`);
-const alphaNumber = Number.parseInt(versionMatch[1], 10);
-const webNumber = Number.parseInt(versionMatch[2], 10);
-const assetVersion = `alpha${alphaNumber}web${webNumber}`;
-const hasWeb29Ui = alphaNumber > 7 || webNumber >= 29;
-assert.ok(hasWeb29Ui, `Expected Web.29 UI parity or later, got ${pkg.version}`);
+const assetVersion = "build1";
 
 assert.doesNotMatch(index, />Products</);
 assert.doesNotMatch(index, /History &amp; scenarios/);
@@ -115,7 +108,7 @@ assert.match(manifest, /performance\.html/);
 assert.match(manifest, /settings\.html/);
 assert.match(worker, /performance\.html/);
 assert.match(worker, /settings\.html/);
-assert.match(worker, new RegExp(`kems-alpha${alphaNumber}-web${webNumber}-shell-v1`));
+assert.match(worker, /kems-web-shell-build1/);
 assert.match(worker, new RegExp(`live-page\\.js\\?v=${assetVersion}`));
 assert.match(worker, new RegExp(`panel-widget\\.js\\?v=${assetVersion}`));
 assert.match(worker, new RegExp(`panel-state\\.js\\?v=${assetVersion}`));

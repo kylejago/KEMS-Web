@@ -1,11 +1,11 @@
 {
   "name": "KEMS",
   "longName": "Kyle Energy Management System",
-  "version": "0.8.0-alpha8-web.0",
+  "version": "0.8.0-alpha8-web.1",
   "tagline": "Your property data first. Full KEMS Agile when you need the detail.",
-  "summary": "The coordinated Alpha8 property PWA, Pi companion and public-site source, preserving the accepted Web.33 Cloudflare-authenticated install path while consolidating shared panel state and release contracts.",
+  "summary": "The KEMS property PWA, Pi companion and public-site source, preserving the accepted Cloudflare-authenticated install path while sharing panel state and release contracts.",
   "repository": "https://github.com/kylejago/KEMS-Web",
-  "build": "Alpha8 Web.0 coordinated cleanup baseline · Web.33 Cloudflare-authenticated PWA parity · shared Live/panel state · no Home Assistant control writes",
+  "build": "KEMS Web maintenance build · Cloudflare-authenticated PWA parity · shared Live/panel state · no Home Assistant control writes",
   "principles": [
     "Home Assistant and KEMS remain the source of truth for each property.",
     "The user-facing product model is Live Data, Battery & Solar, Full KEMS and Full KEMS Agile.",
@@ -36,6 +36,7 @@
     "Raspberry Pi maintenance, updates, encrypted backups and Cloudflare connector provisioning remain local-only even when a property dashboard is reached through a remote gateway.",
     "Cloudflare connector setup accepts only a tunnel token; pasted shell commands are never executed.",
     "The private property tunnel targets KEMS Web on localhost:4173 only and never exposes Pi management, setup helpers, SSH, Home Assistant or the wider LAN.",
-    "Each property keeps its own Home Assistant credentials and KEMS data on its own appliance."
+    "Each property keeps its own Home Assistant credentials and KEMS data on its own appliance.",
+    "Release versions identify published repository states; live product naming and cache identities remain independent of development-generation labels."
   ]
 }

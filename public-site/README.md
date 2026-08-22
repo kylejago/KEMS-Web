@@ -1,4 +1,4 @@
-# kems.uk public site — Web.19
+# kems.uk public site
 
 `public-site/` is the static public KEMS website deployed to IONOS. It contains no Home Assistant credentials, property-control API or private Pi-management endpoint.
 
@@ -14,7 +14,7 @@ The deployment workflow runs `scripts/sync-approved-logo.mjs`, which copies the 
 https://demo-api.kems.uk/api/public-demo
 ```
 
-That hostname is served by the property Pi through Cloudflare Tunnel, but the Web.19 gateway exposes only the sanitised public-demo endpoint on that hostname. Data is daily aggregate evidence at least seven days old. If the API is unavailable, the page falls back to `demo-data.json` and reports the unavailable/live-feed state.
+That hostname is served by the property Pi through Cloudflare Tunnel, but the KEMS gateway exposes only the sanitised public-demo endpoint on that hostname. Data is daily aggregate evidence at least seven days old. If the API is unavailable, the page falls back to `demo-data.json` and reports the unavailable/live-feed state.
 
 ## Sign in
 

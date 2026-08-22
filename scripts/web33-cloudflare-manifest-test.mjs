@@ -3,13 +3,10 @@ import fs from "node:fs";
 
 const read = (path) => fs.readFileSync(path, "utf8");
 const pkg = JSON.parse(read("package.json"));
-const versionMatch = pkg.version.match(/-alpha(\d+)-web\.(\d+)$/);
-assert.ok(versionMatch, `Unsupported KEMS Web version ${pkg.version}`);
-const alphaNumber = Number.parseInt(versionMatch[1], 10);
-const webNumber = Number.parseInt(versionMatch[2], 10);
-const assetVersion = `alpha${alphaNumber}web${webNumber}`;
+const assetVersion = "build1";
 
-assert.ok(alphaNumber > 7 || webNumber >= 33, `Expected Web.33 parity or later, got ${pkg.version}`);
+assert.equal(typeof pkg.version, "string");
+assert.ok(pkg.version.length > 0, "KEMS Web release metadata must include a version");
 
 const propertyPages = [
   "public/index.html",
@@ -28,7 +25,7 @@ for (const file of propertyPages) {
     /<link rel="manifest" href="site\.webmanifest" crossorigin="use-credentials" \/>/,
     `${file} must include Cloudflare Access credentials in the browser manifest request`,
   );
-  assert.match(html, new RegExp(assetVersion), `${file} must use the current ${pkg.version} cache key`);
+  assert.match(html, new RegExp(assetVersion), `${file} must use the neutral property cache key`);
   assert.doesNotMatch(
     html,
     /<link rel="manifest" href="site\.webmanifest" \/>/,
@@ -73,7 +70,7 @@ const manifestText = read("public/site.webmanifest");
 assert.match(manifestText, new RegExp(assetVersion));
 
 const worker = read("public/service-worker.js");
-assert.match(worker, new RegExp(`kems-alpha${alphaNumber}-web${webNumber}-shell-v1`));
+assert.match(worker, /kems-web-shell-build1/);
 assert.match(worker, new RegExp(`pwa-bootstrap\\.js\\?v=${assetVersion}`));
 
 const project = JSON.parse(read("config/project.json"));
