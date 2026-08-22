@@ -2,7 +2,7 @@ import {
   PANEL_POWER_THRESHOLD_KW,
   derivePanelState,
   numberOrNull as n,
-} from "./panel-state.js?v=alpha8web0";
+} from "./panel-state.js?v=build1";
 
 const app = document.querySelector("#live-app");
 const refreshButton = document.querySelector("#refresh-button");
