@@ -6,12 +6,7 @@ const mustContain = (file, pieces) => {
 };
 
 const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
-const versionMatch = pkg.version.match(/-alpha(\d+)-web\.(\d+)$/);
-if (!versionMatch) throw new Error(`Unsupported KEMS Web version ${pkg.version}`);
-const alphaNumber = Number.parseInt(versionMatch[1], 10);
-const webNumber = Number.parseInt(versionMatch[2], 10);
-const assetVersion = `alpha${alphaNumber}web${webNumber}`;
-const hasPropertyFocusedShell = alphaNumber > 7 || webNumber >= 21;
+const assetVersion = "build1";
 
 mustContain("image/kems-firstboot.service", ["Restart=on-failure", "After=network-online.target"]);
 mustContain("image/kems-setup-status.service", ["ExecStart=/usr/local/bin/node", "ConditionPathExists=!/var/lib/kems-bootstrap/complete"]);
@@ -37,13 +32,8 @@ mustContain("public/app.js", ["Site identity", "Automatic coordinated updates", 
 mustContain("public/brand.css", ["brand-lockup", "loading-brand-lockup", "page-brand-lockup"]);
 mustContain("public/brand-lockup.svg", ["KEMS logo", "viewBox=\"0 0 180 180\""]);
 
-if (hasPropertyFocusedShell) {
-  mustContain("public/remote-access.html", ["Remote Access has moved", "/settings.html#remote-access", `brand-lockup.svg?v=${assetVersion}`]);
-  mustContain("public/settings.html", ["Remote Access", "Cloudflare connector", "cloudflare-command", `brand-lockup.svg?v=${assetVersion}`]);
-  mustContain("public/settings-page.js", ["/api/remote-access/status", "/api/remote-access/install", "/api/remote-access/action", "beforeinstallprompt"]);
-} else {
-  mustContain("public/remote-access.html", ["Remote access", "Cloudflare Tunnel connector", "http://localhost:4173", "kyle.kems.uk", "Install &amp; connect", `brand-lockup.svg?v=${assetVersion}`, "page-brand-lockup"]);
-  mustContain("public/remote-access.js", ["/api/remote-access", "\"/install\"", "\"/action\""]);
-}
+mustContain("public/remote-access.html", ["Remote Access has moved", "/settings.html#remote-access", `brand-lockup.svg?v=${assetVersion}`]);
+mustContain("public/settings.html", ["Remote Access", "Cloudflare connector", "cloudflare-command", `brand-lockup.svg?v=${assetVersion}`]);
+mustContain("public/settings-page.js", ["/api/remote-access/status", "/api/remote-access/install", "/api/remote-access/action", "beforeinstallprompt"]);
 
 console.log(`Pi deployment checks passed for ${pkg.version}: branding, delayed demo and retained loopback Remote Access helper are aligned.`);
