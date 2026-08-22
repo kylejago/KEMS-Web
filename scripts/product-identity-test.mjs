@@ -74,6 +74,28 @@ assert.match(
   /Release versions identify published repository states/,
 );
 
+const bundleAgent = read("deploy/bundle-agent.mjs");
+assert.match(bundleAgent, /const AGENT_VERSION = installedVersion\(\);/);
+assert.doesNotMatch(bundleAgent, /const AGENT_VERSION = ["'][^"']*(?:alpha|beta|rc)/i);
+const versionPatternSource = bundleAgent.match(/const match = \/(.+)\/i\.exec\(text\);/)?.[1];
+assert.ok(versionPatternSource, "Pi bundle agent must expose an appliance release ordering pattern");
+const versionPattern = new RegExp(versionPatternSource, "i");
+for (const version of [
+  "0.8.0-alpha8-web.1",
+  "0.8.0-alpha.8-web.1",
+  "0.8.0-beta1-web.0",
+  "0.8.0-beta.1-web.0",
+  "0.8.0-rc.1-web.0",
+  "1.0.0-web.0",
+]) {
+  assert.ok(versionPattern.test(version), `Pi bundle version ordering must understand ${version}`);
+}
+
+const remoteHelper = read("deploy/remote-access-service.mjs");
+assert.match(remoteHelper, /const HELPER_VERSION = JSON\.parse\(/);
+assert.match(remoteHelper, /\.\.\/package\.json/);
+assert.doesNotMatch(remoteHelper, /const HELPER_VERSION = ["'][^"']*(?:alpha|beta|rc)/i);
+
 console.log(
   "KEMS product identity contract passed: release versions stay in metadata, not live product/cache naming.",
 );
