@@ -8,12 +8,7 @@ const port = 4197;
 const packageVersion = JSON.parse(
   fs.readFileSync(new URL("../package.json", import.meta.url), "utf8"),
 ).version;
-const versionMatch = packageVersion.match(/-alpha(\d+)-web\.(\d+)$/);
-if (!versionMatch) throw new Error(`Unsupported KEMS Web version ${packageVersion}`);
-const alphaNumber = Number.parseInt(versionMatch[1], 10);
-const webNumber = Number.parseInt(versionMatch[2], 10);
-const assetVersion = `alpha${alphaNumber}web${webNumber}`;
-const hasPropertyFocusedShell = alphaNumber > 7 || webNumber >= 21;
+const assetVersion = "build1";
 const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "kems-web-smoke-"));
 const child = spawn(process.execPath, ["gateway.mjs"], {
   cwd: new URL("..", import.meta.url),
@@ -131,10 +126,7 @@ try {
   if (!html.includes(`brand-lockup.svg?v=${assetVersion}`) || !html.includes("Cost &amp; ROI")) {
     throw new Error("Branded HTML shell incomplete.");
   }
-  if (
-    hasPropertyFocusedShell &&
-    (html.includes(">Products<") || !html.includes("/settings.html") || !html.includes("/performance.html"))
-  ) {
+  if (html.includes(">Products<") || !html.includes("/settings.html") || !html.includes("/performance.html")) {
     throw new Error("Property navigation is not focused on property data/settings.");
   }
   if (
@@ -144,27 +136,23 @@ try {
   ) {
     throw new Error("Canonical SVG is not being served.");
   }
-  if (hasPropertyFocusedShell) {
-    if (!productsHtml.includes("Product information has moved")) {
-      throw new Error("Products page should hand off to public KEMS site.");
+  if (!productsHtml.includes("Product information has moved")) {
+    throw new Error("Products page should hand off to public KEMS site.");
+  }
+  if (!remoteHtml.includes("Remote Access has moved")) {
+    throw new Error("Remote Access should hand off to Settings.");
+  }
+  for (const [name, page] of [
+    ["compare", compareHtml],
+    ["performance", performanceHtml],
+    ["settings", settingsHtml],
+  ]) {
+    if (!page.includes(assetVersion)) {
+      throw new Error(`${name} page is not cache-version aligned`);
     }
-    if (!remoteHtml.includes("Remote Access has moved")) {
-      throw new Error("Remote Access should hand off to Settings.");
-    }
-    for (const [name, page] of [
-      ["compare", compareHtml],
-      ["performance", performanceHtml],
-      ["settings", settingsHtml],
-    ]) {
-      if (!page.includes(assetVersion)) {
-        throw new Error(`${name} page is not cache-version aligned`);
-      }
-    }
-    if (!web21Css.includes("panel-flow") || !web21Css.includes("web21-mobile-nav")) {
-      throw new Error("Responsive property styles missing.");
-    }
-  } else if (!productsHtml.includes("Four clear product levels")) {
-    throw new Error("Legacy product page incomplete.");
+  }
+  if (!web21Css.includes("panel-flow") || !web21Css.includes("web21-mobile-nav")) {
+    throw new Error("Responsive property styles missing.");
   }
   if (!productModel.includes('label: "Full KEMS Agile"')) throw new Error("Product model incomplete.");
   if (!brandCss.includes("brand-lockup") || !brandCss.includes("loading-brand-lockup")) {
