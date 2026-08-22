@@ -1,4 +1,4 @@
-import { derivePanelState } from "./panel-state.js?v=alpha8web0";
+import { derivePanelState } from "./panel-state.js?v=build1";
 
 const app = document.querySelector("#live-app");
 let latest = null;
