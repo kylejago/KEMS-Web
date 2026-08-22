@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.8.0-alpha8-web.1 — Release-independent KEMS product identity
+
+- Keeps the product and user-facing identity simply **KEMS / KEMS Web** while retaining `0.8.0-alpha8-web.1` only as release metadata.
+- Removes stale `KEMS Alpha7.40`, `Alpha7 shadow chain`, `alpha7web*` and `alpha8web*` wording from live property/public UI and cache identities.
+- Uses neutral property/PWA cache identity `build1` and neutral public-site cache identity `site1`.
+- Preserves the existing Home Assistant entity/API contract, Full KEMS Agile presentation, Cloudflare-authenticated PWA install path, seven-day public-demo privacy boundary and read-only property behavior.
+- Adds a canonical product-identity regression so future Alpha, Beta, RC and stable releases cannot leak lifecycle/version names back into live product/cache naming.
+- Historical regression filenames and release history remain unchanged evidence rather than being renamed or rewritten.
+
 ## 0.7.0-alpha7-web.14 — Four-product parity, delayed demo and remote-access foundation
 
 - Aligns the property dashboard and public site to the canonical user-facing KEMS product model: **Live Data**, **Battery & Solar**, **Full KEMS**, and **Full KEMS Agile**.
