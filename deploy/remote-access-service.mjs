@@ -13,7 +13,9 @@ const UNIT_NAME = "kems-cloudflared.service";
 const CLOUDFLARED = "/usr/bin/cloudflared";
 const TOKEN_PATTERN = /^[A-Za-z0-9._-]{80,4096}$/;
 const INSTALL_LINE = /^(?:sudo\s+)?(?:\/usr\/local\/bin\/|\/usr\/bin\/)?cloudflared\s+service\s+install\s+([A-Za-z0-9._-]{80,4096})\s*$/i;
-const HELPER_VERSION = "0.8.0-alpha8-web.0";
+const HELPER_VERSION = JSON.parse(
+  fs.readFileSync(new URL("../package.json", import.meta.url), "utf8"),
+).version;
 let busy = false;
 
 fs.mkdirSync(MANAGER_DIR, { recursive: true, mode: 0o750 });
