@@ -5,7 +5,7 @@
   "tagline": "Your property data first. Full KEMS Agile when you need the detail.",
   "summary": "The KEMS property PWA, Pi companion and public-site source, preserving the accepted Cloudflare-authenticated install path while sharing panel state and release contracts.",
   "repository": "https://github.com/kylejago/KEMS-Web",
-  "build": "KEMS Web maintenance build · EV shadow-policy presentation parity · delayed aggregate EV demo evidence · no Home Assistant control writes",
+  "build": "KEMS Web maintenance build · authenticated PWA parity · EV shadow-policy presentation parity · delayed aggregate EV demo evidence · no Home Assistant control writes",
   "principles": [
     "Home Assistant and KEMS remain the source of truth for each property.",
     "The user-facing product model is Live Data, Battery & Solar, Full KEMS and Full KEMS Agile.",
