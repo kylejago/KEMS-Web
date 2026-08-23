@@ -15,6 +15,7 @@ const ALLOWED_KEYS = new Set([
 
 const ALLOWED_METRICS = new Set([
   "homeKwh",
+  "evKwh",
   "gridImportKwh",
   "gridExportKwh",
   "solarKwh",
