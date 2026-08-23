@@ -5,7 +5,7 @@ const read = (path) => fs.readFileSync(path, "utf8");
 const pkg = JSON.parse(read("package.json"));
 const project = JSON.parse(read("config/project.json"));
 
-assert.equal(pkg.version, "0.8.0-alpha8-web.1");
+assert.equal(pkg.version, "0.8.0-alpha8-web.2");
 assert.equal(project.version, pkg.version);
 
 const propertyPages = [
@@ -45,6 +45,8 @@ assert.doesNotMatch(
 const worker = read("public/service-worker.js");
 assert.match(worker, /kems-web-shell-build1/);
 assert.match(worker, /panel-state\.js\?v=build1/);
+assert.match(worker, /ev-policy-model\.js\?v=build1/);
+assert.match(worker, /ev-policy-parity\.js\?v=build1/);
 assert.match(worker, /url\.pathname === "\/site\.webmanifest"/);
 assert.match(worker, /isAccessRedirect/);
 
@@ -52,4 +54,4 @@ const manifest = JSON.parse(read("public/site.webmanifest"));
 assert.equal(manifest.display, "standalone");
 assert.ok(manifest.icons.every((icon) => icon.src.includes("build1")));
 
-console.log("KEMS Web consolidation contract passed: authenticated PWA parity, shared panel state and coordinated versioning are intact.");
+console.log("KEMS Web consolidation contract passed: authenticated PWA parity, shared panel state, EV policy projection and coordinated versioning are intact.");
