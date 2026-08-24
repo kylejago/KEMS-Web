@@ -6,6 +6,8 @@
   "generatedAt": null,
   "dataThrough": null,
   "privacy": "Sanitised daily totals only. Aggregate EV energy may be included after the privacy delay; no live power, EV state/SOC, entity IDs, device identifiers, Home Assistant address, credentials or control endpoints are published.",
+  "products": ["actual", "kems"],
+  "billBasis": "Total energy cost includes electricity and gas usage, both standing charges, export income and genuine supplier/account energy credits. Battery wear is excluded.",
   "economics": null,
   "days": []
 }
