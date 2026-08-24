@@ -103,7 +103,10 @@ try {
   if (live.simulation?.solarToBatteryPower !== 0) throw new Error("Solar-to-battery power mapping failed.");
   if (live.simulation?.batterySoc !== 55) throw new Error("Simulated battery SOC mapping failed.");
   if (!day.nativePeriod || Math.abs(day.actual.totals.gridImport - 32.112) > 0.001) throw new Error("Alpha5 native today ledger failed.");
-  if (!day.policyEvents?.some((event) => event.label.includes("Export tariff") && event.label.includes("Awaiting"))) throw new Error("Alpha5 policy-change history marker was not produced.");
+  // The synthetic transition spans the previous ~14 hours. Around local midnight
+  // it legitimately falls into yesterday, so assert it in the seven-day history
+  // instead of making CI depend on the minute at which the job starts.
+  if (!week.policyEvents?.some((event) => event.label.includes("Export tariff") && event.label.includes("Awaiting"))) throw new Error("Alpha5 policy-change history marker was not produced.");
 
   const expected = {
     week: { gridImport: 32.112, cost: 5.7539 },
