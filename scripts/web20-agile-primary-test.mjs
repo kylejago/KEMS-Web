@@ -21,7 +21,7 @@ for (const marker of [
   "Live Data",
   "KEMS",
   "Total energy cost",
-  "Estimated ROI",
+  "Estimated KEMS ROI",
 ]) {
   assert.match(compare, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
 }
