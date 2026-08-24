@@ -5,7 +5,9 @@ const read = (path) => fs.readFileSync(path, "utf8");
 const pkg = JSON.parse(read("package.json"));
 const project = JSON.parse(read("config/project.json"));
 
-assert.equal(pkg.version, "0.8.0-alpha8-web.3");
+const versionMatch = pkg.version.match(/^0\.8\.0-alpha8-web\.(\d+)$/);
+assert.ok(versionMatch, `Expected Alpha8 Web release family, got ${pkg.version}`);
+assert.ok(Number.parseInt(versionMatch[1], 10) >= 3, `Expected Web.3 or later, got ${pkg.version}`);
 assert.equal(project.version, pkg.version);
 
 const propertyPages = [
@@ -54,4 +56,4 @@ const manifest = JSON.parse(read("public/site.webmanifest"));
 assert.equal(manifest.display, "standalone");
 assert.ok(manifest.icons.every((icon) => icon.src.includes("build1")));
 
-console.log("KEMS Web consolidation contract passed: authenticated PWA parity, shared panel state, EV policy projection and coordinated versioning are intact.");
+console.log(`KEMS ${pkg.version} consolidation contract passed: authenticated PWA parity, shared panel state, EV policy projection and coordinated versioning are intact.`);

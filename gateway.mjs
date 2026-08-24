@@ -19,7 +19,9 @@ const PUBLIC_DEMO_HOST = String(process.env.KEMS_PUBLIC_DEMO_HOST || "demo-api.k
 const PUBLIC_DEMO_DELAY_DAYS = 7;
 const PUBLIC_DEMO_ORIGINS = new Set(["https://kems.uk", "https://www.kems.uk"]);
 const PUBLIC_BACKFILL_DAYS = 14;
+const PUBLIC_EVIDENCE_VERSION = 3;
 const PUBLIC_HISTORY_ENTITIES = [
+  "sensor.kems_energy_cost_comparison",
   "sensor.kems_scenario_comparison_today",
   "sensor.kems_agile_smart_export_plan",
   "sensor.kems_today_energy_summary",
@@ -182,17 +184,6 @@ function poundsFromPence(value) {
 
 function scenarioProduct(source, evKwh = null) {
   if (!source || typeof source !== "object" || source.ready === false) return null;
-  const netCostPence = [
-    source.total_cost_pence,
-    source.net_cost_pence,
-    source.headline_electricity_bill_pence,
-    source.economic_net_cost_pence,
-    source.energy_net_cost_pence
-  ].map(finite).find(Number.isFinite);
-  const importCostPence = finite(source.import_cost_pence ?? source.grid_import_cost_pence ?? source.cost_pence);
-  const exportIncomePence = finite(source.export_income_pence ?? source.grid_export_income_pence) ?? 0;
-  const standingPence = finite(source.standing_charge_pence) ?? 0;
-  const calculatedNet = Number.isFinite(importCostPence) ? importCostPence - exportIncomePence + standingPence : null;
   const mapped = {
     home: finite(source.house_consumption_kwh ?? source.home_energy_kwh ?? source.house_energy_kwh ?? source.home_usage_kwh),
     ev: finite(evKwh),
@@ -202,9 +193,6 @@ function scenarioProduct(source, evKwh = null) {
     batteryCharge: finite(source.battery_charge_kwh),
     batteryDischarge: finite(source.battery_to_home_kwh ?? source.battery_discharged_kwh ?? source.battery_discharge_kwh),
     batteryExport: finite(source.battery_export_kwh),
-    importCost: Number.isFinite(importCostPence) ? poundsFromPence(importCostPence + standingPence) : null,
-    exportIncome: poundsFromPence(exportIncomePence),
-    netCost: poundsFromPence(Number.isFinite(netCostPence) ? netCostPence : calculatedNet),
     endSocPercent: finite(source.ending_soc_percent ?? source.end_soc_percent)
   };
   for (const key of Object.keys(mapped)) if (!Number.isFinite(mapped[key])) delete mapped[key];
@@ -243,8 +231,54 @@ function evEnergyFromHistory(history, dateKey) {
   return finite(simulation?.attributes?.actual_ev_energy_kwh);
 }
 
+function canonicalBillProduct(source) {
+  if (!source || typeof source !== "object" || source.ready === false) return null;
+  const mapped = {
+    homeKwh: round(source.home_energy_kwh),
+    gridImportKwh: round(source.grid_import_kwh),
+    gridExportKwh: round(source.grid_export_kwh),
+    gasUsageKwh: round(source.gas_usage_kwh),
+    electricityImportCostGbp: poundsFromPence(source.electricity_import_cost_pence),
+    electricityStandingChargeGbp: poundsFromPence(source.electricity_standing_charge_pence),
+    electricityExportIncomeGbp: poundsFromPence(source.electricity_export_income_pence),
+    supplierEnergyCreditGbp: poundsFromPence(source.supplier_energy_credit_pence),
+    electricityTotalCostGbp: poundsFromPence(source.electricity_total_cost_pence),
+    gasUsageCostGbp: poundsFromPence(source.gas_usage_cost_pence),
+    gasStandingChargeGbp: poundsFromPence(source.gas_standing_charge_pence),
+    gasTotalCostGbp: poundsFromPence(source.gas_total_cost_pence),
+    totalEnergyCostGbp: poundsFromPence(source.total_energy_cost_pence)
+  };
+  for (const key of Object.keys(mapped)) if (!Number.isFinite(mapped[key])) delete mapped[key];
+  return Object.keys(mapped).length ? mapped : null;
+}
+
+function canonicalBillForDay(state, dateKey) {
+  const attrs = state?.attributes || {};
+  if (Number(attrs.contract_version) < 1 || attrs.basis !== "bill_equivalent") return null;
+  const period = attrs?.periods?.today;
+  if (!period) return null;
+  const endDate = String(period?.end_date || period?.endDate || "").slice(0, 10);
+  if (endDate !== dateKey) return null;
+  const liveData = canonicalBillProduct(period.live_data);
+  const kems = canonicalBillProduct(period.kems);
+  if (!liveData && !kems) return null;
+  return {
+    liveData,
+    kems,
+    savingGbp: poundsFromPence(period.saving_pence),
+    strategy: String(period?.kems?.strategy || attrs.selected_kems_strategy || ""),
+    strategyLabel: String(period?.kems?.strategy_label || attrs.selected_kems_strategy_label || "Adaptive KEMS")
+  };
+}
+
+function selectLegacyKemsEnergy(strategy, batterySolar, fullKems, fullKemsAgile) {
+  if (strategy === "agile") return fullKemsAgile || fullKems || batterySolar || null;
+  if (strategy === "none") return batterySolar || fullKems || fullKemsAgile || null;
+  return fullKems || fullKemsAgile || batterySolar || null;
+}
+
 async function historicalEvidenceForDay(connection, dateKey) {
-  const start = `${dateKey}T18:00:00Z`;
+  const start = `${dateKey}T00:00:00Z`;
   const end = `${addDays(dateKey, 1)}T01:30:00Z`;
   const params = new URLSearchParams({
     filter_entity_id: PUBLIC_HISTORY_ENTITIES.join(","),
@@ -253,6 +287,15 @@ async function historicalEvidenceForDay(connection, dateKey) {
   });
   const history = await homeAssistantJson(connection, `/api/history/period/${encodeURIComponent(start)}?${params.toString()}`);
   if (!history) return null;
+
+  const billState = matchingLatestState(history, "sensor.kems_energy_cost_comparison", (attrs) => {
+    const period = attrs?.periods?.today;
+    return Number(attrs.contract_version) >= 1
+      && attrs.basis === "bill_equivalent"
+      && String(period?.end_date || period?.endDate || "").slice(0, 10) === dateKey;
+  });
+  const bill = canonicalBillForDay(billState, dateKey);
+
   const scenarioState = matchingLatestState(history, "sensor.kems_scenario_comparison_today", (attrs) => {
     const period = attrs?.periods?.today || attrs;
     return String(period?.end_date || period?.endDate || "").slice(0, 10) === dateKey;
@@ -266,13 +309,18 @@ async function historicalEvidenceForDay(connection, dateKey) {
   const batterySolar = scenarioProduct(scenarioByKey(scenarioState, dateKey, ["solar_battery"]), evKwh);
   const fullKems = scenarioProduct(scenarioByKey(scenarioState, dateKey, ["kems_forecast", "kems_full"]), evKwh);
   const fullKemsAgile = scenarioProduct(agileScenario(agileState, dateKey), evKwh);
-  if (!batterySolar && !fullKems && !fullKemsAgile && !Number.isFinite(evKwh)) return null;
+  const legacyKems = selectLegacyKemsEnergy(bill?.strategy || "", batterySolar, fullKems, fullKemsAgile);
+
   return {
     date: dateKey,
+    canonicalChecked: true,
+    billLive: bill?.liveData || null,
+    billKems: bill?.kems || null,
+    savingGbp: bill?.savingGbp ?? null,
+    strategy: bill?.strategy || null,
+    strategyLabel: bill?.strategyLabel || null,
     evKwh: Number.isFinite(evKwh) ? round(evKwh, 3) : null,
-    batterySolar,
-    fullKems,
-    fullKemsAgile,
+    legacyKems,
     capturedAt: new Date().toISOString(),
     source: "Home Assistant Recorder delayed KEMS evidence"
   };
@@ -298,22 +346,19 @@ async function currentPublicEconomics(connection) {
 
 async function refreshPublicEvidence(rows, cutoff) {
   if (Date.now() - publicEvidenceLastRefresh < 5 * 60_000 && fs.existsSync(PUBLIC_EVIDENCE_FILE)) {
-    return readJsonIfExists(PUBLIC_EVIDENCE_FILE, { version: 2, days: {} });
+    return readJsonIfExists(PUBLIC_EVIDENCE_FILE, { version: PUBLIC_EVIDENCE_VERSION, days: {} });
   }
   if (publicEvidenceRefresh) return publicEvidenceRefresh;
   publicEvidenceRefresh = (async () => {
-    const cache = readJsonIfExists(PUBLIC_EVIDENCE_FILE, { version: 2, days: {}, economics: null });
-    if (!cache || typeof cache !== "object") return { version: 2, days: {}, economics: null };
+    const cache = readJsonIfExists(PUBLIC_EVIDENCE_FILE, { version: PUBLIC_EVIDENCE_VERSION, days: {}, economics: null });
+    if (!cache || typeof cache !== "object") return { version: PUBLIC_EVIDENCE_VERSION, days: {}, economics: null };
     if (!cache.days || typeof cache.days !== "object") cache.days = {};
-    cache.version = 2;
+    cache.version = PUBLIC_EVIDENCE_VERSION;
     const connection = storedHomeAssistantConnection();
     if (!connection) return cache;
 
     const eligible = rows.filter((row) => row?.date <= cutoff).slice(-PUBLIC_BACKFILL_DAYS);
-    const missing = eligible.filter((row) => {
-      const item = cache.days[row.date];
-      return !item?.batterySolar || !item?.fullKems || !item?.fullKemsAgile || !Number.isFinite(finite(item?.evKwh));
-    });
+    const missing = eligible.filter((row) => !cache.days[row.date]?.canonicalChecked);
     const chunks = [];
     for (let index = 0; index < missing.length; index += 4) chunks.push(missing.slice(index, index + 4));
     for (const chunk of chunks) {
@@ -344,7 +389,7 @@ function mergeProduct(base, recovered, evKwh = null) {
   return Object.keys(value).length ? value : null;
 }
 
-function publicProductMetrics(source, actualNetCost = null) {
+function publicEnergyMetrics(source) {
   if (!source || typeof source !== "object" || Array.isArray(source)) return null;
   const metric = (key, digits = 3) => round(source[key], digits);
   const mapped = {
@@ -356,14 +401,18 @@ function publicProductMetrics(source, actualNetCost = null) {
     batteryChargeKwh: metric("batteryCharge"),
     batteryDischargeKwh: metric("batteryDischarge"),
     batteryExportKwh: metric("batteryExport"),
-    importCostGbp: metric("importCost", 2),
-    netCostGbp: metric("netCost", 2),
-    exportIncomeGbp: metric("exportIncome", 2),
     endSocPercent: metric("endSocPercent", 1)
   };
-  if (Number.isFinite(actualNetCost) && Number.isFinite(mapped.netCostGbp)) mapped.savingGbp = round(actualNetCost - mapped.netCostGbp, 2);
   for (const key of Object.keys(mapped)) if (!Number.isFinite(mapped[key])) delete mapped[key];
   return Object.keys(mapped).length ? mapped : null;
+}
+
+function legacyEnergyForStrategy(row, recovered) {
+  if (recovered?.legacyKems) return recovered.legacyKems;
+  if (recovered?.strategy === "none") return row.products?.batterySolar || null;
+  if (recovered?.strategy === "fixed") return row.products?.fullKems || null;
+  if (recovered?.strategy === "agile") return row.products?.fullKemsAgile || row.simulated || null;
+  return null;
 }
 
 async function publicDemoPayload() {
@@ -379,24 +428,17 @@ async function publicDemoPayload() {
   const days = rows.map((row) => {
     const recovered = evidence?.days?.[row.date] || {};
     const evKwh = finite(recovered.evKwh);
-    const actual = publicProductMetrics(mergeProduct(row.actual, null, evKwh));
-    const actualNetCost = actual?.netCostGbp ?? null;
-    const batterySolar = publicProductMetrics(mergeProduct(row.products?.batterySolar, recovered.batterySolar, evKwh), actualNetCost);
-    const fullKems = publicProductMetrics(mergeProduct(row.products?.fullKems, recovered.fullKems, evKwh), actualNetCost);
-    const fullKemsAgile = publicProductMetrics(mergeProduct(row.products?.fullKemsAgile || row.simulated, recovered.fullKemsAgile, evKwh), actualNetCost);
+    const actualEnergy = publicEnergyMetrics(mergeProduct(row.actual, null, evKwh)) || {};
+    const kemsEnergy = publicEnergyMetrics(mergeProduct(legacyEnergyForStrategy(row, recovered), null, evKwh)) || {};
+    const actual = { ...actualEnergy, ...(recovered.billLive || {}) };
+    const kems = { ...kemsEnergy, ...(recovered.billKems || {}) };
+    if (Number.isFinite(finite(recovered.savingGbp))) kems.savingGbp = round(recovered.savingGbp, 2);
     const day = { date: row.date };
-    if (actual) day.actual = actual;
-    if (batterySolar) day.batterySolar = batterySolar;
-    if (fullKems) day.fullKems = fullKems;
-    if (fullKemsAgile) day.fullKemsAgile = fullKemsAgile;
-    const candidates = [
-      [batterySolar?.netCostGbp, "Battery & Solar"],
-      [fullKems?.netCostGbp, "Full KEMS"],
-      [fullKemsAgile?.netCostGbp, "Full KEMS Agile"]
-    ].filter(([cost]) => Number.isFinite(cost)).sort((a, b) => a[0] - b[0]);
-    if (candidates[0]) day.winner = candidates[0][1];
+    if (Object.keys(actual).length) day.actual = actual;
+    if (Object.keys(kems).length) day.kems = kems;
+    if (recovered.strategyLabel) day.strategyLabel = recovered.strategyLabel;
     return day;
-  }).filter((day) => day.actual || day.batterySolar || day.fullKems || day.fullKemsAgile);
+  }).filter((day) => day.actual || day.kems);
 
   return {
     schema: 2,
@@ -407,11 +449,12 @@ async function publicDemoPayload() {
     dataThrough: days.at(-1)?.date || null,
     source: "KEMS Pi retained daily ledger plus delayed Recorder evidence",
     privacy: "Sanitised daily totals only. Aggregate EV energy is included after the privacy delay; no live power, EV state/SOC, entity IDs, device identifiers, Home Assistant address, credentials or control endpoints are published.",
+    products: ["actual", "kems"],
+    billBasis: "Total energy cost includes electricity and gas usage, both standing charges, export income and genuine supplier/account energy credits. Battery wear is excluded.",
     coverage: {
-      actual: "retained measured daily totals",
-      batterySolar: "delayed KEMS Solar + Battery replay when Recorder evidence is available",
-      fullKems: "delayed KEMS Forecast replay when Recorder evidence is available",
-      fullKemsAgile: "delayed Agile Smart Export replay when available, with retained simulation fallback",
+      actual: "retained measured energy plus delayed canonical KEMS bill evidence",
+      kems: "delayed canonical KEMS bill evidence with strategy-matched replay energy where available",
+      finance: "only sensor.kems_energy_cost_comparison Recorder evidence is accepted for bill totals",
       ev: "aggregate daily EV energy only, delayed by at least seven days"
     },
     economics: evidence?.economics?.systemCostGbp ? { systemCostGbp: evidence.economics.systemCostGbp } : null,
@@ -490,5 +533,5 @@ const gateway = http.createServer(async (request, response) => {
 });
 
 gateway.listen(PUBLIC_PORT, PUBLIC_HOST, () => {
-  console.log(`KEMS Web.30 gateway listening on http://${PUBLIC_HOST}:${PUBLIC_PORT}; app backend http://127.0.0.1:${BACKEND_PORT}; remote setup helper loopback-only on ${REMOTE_HELPER_PORT}; delayed demo host ${PUBLIC_DEMO_HOST}`);
+  console.log(`KEMS Web.4 gateway listening on http://${PUBLIC_HOST}:${PUBLIC_PORT}; app backend http://127.0.0.1:${BACKEND_PORT}; remote setup helper loopback-only on ${REMOTE_HELPER_PORT}; delayed demo host ${PUBLIC_DEMO_HOST}`);
 });

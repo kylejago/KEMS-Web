@@ -83,7 +83,25 @@ assert.doesNotMatch(panel, /panel-face-mask\.(?:png|svg)/, "Panel widget must no
 assert.doesNotMatch(web26, /mask-image|panel-face-mask\.(?:png|svg)/, "Panel CSS must not depend on artwork masks");
 for (const marker of ["kems-web-panel", "kems-web-status", "kems-web-stage", "kems-web-node", "kems-battery-gauge", "kems-web-flow-x", "kems-web-flow-y"]) assert.match(web26, new RegExp(marker));
 
-for (const marker of ["Live Data", "Battery & Solar", "Full KEMS", "Full KEMS Agile", "Winner", "Net electricity cost", "Estimated ROI", "Today", "Yesterday", "Last 7 days", "Last 30 days", "Year", "All time"]) assert.match(compare, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"));
+for (const marker of [
+  "Live Data",
+  "KEMS",
+  "Lowest total energy cost",
+  "Total energy cost",
+  "Estimated KEMS ROI",
+  "Today",
+  "Yesterday",
+  "Last 7 days",
+  "Last 30 days",
+  "Year",
+  "All time",
+]) assert.match(compare, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"));
+assert.doesNotMatch(compare, /Battery & Solar|Full KEMS Agile/, "Compare must expose only Live Data and KEMS");
+assert.match(compare, /sensor\.kems_energy_cost_comparison/);
+assert.match(compare, /electricity_standing_charge_pence/);
+assert.match(compare, /gas_standing_charge_pence/);
+assert.match(compare, /total_energy_cost_pence/);
+assert.doesNotMatch(compare, /economic_net_cost_pence/, "Bill comparison must exclude battery-wear economics");
 assert.doesNotMatch(compareHtml, /strategy-comparison\.js/, "Compare must not load a second legacy renderer");
 
 for (const marker of ["data-agile-mode", "simulated", "Solar generation", "Battery SoC", "Home usage", "EV usage", "simulatedHouse", "solarSimulated", "simulatedBattery", "socSimulated", "solarLive", "batteryLive", "socLive", "KEMS Panel View", "web29-agile-panel", "livePanelValues", "simulatedPanelValues", "gridImporting", "gridExporting", "kems-web-panel", "kems-web-connector", "/api/live"]) assert.match(agile, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"));
@@ -117,4 +135,4 @@ assert.doesNotMatch(worker, /panel-face-mask\.(?:png|svg)/);
 assert.match(css, /@media\(max-width:620px\)/);
 assert.match(css, /maintenance-time-grid/);
 
-console.log(`${pkg.version} property UI contract passed: shared panel-state model, panel-inspired Live Data and Agile Live/Simulated views, six-period four-way comparison, actual ROI, maintenance settings and responsive PWA shell are present.`);
+console.log(`${pkg.version} property UI contract passed: shared panel-state model, panel-inspired Live Data and KEMS views, bill-equivalent two-way comparison, actual ROI, maintenance settings and responsive PWA shell are present.`);

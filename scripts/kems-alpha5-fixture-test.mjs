@@ -6,6 +6,8 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
+process.env.TZ = "Europe/London";
+
 const here = path.dirname(fileURLToPath(import.meta.url));
 const states = JSON.parse(fs.readFileSync(path.join(here, "fixtures", "kems-alpha5-states.json"), "utf8"));
 const haPort = 23000 + (process.pid % 5000);
@@ -13,6 +15,9 @@ const sitePort = haPort + 1;
 const token = "alpha5-fixture-long-lived-access-token-123456789";
 const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "kems-alpha5-web-"));
 const now = new Date();
+const historyStart = new Date(now);
+historyStart.setHours(0, 0, 0, 0);
+const historySpanMs = Math.max(now.getTime() - historyStart.getTime(), 1);
 const seedLedger = { version: 1, days: {} };
 for (let day = 27; day <= 31; day += 1) {
   const date = `2026-07-${String(day).padStart(2, "0")}`;
@@ -49,7 +54,12 @@ const ha = http.createServer((request, response) => {
         if (id === "sensor.kems_export_tariff_status") value = index < 28 ? "active" : "awaiting";
         if (id === "binary_sensor.kems_no_export_mode_active") value = index < 28 ? "off" : "on";
         if (id === "sensor.kems_simulation_strategy") value = index < 28 ? "export" : "self_use";
-        const at = new Date(now.getTime() - (41 - index) * 20 * 60 * 1000).toISOString();
+        // Keep the synthetic transition inside the current Europe/London day.
+        // This makes the today-only policyEvents contract deterministic even
+        // when CI starts a few minutes after local midnight.
+        const at = new Date(
+          historyStart.getTime() + Math.floor((historySpanMs * (index + 1)) / 42),
+        ).toISOString();
         return { ...source, state: String(value), last_changed: at, last_updated: at };
       });
     });
@@ -63,7 +73,7 @@ await new Promise((resolve) => ha.listen(haPort, "127.0.0.1", resolve));
 
 const child = spawn(process.execPath, ["server.mjs"], {
   cwd: path.join(here, ".."),
-  env: { ...process.env, PORT: String(sitePort), HOST: "127.0.0.1", DATA_DIR: dataDir, HA_URL: "", HA_TOKEN: "" },
+  env: { ...process.env, PORT: String(sitePort), HOST: "127.0.0.1", DATA_DIR: dataDir, HA_URL: "", HA_TOKEN: "", TZ: "Europe/London" },
   stdio: ["ignore", "pipe", "pipe"]
 });
 let output = "";

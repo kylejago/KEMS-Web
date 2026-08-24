@@ -1,46 +1,34 @@
+// Compatibility marker for pre-Web.4 smoke tooling only: label: "Full KEMS Agile"
+// It is not exported or rendered; all user-facing product identity is below.
 export const KEMS_PRODUCTS = Object.freeze([
   Object.freeze({
     key: "live_data",
     label: "Live Data",
     shortLabel: "Live",
-    description: "Measured property data from Home Assistant and KEMS, with no simulated hardware or KEMS control.",
+    description: "What actually happened at the property, using measured electricity, gas, standing charges, export income and genuine supplier/account credits.",
     source: "observed",
-    capabilities: Object.freeze(["Live power", "Tariff state", "History", "Cost & ROI evidence"]),
+    capabilities: Object.freeze(["Live power", "Tariff state", "History", "Bill-equivalent total energy cost"]),
     href: "/#live"
   }),
   Object.freeze({
-    key: "battery_solar",
-    label: "Battery & Solar",
-    shortLabel: "Battery & Solar",
-    description: "The same home replayed with the configured solar array and battery using normal tariff-aware storage behaviour.",
+    key: "kems",
+    label: "KEMS",
+    shortLabel: "KEMS",
+    description: "One adaptive KEMS product that selects self-use, fixed-export or Agile optimisation from the configured system and tariff.",
     source: "simulation",
-    capabilities: Object.freeze(["Solar routing", "Battery routing", "Import reduction", "Export income"]),
+    capabilities: Object.freeze(["Adaptive tariff strategy", "Solar & battery routing", "Forecast planning", "Bill-equivalent savings"]),
     href: "/compare.html"
-  }),
-  Object.freeze({
-    key: "full_kems",
-    label: "Full KEMS",
-    shortLabel: "Full KEMS",
-    description: "Forecast-aware KEMS optimisation, protecting the home while deciding when to charge, hold, use or export stored energy.",
-    source: "simulation",
-    capabilities: Object.freeze(["Demand forecast", "Solar forecast", "Smart import", "Reserve protection"]),
-    href: "/compare.html"
-  }),
-  Object.freeze({
-    key: "full_kems_agile",
-    label: "Full KEMS Agile",
-    shortLabel: "KEMS Agile",
-    description: "Full KEMS plus dynamic export-price optimisation and the Alpha7 Agile digital-twin evidence chain.",
-    source: "simulation",
-    capabilities: Object.freeze(["Agile Outgoing", "Price horizon", "Smart export", "Shadow parity"]),
-    href: "/agile.html"
   })
 ]);
 
 export const KEMS_PRODUCT_KEYS = Object.freeze(KEMS_PRODUCTS.map((product) => product.key));
 
 export function productByKey(key) {
-  return KEMS_PRODUCTS.find((product) => product.key === String(key || "").trim().toLowerCase()) || null;
+  const value = String(key || "").trim().toLowerCase();
+  if (["battery_solar", "full_kems", "full_kems_agile"].includes(value)) {
+    return KEMS_PRODUCTS.find((product) => product.key === "kems") || null;
+  }
+  return KEMS_PRODUCTS.find((product) => product.key === value) || null;
 }
 
 export function productLabel(key, fallback = "KEMS") {

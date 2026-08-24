@@ -1,12 +1,16 @@
 import fs from "node:fs";
 import path from "node:path";
 
-export const PUBLIC_DEMO_SCHEMA = 1;
+export const PUBLIC_DEMO_SCHEMA = 2;
 export const PUBLIC_DEMO_DELAY_DAYS = 7;
 
 const ALLOWED_KEYS = new Set([
   "date",
   "actual",
+  "kems",
+  "strategyLabel",
+  // Legacy candidate fields are accepted only as private input compatibility.
+  // The published payload always collapses them into the single KEMS product.
   "batterySolar",
   "fullKems",
   "fullKemsAgile",
@@ -22,14 +26,29 @@ const ALLOWED_METRICS = new Set([
   "batteryChargeKwh",
   "batteryDischargeKwh",
   "batteryExportKwh",
-  "netCostGbp",
-  "exportIncomeGbp",
+  "electricityImportCostGbp",
+  "electricityStandingChargeGbp",
+  "electricityExportIncomeGbp",
+  "supplierEnergyCreditGbp",
+  "electricityTotalCostGbp",
+  "gasUsageCostGbp",
+  "gasStandingChargeGbp",
+  "gasTotalCostGbp",
+  "totalEnergyCostGbp",
   "savingGbp",
-  "endSocPercent"
+  "endSocPercent",
+  // Retained only so an old delayed candidate can still provide non-financial
+  // energy evidence. It is never promoted to Total energy cost.
+  "netCostGbp",
+  "exportIncomeGbp"
 ]);
 
 function parseArgs(argv) {
-  const result = { input: null, output: path.resolve("public-site/demo-data.json"), delayDays: PUBLIC_DEMO_DELAY_DAYS };
+  const result = {
+    input: null,
+    output: path.resolve("public-site/demo-data.json"),
+    delayDays: PUBLIC_DEMO_DELAY_DAYS
+  };
   for (let index = 2; index < argv.length; index += 1) {
     const token = argv[index];
     if (token === "--input") result.input = argv[++index] || null;
@@ -75,7 +94,18 @@ function latestAllowedDate(delayDays, now = new Date()) {
   return local.toISOString().slice(0, 10);
 }
 
-export function sanitisePublicDemo(source, { delayDays = PUBLIC_DEMO_DELAY_DAYS, now = new Date() } = {}) {
+function legacyKemsCandidate(candidate) {
+  if (candidate.kems) return [candidate.kems, candidate.strategyLabel || "Adaptive KEMS"];
+  if (candidate.fullKemsAgile) return [candidate.fullKemsAgile, "Agile export optimisation"];
+  if (candidate.fullKems) return [candidate.fullKems, "Fixed export optimisation"];
+  if (candidate.batterySolar) return [candidate.batterySolar, "Self-use / no paid export"];
+  return [null, candidate.strategyLabel || null];
+}
+
+export function sanitisePublicDemo(
+  source,
+  { delayDays = PUBLIC_DEMO_DELAY_DAYS, now = new Date() } = {}
+) {
   if (!Number.isInteger(delayDays) || delayDays < PUBLIC_DEMO_DELAY_DAYS) {
     throw new Error(`Public demo delay must be at least ${PUBLIC_DEMO_DELAY_DAYS} days.`);
   }
@@ -86,17 +116,20 @@ export function sanitisePublicDemo(source, { delayDays = PUBLIC_DEMO_DELAY_DAYS,
   for (const candidate of rows) {
     if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) continue;
     for (const key of Object.keys(candidate)) {
-      if (!ALLOWED_KEYS.has(key)) throw new Error(`Public demo candidate contains forbidden field: ${key}`);
+      if (!ALLOWED_KEYS.has(key)) {
+        throw new Error(`Public demo candidate contains forbidden field: ${key}`);
+      }
     }
     const date = dateKey(candidate.date);
     if (!date || date > cutoff) continue;
+
     const safe = { date };
-    for (const key of ["actual", "batterySolar", "fullKems", "fullKemsAgile"]) {
-      const metrics = sanitiseMetrics(candidate[key]);
-      if (metrics) safe[key] = metrics;
-    }
-    const winner = String(candidate.winner || "").trim();
-    if (["Battery & Solar", "Full KEMS", "Full KEMS Agile"].includes(winner)) safe.winner = winner;
+    const actual = sanitiseMetrics(candidate.actual);
+    const [kemsSource, strategyLabel] = legacyKemsCandidate(candidate);
+    const kems = sanitiseMetrics(kemsSource);
+    if (actual) safe.actual = actual;
+    if (kems) safe.kems = kems;
+    if (strategyLabel) safe.strategyLabel = String(strategyLabel).slice(0, 80);
     days.push(safe);
   }
 
@@ -110,6 +143,8 @@ export function sanitisePublicDemo(source, { delayDays = PUBLIC_DEMO_DELAY_DAYS,
     generatedAt: new Date(now).toISOString(),
     dataThrough,
     privacy: "Sanitised daily totals only. No live power, entity IDs, device identifiers, Home Assistant address, credentials or control endpoints.",
+    products: ["actual", "kems"],
+    billBasis: "Total energy cost includes electricity and gas usage, both standing charges, export income and genuine supplier/account energy credits. Battery wear is excluded.",
     days
   };
 }

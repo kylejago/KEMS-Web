@@ -35,7 +35,7 @@
       <div>
         <p class="eyebrow">Kyle Energy Management System</p>
         <h1>Know what your home could do before KEMS ever takes control.</h1>
-        <p class="lead">KEMS works with Home Assistant to observe real household demand, learn how the property behaves, replay solar and battery strategies, compare costs, and prove proposed control decisions in a digital twin first.</p>
+        <p class="lead">KEMS works with Home Assistant to observe real household demand, learn how the property behaves, replay the best strategy for the installed system and tariff, compare the actual energy bill with KEMS, and prove proposed control decisions in a digital twin first.</p>
         <div class="hero-actions">
           <a class="button" href="demo.html">Open the delayed demo</a>
           <a class="button ghost" href="login.html">Property sign in</a>
@@ -53,30 +53,41 @@
 
     <section class="section-block">
       <div class="section-heading">
-        <p class="eyebrow">What KEMS does</p>
-        <h2>One platform, four levels of energy intelligence.</h2>
-        <p>KEMS keeps measured reality separate from simulation, then lets you see exactly what additional hardware and optimisation could change.</p>
+        <p class="eyebrow">What KEMS compares</p>
+        <h2>One measured baseline. One adaptive KEMS.</h2>
+        <p>The user-facing comparison is deliberately simple: Live Data is what actually happened; KEMS is what the same property could have done with its configured hardware and tariff.</p>
       </div>
       <div class="strategy-grid">
-        <article class="strategy-card"><span>01</span><h3>Live Data</h3><p>Measured household energy, import, export, EV and tariff evidence from Home Assistant and KEMS.</p><small>Reality first</small></article>
-        <article class="strategy-card"><span>02</span><h3>Battery &amp; Solar</h3><p>Replay the same property with configured solar and storage to understand routing, import reduction and export.</p><small>Hardware scenario</small></article>
-        <article class="strategy-card"><span>03</span><h3>Full KEMS</h3><p>Add forecasting, reserve protection and smarter whole-home import decisions around the property's real demand.</p><small>Forecast-led</small></article>
-        <article class="strategy-card featured"><span>04</span><h3>Full KEMS Agile</h3><p>Add dynamic export-price optimisation, rolling price-horizon planning and digital-twin proof before control.</p><small>Flagship strategy</small></article>
+        <article class="strategy-card featured"><span>01</span><h3>Live Data</h3><p>Measured electricity, gas, import, export, EV and tariff evidence from Home Assistant and KEMS.</p><small>What actually happened</small></article>
+        <article class="strategy-card featured"><span>02</span><h3>KEMS</h3><p>The adaptive simulation chooses the appropriate optimisation strategy from the property configuration rather than asking the user to choose a product variant.</p><small>What KEMS would have done</small></article>
+      </div>
+    </section>
+
+    <section class="section-block">
+      <div class="section-heading">
+        <p class="eyebrow">Adaptive strategy</p>
+        <h2>KEMS changes its behaviour, not its identity.</h2>
+        <p>The internal replay engine is selected automatically from the export arrangement and installed system. These are strategies inside KEMS, not separate products.</p>
+      </div>
+      <div class="strategy-grid">
+        <article class="strategy-card"><span>A</span><h3>Self-use / no paid export</h3><p>Prioritise the home, battery and solar when exported energy has no useful sale value.</p><small>No-export strategy</small></article>
+        <article class="strategy-card"><span>B</span><h3>Fixed export optimisation</h3><p>Value exported energy at the configured fixed export tariff while protecting household demand and battery reserves.</p><small>Fixed-rate strategy</small></article>
+        <article class="strategy-card"><span>C</span><h3>Agile export optimisation</h3><p>Use the rolling half-hour export-price horizon to choose when stored and solar energy is worth exporting.</p><small>Dynamic-rate strategy</small></article>
       </div>
     </section>
 
     <section class="section-block two-column">
       <article class="content-card">
-        <p class="eyebrow">Observe and learn</p>
-        <h2>Start with the home you actually have.</h2>
-        <p>KEMS records real demand and tariff behaviour instead of starting with an idealised model. That evidence becomes the baseline used by every later comparison.</p>
-        <div class="feature-list"><span>Measured home demand</span><span>Grid import and export</span><span>EV and tariff context</span><span>Retained historical evidence</span></div>
+        <p class="eyebrow">Actual bill basis</p>
+        <h2>Compare the number that matters on the energy account.</h2>
+        <p>The headline Total energy cost includes electricity import, electricity standing charge, gas usage, gas standing charge, export income and genuine supplier/account energy credits. Battery wear is kept out of the household-bill total.</p>
+        <div class="feature-list"><span>Electricity usage</span><span>Both standing charges</span><span>Gas usage</span><span>Export and supplier credits</span></div>
       </article>
       <article class="content-card">
-        <p class="eyebrow">Simulate and compare</p>
-        <h2>Test changes against the same house.</h2>
-        <p>Battery, solar and KEMS strategies are replayed against the same demand so the comparison is about the strategy, not a different set of assumptions.</p>
-        <div class="feature-list"><span>Battery &amp; solar replay</span><span>Full KEMS replay</span><span>Agile export optimisation</span><span>Common cost basis</span></div>
+        <p class="eyebrow">Simulate and prove</p>
+        <h2>Test KEMS against exactly the same property.</h2>
+        <p>KEMS replays the property against the same retained demand, tariff and hardware configuration. Missing evidence remains unavailable rather than being scaled or invented.</p>
+        <div class="feature-list"><span>Common demand evidence</span><span>Tariff-aware strategy</span><span>Digital-twin proof</span><span>One canonical cost contract</span></div>
       </article>
     </section>
 
@@ -94,7 +105,7 @@
     </section>
 
     <section class="section-block callout-grid">
-      <a class="callout-card" href="demo.html"><span>DEMO</span><strong>See Full KEMS Agile and Compare using delayed property evidence.</strong><b>Open demo →</b></a>
+      <a class="callout-card" href="demo.html"><span>DEMO</span><strong>See KEMS and Compare using delayed property evidence.</strong><b>Open demo →</b></a>
       <a class="callout-card" href="login.html"><span>PROPERTY ACCESS</span><strong>Understand how Cloudflare sign in protects each KEMS property.</strong><b>How sign in works →</b></a>
     </section>
   </main>

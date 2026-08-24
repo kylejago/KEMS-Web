@@ -5,23 +5,17 @@ const view = document.body.dataset.demoView || 'agile';
 const LIVE_DEMO_URL = 'https://demo-api.kems.uk/api/public-demo';
 const PRODUCTS = [
   ['actual', 'Live Data'],
-  ['batterySolar', 'Battery & Solar'],
-  ['fullKems', 'Full KEMS'],
-  ['fullKemsAgile', 'Full KEMS Agile']
+  ['kems', 'KEMS']
 ];
 
 let payload = null;
-let mode = 'fullKemsAgile';
+let mode = 'kems';
 let period = 'day';
 
 function number(value) {
   if (value === null || value === undefined || value === '') return null;
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
-}
-
-function first(...values) {
-  return values.map(number).find(Number.isFinite) ?? null;
 }
 
 function escapeHtml(value = '') {
@@ -40,10 +34,10 @@ function money(value, absolute = false) {
 
 function economicResult(value) {
   const parsed = number(value);
-  if (parsed === null) return { value: 'Unavailable', label: 'Net electricity result', className: '' };
-  if (parsed < -0.005) return { value: `${money(parsed, true)} profit`, label: 'Net electricity result', className: 'profit' };
-  if (Math.abs(parsed) <= 0.005) return { value: '£0.00 break-even', label: 'Net electricity result', className: 'profit' };
-  return { value: `${money(parsed)} cost`, label: 'Net electricity result', className: '' };
+  if (parsed === null) return { value: 'Unavailable', label: 'Total energy cost', className: '' };
+  if (parsed < -0.005) return { value: `${money(parsed, true)} credit`, label: 'Total energy cost', className: 'profit' };
+  if (Math.abs(parsed) <= 0.005) return { value: '£0.00', label: 'Total energy cost', className: 'profit' };
+  return { value: money(parsed), label: 'Total energy cost', className: '' };
 }
 
 function energy(value) {
@@ -82,6 +76,21 @@ function latestAllowedDate(delayDays) {
   return date.toISOString().slice(0, 10);
 }
 
+function normaliseDay(day) {
+  const legacyKems = day?.kems || day?.fullKemsAgile || day?.fullKems || day?.batterySolar || null;
+  const strategyLabel = day?.strategyLabel
+    || (day?.fullKemsAgile ? 'Agile export optimisation' : null)
+    || (day?.fullKems ? 'Fixed export optimisation' : null)
+    || (day?.batterySolar ? 'Self-use / no paid export' : null)
+    || 'Adaptive KEMS';
+  return {
+    date: day?.date,
+    actual: day?.actual || null,
+    kems: legacyKems,
+    strategyLabel
+  };
+}
+
 function validate(input) {
   if (!input || ![1, 2].includes(input.schema)) throw new Error('Unsupported demo data format.');
   if (!input.delayed || !Number.isInteger(input.delayDays) || input.delayDays < 7) {
@@ -90,12 +99,19 @@ function validate(input) {
   const cutoff = latestAllowedDate(input.delayDays);
   if (input.dataThrough && input.dataThrough > cutoff) throw new Error('The public demo feed contains data that is too recent.');
   if (!Array.isArray(input.days)) throw new Error('The public demo feed has no day list.');
-  for (const day of input.days) {
+  const days = input.days.map(normaliseDay);
+  for (const day of days) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(String(day?.date || '')) || day.date > cutoff) {
-      throw new Error('The public demo feed contains an invalid or too-recent day.');
+      throw new Error('The public demo feed contains an invalid or too recent day.');
     }
   }
-  return input;
+  return {
+    ...input,
+    schema: 2,
+    products: ['actual', 'kems'],
+    billBasis: input.billBasis || 'Total energy cost includes electricity and gas usage, both standing charges, export income and genuine supplier/account credits. Battery wear is excluded.',
+    days
+  };
 }
 
 function aggregate(days) {
@@ -126,11 +142,15 @@ function periodSlice(value = period) {
 
 function hasProductEvidence(day, key) {
   const row = day?.[key];
-  return row && typeof row === 'object' && number(row.netCostGbp) !== null;
+  return row && typeof row === 'object' && Object.keys(row).length > 0;
+}
+
+function hasBillEvidence(day, key) {
+  return hasProductEvidence(day, key) && number(day[key].totalEnergyCostGbp) !== null;
 }
 
 function completeCompareDay(day) {
-  return PRODUCTS.every(([key]) => hasProductEvidence(day, key));
+  return PRODUCTS.every(([key]) => hasBillEvidence(day, key));
 }
 
 function periodReady(value = period, forView = view) {
@@ -165,7 +185,7 @@ function toolbar(showMode = false) {
     const ready = periodReady(value, view);
     return `<option value="${value}"${period === value ? ' selected' : ''}${ready ? '' : ' disabled'}>${label}${ready ? '' : ' · building evidence'}</option>`;
   }).join('');
-  return `<section class="demo-toolbar"><div class="toolbar-group"><span class="toolbar-label">Evidence window</span><select id="demo-period">${options}</select></div>${showMode ? `<div class="toolbar-group"><span class="toolbar-label">Panel view</span><div class="mode-toggle"><button type="button" data-mode="actual" class="${mode === 'actual' ? 'active' : ''}">Delayed live</button><button type="button" data-mode="fullKemsAgile" class="${mode === 'fullKemsAgile' ? 'active' : ''}">Delayed simulated</button></div></div>` : ''}</section>`;
+  return `<section class="demo-toolbar"><div class="toolbar-group"><span class="toolbar-label">Evidence window</span><select id="demo-period">${options}</select></div>${showMode ? `<div class="toolbar-group"><span class="toolbar-label">Panel view</span><div class="mode-toggle"><button type="button" data-mode="actual" class="${mode === 'actual' ? 'active' : ''}">Delayed live</button><button type="button" data-mode="kems" class="${mode === 'kems' ? 'active' : ''}">Delayed KEMS</button></div></div>` : ''}</section>`;
 }
 
 function hero(title, description) {
@@ -189,13 +209,13 @@ function panel(metrics, selected) {
   const batteryIn = number(metrics.batteryChargeKwh) || 0;
   const ev = number(metrics.evKwh);
   const soc = number(metrics.endSocPercent);
-  const result = economicResult(metrics.netCostGbp);
+  const result = economicResult(metrics.totalEnergyCostGbp);
   const detail = selected.days.length === 1 ? dateLabel(selected.days[0].date) : selected.label;
   const gridValue = exported > imported && exported > 0 ? `${exported.toFixed(2)} kWh export` : imported > 0 ? `${imported.toFixed(2)} kWh import` : 'No grid energy';
   const batteryValue = batteryOut > 0 ? `${batteryOut.toFixed(2)} kWh out` : batteryIn > 0 ? `${batteryIn.toFixed(2)} kWh in` : 'No battery flow';
   const batteryGauge = Number.isFinite(soc) ? `<div class="battery-gauge"><i style="width:${Math.max(0, Math.min(100, soc))}%"></i></div>` : '';
-  const status = `${statusTile('GRID', imported > 0 || exported > 0, 'FLOW', 'IDLE')}${statusTile('COST', number(metrics.netCostGbp) !== null && number(metrics.netCostGbp) <= 0, 'PROFIT', 'COST')}${statusTile('IMPORT', imported > 0.001, 'ON', 'OFF')}${statusTile('EXPORT', exported > 0.001, 'ON', 'OFF')}`;
-  return `<section class="panel-section"><div class="section-title"><div><h2>KEMS Panel View</h2><p>Pi-style energy-flow graphic using the selected delayed evidence. Values are daily/period energy, never current household power.</p></div><span class="demo-badge"><i></i>${mode === 'actual' ? 'Delayed live' : 'Delayed simulation'}</span></div><div class="panel-status-grid">${status}</div><div class="kems-panel-stage">
+  const status = `${statusTile('GRID', imported > 0 || exported > 0, 'FLOW', 'IDLE')}${statusTile('COST', number(metrics.totalEnergyCostGbp) !== null && number(metrics.totalEnergyCostGbp) <= 0, 'CREDIT', 'COST')}${statusTile('IMPORT', imported > 0.001, 'ON', 'OFF')}${statusTile('EXPORT', exported > 0.001, 'ON', 'OFF')}`;
+  return `<section class="panel-section"><div class="section-title"><div><h2>KEMS Panel View</h2><p>Pi-style energy-flow graphic using selected delayed evidence. Values are daily/period energy, never current household power.</p></div><span class="demo-badge"><i></i>${mode === 'actual' ? 'Delayed live' : 'Delayed KEMS'}</span></div><div class="panel-status-grid">${status}</div><div class="kems-panel-stage">
     <div class="flow-line flow-solar ${solar > 0 ? 'active' : ''}"><i></i></div>
     <div class="flow-line flow-grid ${imported > 0 || exported > 0 ? 'active' : ''}"><i></i></div>
     <div class="flow-line flow-battery ${batteryIn > 0 || batteryOut > 0 ? 'active' : ''}"><i></i></div>
@@ -204,20 +224,33 @@ function panel(metrics, selected) {
     ${panelNode('grid', 'Grid', gridValue, detail, '⌁')}
     ${panelNode('home', 'Home', energy(metrics.homeKwh), result.value, '⌂')}
     ${panelNode('battery', 'Battery', batteryValue, Number.isFinite(soc) ? `End SoC ${soc.toFixed(1)}%` : 'End SoC unavailable', '▣', batteryGauge)}
-    ${panelNode('ev', 'EV', energy(metrics.evKwh), Number.isFinite(ev) ? 'Aggregate delayed charging energy' : 'EV history not retained for this day', '▰')}
+    ${panelNode('ev', 'EV', energy(metrics.evKwh), Number.isFinite(ev) ? 'Aggregate delayed charging energy' : 'EV history unavailable', '▰')}
   </div></section>`;
 }
 
+function billBreakdown(metrics) {
+  const rows = [
+    ['Electricity import', metrics.electricityImportCostGbp, false],
+    ['Electricity standing charge', metrics.electricityStandingChargeGbp, false],
+    ['Electricity export income', metrics.electricityExportIncomeGbp, true],
+    ['Supplier/account credits', metrics.supplierEnergyCreditGbp, true],
+    ['Electricity total', metrics.electricityTotalCostGbp, false],
+    ['Gas usage', metrics.gasUsageCostGbp, false],
+    ['Gas standing charge', metrics.gasStandingChargeGbp, false],
+    ['Gas total', metrics.gasTotalCostGbp, false],
+    ['TOTAL ENERGY COST', metrics.totalEnergyCostGbp, false]
+  ];
+  return `<section class="routing-section"><div class="section-title"><div><h2>Total energy cost breakdown</h2><p>${escapeHtml(payload.billBasis || '')}</p></div></div><div class="demo-table-wrap"><table class="demo-table"><thead><tr><th>Bill component</th><th>Delayed value</th></tr></thead><tbody>${rows.map(([label, value, credit]) => `<tr><th>${escapeHtml(label)}</th><td>${value === null || value === undefined ? '—' : `${credit ? '−' : ''}${escapeHtml(money(Math.abs(number(value) || 0)))}`}</td></tr>`).join('')}</tbody></table></div></section>`;
+}
+
 function routing(metrics) {
-  const result = economicResult(metrics.netCostGbp);
-  const importCost = first(metrics.importCostGbp, number(metrics.netCostGbp) !== null && number(metrics.exportIncomeGbp) !== null ? number(metrics.netCostGbp) + number(metrics.exportIncomeGbp) : null);
   const rows = [
     ['Home usage', energy(metrics.homeKwh)], ['EV charging', energy(metrics.evKwh)], ['Solar generation', energy(metrics.solarKwh)],
     ['Grid import', energy(metrics.gridImportKwh)], ['Grid export', energy(metrics.gridExportKwh)],
     ['Battery charge', energy(metrics.batteryChargeKwh)], ['Battery → home / discharge', energy(metrics.batteryDischargeKwh)],
     ['Battery export', energy(metrics.batteryExportKwh)], ['End battery SoC', percent(metrics.endSocPercent)]
   ];
-  return `<section class="routing-section"><div class="section-title"><div><h2>Energy routing summary</h2><p>Sanitised delayed daily evidence. EV energy is now included as an aggregate; EV identity, state, SoC and charge times are not published.</p></div></div><div class="demo-table-wrap"><table class="demo-table"><thead><tr><th>Route / evidence</th><th>Delayed value</th></tr></thead><tbody>${rows.map(([label, value]) => `<tr><th>${escapeHtml(label)}</th><td>${escapeHtml(value)}</td></tr>`).join('')}</tbody></table></div><div class="demo-grid" style="margin-top:14px">${card('Import + standing cost', money(importCost), 'Published when retained by the KEMS replay')}${card('Export income', money(metrics.exportIncomeGbp), 'Retained delayed evidence')}${card(result.label, result.value, 'Negative net cost is shown as profit', result.className)}${card('Modelled saving', mode === 'actual' ? 'Measured baseline' : money(metrics.savingGbp), mode === 'actual' ? 'No simulated saving applied to measured data' : 'Versus delayed measured reality')}</div></section>`;
+  return `<section class="routing-section"><div class="section-title"><div><h2>Energy routing summary</h2><p>Sanitised delayed daily evidence. EV identity, state, SoC and charge times are not published.</p></div></div><div class="demo-table-wrap"><table class="demo-table"><thead><tr><th>Route / evidence</th><th>Delayed value</th></tr></thead><tbody>${rows.map(([label, value]) => `<tr><th>${escapeHtml(label)}</th><td>${escapeHtml(value)}</td></tr>`).join('')}</tbody></table></div></section>`;
 }
 
 function chartPoints(days, key) {
@@ -240,32 +273,39 @@ function trendChart(days, productKey) {
     return `<line x1="${left}" y1="${yy}" x2="${width - right}" y2="${yy}" class="chart-grid"/><text x="${left - 10}" y="${yy + 4}" text-anchor="end">${label}</text>`;
   }).join('');
   const labels = rows.map((row, index) => `<text x="${x(index)}" y="${height - 15}" text-anchor="middle">${escapeHtml(shortDate(row.date))}</text>`).join('');
-  return `<section class="chart-section"><div class="section-title"><div><h2>Delayed energy history</h2><p>Pi-style trend view across published days: Home, Solar, Battery → home, EV and end battery SoC. No intra-day household profile is exposed.</p></div></div><div class="chart-wrap"><svg class="demo-chart pi-history-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="Delayed energy history chart">${grid}${labels}<text x="14" y="${top + 5}">kWh</text><text x="${width - 6}" y="${top + 5}" text-anchor="end">SoC %</text><path d="${pathFor('homeKwh')}" class="series-home"/><path d="${pathFor('solarKwh')}" class="series-solar"/><path d="${pathFor('batteryDischargeKwh')}" class="series-battery"/><path d="${pathFor('evKwh')}" class="series-ev"/><path d="${pathFor('endSocPercent', ySoc)}" class="series-soc"/></svg></div><div class="chart-legend pi-legend"><span class="home">Home</span><span class="solar">Solar</span><span class="battery">Battery → home</span><span class="ev">EV</span><span class="soc">Battery SoC</span></div></section>`;
+  return `<section class="chart-section"><div class="section-title"><div><h2>Delayed energy history</h2><p>Home, Solar, Battery → home, EV and end battery SoC. No intra-day household profile is exposed.</p></div></div><div class="chart-wrap"><svg class="demo-chart pi-history-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="Delayed energy history chart">${grid}${labels}<text x="14" y="${top + 5}">kWh</text><text x="${width - 6}" y="${top + 5}" text-anchor="end">SoC %</text><path d="${pathFor('homeKwh')}" class="series-home"/><path d="${pathFor('solarKwh')}" class="series-solar"/><path d="${pathFor('batteryDischargeKwh')}" class="series-battery"/><path d="${pathFor('evKwh')}" class="series-ev"/><path d="${pathFor('endSocPercent', ySoc)}" class="series-soc"/></svg></div><div class="chart-legend pi-legend"><span class="home">Home</span><span class="solar">Solar</span><span class="battery">Battery → home</span><span class="ev">EV</span><span class="soc">Battery SoC</span></div></section>`;
 }
 
 function privacyNote() {
   return `<section class="privacy-section"><div class="privacy-note"><div class="privacy-icon">✓</div><p><strong>Public-demo boundary:</strong> ${escapeHtml(payload.privacy || 'Sanitised daily totals only.')} Detailed current power, EV state/SoC, entity identifiers, tariff-control commands and hardware-control surfaces stay private to the property.</p></div></section>`;
 }
 
-function unavailable(selected) {
-  return `<section class="empty-state"><strong>${escapeHtml(selected.label)} is still building complete delayed evidence.</strong><span>KEMS enables a period only when its native delayed evidence exists for the required products. Nothing is multiplied, scaled or invented.</span></section>`;
+function unavailable(selected, comparison = false) {
+  const detail = comparison
+    ? 'KEMS enables a financial comparison only when both delayed products contain canonical Total energy cost evidence. Legacy electricity-only cost is never promoted into the bill headline.'
+    : 'KEMS enables a period only when its native delayed evidence exists. Nothing is multiplied, scaled or invented.';
+  return `<section class="empty-state"><strong>${escapeHtml(selected.label)} is still building complete delayed evidence.</strong><span>${escapeHtml(detail)}</span></section>`;
+}
+
+function selectedStrategy(days) {
+  const labels = days.map((day) => day.strategyLabel).filter(Boolean);
+  return labels.at(-1) || 'Adaptive KEMS';
 }
 
 function renderAgile() {
   const selected = selectedPeriod();
   if (!selected.days.length || !selected.complete) {
-    root.innerHTML = hero('Full KEMS Agile', 'The flagship property view reproduced with sanitised evidence that is at least seven days old.') + toolbar(true) + unavailable(selected) + privacyNote();
+    root.innerHTML = hero('KEMS', 'The adaptive KEMS property view reproduced with sanitised evidence that is at least seven days old.') + toolbar(true) + unavailable(selected) + privacyNote();
     return bindControls();
   }
   const metrics = aggregate(selected.days)[mode] || {};
-  const result = economicResult(metrics.netCostGbp);
+  const result = economicResult(metrics.totalEnergyCostGbp);
   const chartDays = period === 'day' || period === 'previous' ? (payload.days || []).slice(-14) : selected.days;
-  root.innerHTML = hero('Full KEMS Agile', 'The flagship property view reproduced with sanitised evidence that is at least seven days old.') + toolbar(true) + `<section class="demo-grid">${card('Home energy', energy(metrics.homeKwh), selected.label)}${card('EV charging', energy(metrics.evKwh), 'Aggregate delayed energy only')}${card('Grid import', energy(metrics.gridImportKwh), selected.label)}${card('Grid export', energy(metrics.gridExportKwh), selected.label)}${card(result.label, result.value, selected.label, result.className)}${card('Solar generation', energy(metrics.solarKwh), mode === 'actual' ? 'Delayed measured evidence' : 'Full KEMS Agile replay')}${card('Battery discharge', energy(metrics.batteryDischargeKwh), mode === 'actual' ? 'Delayed measured evidence' : 'Agile replay route')}${card('End battery SoC', percent(metrics.endSocPercent), selected.days.length === 1 ? dateLabel(selected.days.at(-1).date) : 'Latest day in period')}</section>` + panel(metrics, selected) + trendChart(chartDays, mode) + routing(metrics) + `<section class="routing-section"><div class="section-title"><div><h2>Agile optimiser detail</h2><p>The property Pi also shows the current price horizon, selected half-hour slots, latest-safe protection, economic guard and shadow proof.</p></div></div><div class="empty-state"><strong>Those time-resolved controls remain private.</strong><span>The public page mirrors the outcome graphics using delayed evidence without publishing current household behaviour or a control path.</span></div></section>` + privacyNote();
+  const strategy = selectedStrategy(selected.days);
+  root.innerHTML = hero('KEMS', 'One adaptive product. The internal strategy follows the configured system and export tariff.') + toolbar(true)
+    + `<section class="demo-grid">${card('KEMS strategy', strategy, selected.label)}${card('Home energy', energy(metrics.homeKwh), selected.label)}${card('EV charging', energy(metrics.evKwh), 'Aggregate delayed energy only')}${card('Grid import', energy(metrics.gridImportKwh), selected.label)}${card('Grid export', energy(metrics.gridExportKwh), selected.label)}${card(result.label, result.value, 'Bill-equivalent; battery wear excluded', result.className)}${card('Solar generation', energy(metrics.solarKwh), mode === 'actual' ? 'Delayed measured evidence' : 'Delayed KEMS replay')}${card('End battery SoC', percent(metrics.endSocPercent), selected.days.length === 1 ? dateLabel(selected.days.at(-1).date) : 'Latest day in period')}</section>`
+    + panel(metrics, selected) + trendChart(chartDays, mode) + routing(metrics) + billBreakdown(metrics) + privacyNote();
   bindControls();
-}
-
-function currentLeader(products) {
-  return PRODUCTS.filter(([key]) => key !== 'actual').map(([key, label]) => [number(products[key]?.netCostGbp), key, label]).filter(([cost]) => cost !== null).sort((a, b) => a[0] - b[0])[0] || null;
 }
 
 function roiEvidenceDays() {
@@ -274,46 +314,50 @@ function roiEvidenceDays() {
 
 function roiCards() {
   const days = roiEvidenceDays();
-  const systemCost = number(payload?.economics?.systemCostGbp);
+  const systemCostGbp = number(payload?.economics?.systemCostGbp);
   const products = aggregate(days);
-  if (!Number.isFinite(systemCost) || !days.length) {
-    return `<section class="roi-section"><div class="section-title"><div><h2>Estimated ROI</h2><p>ROI appears when the delayed feed has both the configured KEMS investment and complete comparable strategy evidence.</p></div></div><div class="roi-grid">${PRODUCTS.map(([, label]) => `<article class="roi-card"><span>${escapeHtml(label)}</span><strong>Building evidence</strong><small>No values are invented.</small></article>`).join('')}</div></section>`;
+  if (!Number.isFinite(systemCostGbp) || !days.length) {
+    return `<section class="roi-section"><div class="section-title"><div><h2>Estimated ROI</h2><p>ROI appears when the delayed feed has both the configured KEMS investment and canonical bill-comparable evidence.</p></div></div><div class="roi-grid"><article class="roi-card"><span>KEMS</span><strong>Building evidence</strong><small>No values are invented.</small></article></div></section>`;
   }
-  const actualCost = number(products.actual?.netCostGbp);
-  const evidenceLabel = `${days.length} delayed day${days.length === 1 ? '' : 's'}`;
-  return `<section class="roi-section"><div class="section-title"><div><h2>Estimated ROI</h2><p>Same annualisation rule as the Pi Compare page: measured cost minus each product cost, annualised from native evidence, then divided by the configured system investment (${escapeHtml(money(systemCost))}). ${days.length < 30 ? 'Fewer than 30 complete delayed days are available, so this is early evidence and will stabilise as the public history grows.' : 'A full 30 delayed days are available.'}</p></div></div><div class="roi-grid">${PRODUCTS.map(([key, label]) => {
-    if (key === 'actual') return `<article class="roi-card"><span>${escapeHtml(label)}</span><strong>Baseline</strong><small>Measured reference · ${escapeHtml(evidenceLabel)}</small></article>`;
-    const cost = number(products[key]?.netCostGbp);
-    const saving = Number.isFinite(actualCost) && Number.isFinite(cost) ? actualCost - cost : null;
-    const annualSaving = Number.isFinite(saving) ? saving / days.length * 365 : null;
-    const roi = Number.isFinite(annualSaving) && systemCost > 0 ? annualSaving / systemCost * 100 : null;
-    const payback = Number.isFinite(annualSaving) && annualSaving > 0 ? systemCost / annualSaving : null;
-    return `<article class="roi-card"><span>${escapeHtml(label)}</span><strong>${Number.isFinite(roi) ? `${roi.toFixed(1)}% ROI` : 'Unavailable'}</strong><small>${Number.isFinite(annualSaving) ? `${escapeHtml(money(annualSaving))} annualised saving · ${Number.isFinite(payback) ? `${payback.toFixed(1)} yr payback` : 'no positive payback yet'} · ${escapeHtml(evidenceLabel)}` : 'Incomplete comparable evidence'}</small></article>`;
-  }).join('')}</div></section>`;
+  const actualCost = number(products.actual?.totalEnergyCostGbp);
+  const kemsCost = number(products.kems?.totalEnergyCostGbp);
+  const saving = Number.isFinite(actualCost) && Number.isFinite(kemsCost) ? actualCost - kemsCost : null;
+  const annualSaving = Number.isFinite(saving) ? saving / days.length * 365 : null;
+  const roi = Number.isFinite(annualSaving) && systemCostGbp > 0 ? annualSaving / systemCostGbp * 100 : null;
+  const payback = Number.isFinite(annualSaving) && annualSaving > 0 ? systemCostGbp / annualSaving : null;
+  return `<section class="roi-section"><div class="section-title"><div><h2>Estimated ROI</h2><p>Measured Total energy cost minus KEMS Total energy cost, annualised from native delayed evidence and divided by the configured system investment (${escapeHtml(money(systemCostGbp))}).</p></div></div><div class="roi-grid"><article class="roi-card"><span>Live Data</span><strong>Baseline</strong><small>${days.length} delayed day(s)</small></article><article class="roi-card"><span>KEMS</span><strong>${Number.isFinite(roi) ? `${roi.toFixed(1)}% ROI` : 'Unavailable'}</strong><small>${Number.isFinite(annualSaving) ? `${escapeHtml(money(annualSaving))} annualised saving · ${Number.isFinite(payback) ? `${payback.toFixed(1)} yr payback` : 'no positive payback yet'}` : 'Incomplete comparable evidence'}</small></article></div></section>`;
 }
 
 function renderCompare() {
   const selected = selectedPeriod();
   if (!selected.days.length || !selected.complete) {
-    root.innerHTML = hero('Compare', 'Live Data, Battery & Solar, Full KEMS and Full KEMS Agile on the same delayed evidence basis.') + toolbar() + unavailable(selected) + roiCards() + privacyNote();
+    root.innerHTML = hero('Compare', 'Live Data and KEMS on the same delayed bill-equivalent Total energy cost basis.') + toolbar() + unavailable(selected, true) + roiCards() + privacyNote();
     return bindControls();
   }
   const products = aggregate(selected.days);
-  const leader = currentLeader(products);
+  const liveCost = number(products.actual?.totalEnergyCostGbp);
+  const kemsCost = number(products.kems?.totalEnergyCostGbp);
+  const saving = Number.isFinite(liveCost) && Number.isFinite(kemsCost) ? liveCost - kemsCost : null;
+  const strategy = selectedStrategy(selected.days);
   const strategyCards = PRODUCTS.map(([key, label]) => {
     const metrics = products[key] || {};
-    const exists = number(metrics.netCostGbp) !== null;
-    const isLeader = leader?.[1] === key;
-    const result = economicResult(metrics.netCostGbp);
-    return `<article class="compare-card ${isLeader ? 'leader' : ''} ${result.className}"><div class="strategy-name"><span>${escapeHtml(label)}</span>${isLeader ? '<b class="leader-pill">Current leader</b>' : ''}</div><strong>${exists ? escapeHtml(result.value) : 'Unavailable'}</strong><small>Net electricity result</small><div class="compare-metrics"><div><span>Grid import</span><b>${exists ? compactEnergy(metrics.gridImportKwh) : '—'}</b></div><div><span>Grid export</span><b>${exists ? compactEnergy(metrics.gridExportKwh) : '—'}</b></div><div><span>EV</span><b>${exists ? compactEnergy(metrics.evKwh) : '—'}</b></div><div><span>Solar</span><b>${exists ? compactEnergy(metrics.solarKwh) : '—'}</b></div><div><span>Saving</span><b>${key === 'actual' ? 'Measured' : exists ? money(metrics.savingGbp) : '—'}</b></div></div></article>`;
+    const result = economicResult(metrics.totalEnergyCostGbp);
+    const isKems = key === 'kems';
+    return `<article class="compare-card ${isKems && Number.isFinite(saving) && saving > 0 ? 'leader' : ''} ${result.className}"><div class="strategy-name"><span>${escapeHtml(label)}</span>${isKems ? `<b class="leader-pill">${escapeHtml(strategy)}</b>` : ''}</div><strong>${escapeHtml(result.value)}</strong><small>Total energy cost · battery wear excluded</small><div class="compare-metrics"><div><span>Grid import</span><b>${compactEnergy(metrics.gridImportKwh)}</b></div><div><span>Grid export</span><b>${compactEnergy(metrics.gridExportKwh)}</b></div><div><span>EV</span><b>${compactEnergy(metrics.evKwh)}</b></div><div><span>Solar</span><b>${compactEnergy(metrics.solarKwh)}</b></div><div><span>Saving</span><b>${key === 'actual' ? 'Measured' : Number.isFinite(saving) ? money(saving) : '—'}</b></div></div></article>`;
   }).join('');
-  const rows = [
-    ['Home usage', 'homeKwh', energy], ['EV charging', 'evKwh', energy], ['Grid import', 'gridImportKwh', energy], ['Grid export', 'gridExportKwh', energy],
-    ['Solar generation', 'solarKwh', energy], ['Battery charge', 'batteryChargeKwh', energy], ['Battery → home', 'batteryDischargeKwh', energy], ['Battery export', 'batteryExportKwh', energy]
+  const billRows = [
+    ['Electricity import', 'electricityImportCostGbp', false],
+    ['Electricity standing charge', 'electricityStandingChargeGbp', false],
+    ['Electricity export income', 'electricityExportIncomeGbp', true],
+    ['Supplier/account credits', 'supplierEnergyCreditGbp', true],
+    ['Electricity total', 'electricityTotalCostGbp', false],
+    ['Gas usage', 'gasUsageCostGbp', false],
+    ['Gas standing charge', 'gasStandingChargeGbp', false],
+    ['Gas total', 'gasTotalCostGbp', false],
+    ['TOTAL ENERGY COST', 'totalEnergyCostGbp', false]
   ];
-  const economicsRow = `<tr><th>Net electricity result</th>${PRODUCTS.map(([key]) => `<td><strong>${escapeHtml(economicResult(products[key]?.netCostGbp).value)}</strong></td>`).join('')}</tr>`;
-  const table = `<section class="compare-section"><div class="section-title"><div><h2>Common evidence comparison</h2><p>Every column uses the same delayed date(s) and the same KEMS replay products as the Pi Compare page.</p></div></div><div class="demo-table-wrap"><table class="demo-table"><thead><tr><th>Metric</th>${PRODUCTS.map(([, label]) => `<th>${escapeHtml(label)}</th>`).join('')}</tr></thead><tbody>${rows.map(([label, metric, formatter]) => `<tr><th>${escapeHtml(label)}</th>${PRODUCTS.map(([key]) => `<td>${escapeHtml(formatter(products[key]?.[metric]))}</td>`).join('')}</tr>`).join('')}${economicsRow}</tbody></table></div></section>`;
-  root.innerHTML = hero('Compare', 'Live Data, Battery & Solar, Full KEMS and Full KEMS Agile on the same delayed evidence basis.') + toolbar() + `<section class="compare-cards">${strategyCards}</section>` + table + roiCards() + privacyNote();
+  const table = `<section class="compare-section"><div class="section-title"><div><h2>Common bill comparison</h2><p>Every column uses the same delayed dates and canonical bill contract.</p></div></div><div class="demo-table-wrap"><table class="demo-table"><thead><tr><th>Bill component</th>${PRODUCTS.map(([, label]) => `<th>${escapeHtml(label)}</th>`).join('')}</tr></thead><tbody>${billRows.map(([label, metric, credit]) => `<tr><th>${escapeHtml(label)}</th>${PRODUCTS.map(([key]) => { const value = number(products[key]?.[metric]); return `<td>${value === null ? '—' : `${credit ? '−' : ''}${escapeHtml(money(Math.abs(value)))}`}</td>`; }).join('')}</tr>`).join('')}<tr><th>Saving</th><td>Measured baseline</td><td><strong>${Number.isFinite(saving) ? escapeHtml(money(saving)) : '—'}</strong></td></tr></tbody></table></div></section>`;
+  root.innerHTML = hero('Compare', 'Live Data vs KEMS using the same Total energy cost that is intended to match the household energy account.') + toolbar() + `<section class="compare-cards">${strategyCards}</section>` + table + roiCards() + privacyNote();
   bindControls();
 }
 
@@ -340,7 +384,7 @@ function render() {
 }
 
 async function load() {
-  root.innerHTML = '<section class="loading-screen"><img src="brand-lockup.svg?v=alpha7web20" alt="KEMS"><h1>Loading delayed evidence</h1><p>Checking the sanitised public feed…</p></section>';
+  root.innerHTML = '<section class="loading-screen"><img src="brand-lockup.svg?v=site1" alt="KEMS"><h1>Loading delayed evidence</h1><p>Checking the sanitised public feed…</p></section>';
   try {
     const response = await fetch(LIVE_DEMO_URL, { cache: 'no-store' });
     if (!response.ok) throw new Error(`Public demo API returned ${response.status}.`);
