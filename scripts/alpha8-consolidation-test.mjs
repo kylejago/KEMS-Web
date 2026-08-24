@@ -5,7 +5,7 @@ const read = (path) => fs.readFileSync(path, "utf8");
 const pkg = JSON.parse(read("package.json"));
 const project = JSON.parse(read("config/project.json"));
 
-assert.equal(pkg.version, "0.8.0-alpha8-web.2");
+assert.equal(pkg.version, "0.8.0-alpha8-web.3");
 assert.equal(project.version, pkg.version);
 
 const propertyPages = [
