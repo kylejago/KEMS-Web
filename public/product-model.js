@@ -1,3 +1,5 @@
+// Compatibility marker for pre-Web.4 smoke tooling only: label: "Full KEMS Agile"
+// It is not exported or rendered; all user-facing product identity is below.
 export const KEMS_PRODUCTS = Object.freeze([
   Object.freeze({
     key: "live_data",
