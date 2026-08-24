@@ -12,7 +12,9 @@ function functionBlock(name) {
   const marker = `function ${name}(`;
   const start = source.indexOf(marker);
   assert(start >= 0, `Missing ${name}`);
-  const brace = source.indexOf("{", start);
+  const signatureEnd = source.indexOf(") {", start);
+  assert(signatureEnd >= 0, `Unable to find ${name} body`);
+  const brace = signatureEnd + 2;
   let depth = 0;
   for (let index = brace; index < source.length; index += 1) {
     if (source[index] === "{") depth += 1;
