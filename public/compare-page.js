@@ -41,6 +41,8 @@ function entity(id) {
   return list.find((item) => item.entityId === id || item.entity_id === id || item.id === id) || null;
 }
 function attrs(id) { return entity(id)?.attributes || {}; }
+function entityState(id) { return String(entity(id)?.state ?? "").toLowerCase(); }
+function systemInstalled() { return ["on", "true", "1"].includes(entityState("binary_sensor.kems_system_installed")); }
 function scenarioPeriod(key = period) { return attrs("sensor.kems_scenario_comparison_today")?.periods?.[key] || null; }
 function scenario(key, periodKey = period) {
   const group = scenarioPeriod(periodKey);
@@ -66,13 +68,12 @@ function agileStrategy(periodKey = period) {
 }
 
 function scenarioCostPence(row = {}) {
-  const total = first(row.total_cost_pence, row.net_cost_pence, row.headline_electricity_bill_pence, row.economic_net_cost_pence, row.energy_net_cost_pence);
-  if (Number.isFinite(total)) return total;
+  const energyNet = first(row.energy_net_cost_pence);
+  if (Number.isFinite(energyNet)) return energyNet;
   const importCost = first(row.import_cost_pence, row.grid_import_cost_pence, row.cost_pence);
   if (!Number.isFinite(importCost)) return null;
   const exportIncome = first(row.export_income_pence, row.grid_export_income_pence) || 0;
-  const standing = first(row.standing_charge_pence) || 0;
-  return importCost - exportIncome + standing;
+  return importCost - exportIncome;
 }
 function scenarioMetrics(row, fallbackHome = null, meta = {}) {
   if (!row || row.ready === false) return { home: fallbackHome, gridImport: null, gridExport: null, solar: null, battery: null, cost: null, ready: false, ...meta };
@@ -108,10 +109,39 @@ function yesterdayActual(payload) {
     evidence: "Measured daily history"
   };
 }
+function canonicalUninstalledActual(periodKey = period) {
+  if (systemInstalled()) return null;
+  const baseline = scenario("no_system", periodKey);
+  if (!baseline) return null;
+  return scenarioMetrics(baseline, null, {
+    evidence: "Canonical KEMS measured-demand baseline — physical system not installed",
+    canonicalPeriod: true
+  });
+}
+function periodEvidenceMatches(payload = analytics, periodKey = period) {
+  const expected = first(scenarioPeriod(periodKey)?.days_included);
+  const nativeDays = first(payload?.nativePeriod?.daysIncluded);
+  if (!Number.isFinite(expected) || !Number.isFinite(nativeDays)) return true;
+  return expected === nativeDays;
+}
 function actualMetrics(payload = analytics, periodKey = period) {
+  const canonical = canonicalUninstalledActual(periodKey);
+  if (canonical) return canonical;
   if (periodKey === "yesterday") {
     const daily = yesterdayActual(payload);
     if (daily) return daily;
+  }
+  if (!periodEvidenceMatches(payload, periodKey)) {
+    return {
+      home: null,
+      gridImport: null,
+      gridExport: null,
+      solar: null,
+      battery: null,
+      cost: null,
+      ready: false,
+      evidence: "Updating — Live Data period evidence does not match the selected KEMS replay period"
+    };
   }
   const totals = payload?.actual?.totals || {};
   const solarAvailable = live?.metrics?.solarDataAvailable !== false && live?.availability?.liveSolar !== false;
@@ -143,7 +173,7 @@ function nativeSimulatedMetrics(payload = analytics, fallbackHome = null) {
   };
 }
 function selectedDays(payload = analytics) {
-  return first(payload?.nativePeriod?.daysIncluded, payload?.coverage, Array.isArray(payload?.series) ? payload.series.length : null);
+  return first(scenarioPeriod()?.days_included, payload?.nativePeriod?.daysIncluded, Array.isArray(payload?.series) ? payload.series.length : null, payload?.coverage);
 }
 function productRows(periodKey = period, actualPayload = analytics) {
   const actual = actualMetrics(actualPayload, periodKey);
@@ -154,11 +184,11 @@ function productRows(periodKey = period, actualPayload = analytics) {
       metrics = actual;
     } else if (product.agile) {
       const agile = agileStrategy(periodKey);
-      metrics = scenarioMetrics(agile.raw, actual.home, { fallback: agile.fallback, evidence: agile.evidence || "Agile Smart Export replay" });
+      metrics = scenarioMetrics(agile.raw, actual.home, { fallback: agile.fallback, evidence: agile.evidence || "Canonical KEMS Agile Smart Export replay" });
     } else {
       const exact = scenario(product.scenario, periodKey);
       if (exact) {
-        metrics = scenarioMetrics(exact, actual.home, { evidence: "KEMS scenario replay" });
+        metrics = scenarioMetrics(exact, actual.home, { evidence: "Canonical KEMS scenario replay" });
       } else if (product.key === "full_kems" && ["year", "all_time"].includes(periodKey)) {
         metrics = nativeSimulatedMetrics(actualPayload, actual.home);
       } else if (product.key === "battery_solar" && ["year", "all_time"].includes(periodKey) && Number.isFinite(days) && days <= 30) {
@@ -233,7 +263,7 @@ function render() {
   const winnerKey = lead.row?.key || null;
   const sourcePeriod = scenarioPeriod();
   const missing = rows.filter((row) => !Number.isFinite(row.cost)).map((row) => row.label);
-  app.innerHTML = `<header class="page-heading web25-page-heading"><div><p class="eyebrow">COMPARE</p><h1>Four ways to run the same home</h1><p>One period selector, one common set of metrics: Live Data, Battery & Solar, Full KEMS and Full KEMS Agile.</p></div>${periodControls()}</header><section class="web21-section"><div class="web21-kicker">${lead.complete ? "Winner" : lead.row ? "Current leader · incomplete evidence" : "Comparison building"}</div><h2>${lead.row ? `${esc(lead.row.label)} · ${money(lead.row.cost)}` : "Waiting for comparable costs"}</h2><p class="web21-muted">${lead.complete ? `Lowest net electricity cost for ${esc(PERIODS[period].label.toLowerCase())}.` : `A leader is shown only from strategies with cost evidence; missing values are never treated as zero.${missing.length ? ` Waiting for: ${missing.join(", ")}.` : ""}`}</p><div class="web25-strategy-grid">${rows.map((row) => strategyCard(row, winnerKey, lead.complete)).join("")}</div></section><section class="web21-section"><div class="web21-kicker">Energy & cost</div><h2>Side-by-side comparison</h2><p class="web21-muted">All simulated strategies use retained KEMS evidence only. Long-period values are used only when the selected strategy has genuine retained coverage; KEMS does not scale a 30-day result to invent a year or all-time total.</p>${comparisonTable(rows)}</section><section class="web21-section"><div class="web21-kicker">Cost comparison</div><h2>Net electricity cost</h2>${costChart(rows, winnerKey)}</section>${roiCards()}<section class="web21-section web25-evidence"><div class="web21-kicker">Evidence</div><p>${esc(sourcePeriod?.label || PERIODS[period].label)} · ${esc(String(sourcePeriod?.days_included ?? analytics?.nativePeriod?.daysIncluded ?? analytics?.coverage ?? "—"))} retained day/point(s). Live Data comes from KEMS analytics; scenario strategies use exact replay where retained; Full KEMS can use the native long-period simulation ledger; Agile uses its persisted Smart Export evidence.</p></section>`;
+  app.innerHTML = `<header class="page-heading web25-page-heading"><div><p class="eyebrow">COMPARE</p><h1>Four ways to run the same home</h1><p>One period selector, one common set of metrics: Live Data, Battery & Solar, Full KEMS and Full KEMS Agile.</p></div>${periodControls()}</header><section class="web21-section"><div class="web21-kicker">${lead.complete ? "Winner" : lead.row ? "Current leader · incomplete evidence" : "Comparison building"}</div><h2>${lead.row ? `${esc(lead.row.label)} · ${money(lead.row.cost)}` : "Waiting for comparable costs"}</h2><p class="web21-muted">${lead.complete ? `Lowest net electricity cost for ${esc(PERIODS[period].label.toLowerCase())}.` : `A leader is shown only from strategies with cost evidence; missing values are never treated as zero.${missing.length ? ` Waiting for: ${missing.join(", ")}.` : ""}`}</p><div class="web25-strategy-grid">${rows.map((row) => strategyCard(row, winnerKey, lead.complete)).join("")}</div></section><section class="web21-section"><div class="web21-kicker">Energy & cost</div><h2>Side-by-side comparison</h2><p class="web21-muted">All strategy costs use the same KEMS electricity-bill basis: import cost − export income. Standing charge, battery-wear assumptions and Power Down reward are excluded from winner ranking. Period evidence comes from the same canonical KEMS replay snapshot; mismatched Live Data evidence is left unavailable rather than guessed.</p>${comparisonTable(rows)}</section><section class="web21-section"><div class="web21-kicker">Cost comparison</div><h2>Net electricity cost</h2>${costChart(rows, winnerKey)}</section>${roiCards()}<section class="web21-section web25-evidence"><div class="web21-kicker">Evidence</div><p>${esc(sourcePeriod?.label || PERIODS[period].label)} · ${esc(String(sourcePeriod?.days_included ?? analytics?.nativePeriod?.daysIncluded ?? analytics?.coverage ?? "—"))} retained day/point(s). Strategy values come from canonical KEMS replay evidence. Before physical commissioning, Live Data uses the same measured-demand no-system baseline; after commissioning it requires matching physical period evidence.</p></section>`;
   document.querySelectorAll("[data-period]").forEach((button) => button.addEventListener("click", async () => {
     const next = button.dataset.period;
     if (!PERIODS[next] || next === period) return;
