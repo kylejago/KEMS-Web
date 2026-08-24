@@ -15,19 +15,9 @@ const assert = (condition, message) => {
   if (!condition) throw new Error(message);
 };
 
-assert(
-  (index.match(/href="\/compare\.html"/g) || []).length >= 2,
-  "Desktop and mobile Live Data navigation must open Compare",
-);
-assert(
-  index.includes(`live-page.js?v=${assetVersion}`),
-  "Live page must use the clean renderer",
-);
-assert(
-  !index.includes(`app.js?v=${assetVersion}`) &&
-    !index.includes(`web21-live.js?v=${assetVersion}`),
-  "Live page must not load legacy renderers",
-);
+assert((index.match(/href="\/compare\.html"/g) || []).length >= 2, "Desktop and mobile Live Data navigation must open Compare");
+assert(index.includes(`live-page.js?v=${assetVersion}`), "Live page must use the clean renderer");
+assert(!index.includes(`app.js?v=${assetVersion}`) && !index.includes(`web21-live.js?v=${assetVersion}`), "Live page must not load legacy renderers");
 
 for (const marker of [
   `compare.css?v=${assetVersion}`,
@@ -37,59 +27,42 @@ for (const marker of [
   "/agile.html",
   "/performance.html",
   "/settings.html",
-]) {
-  assert(compareHtml.includes(marker), `Comparison HTML missing ${marker}`);
-}
-assert(
-  !compareHtml.includes("strategy-comparison.js"),
-  "Compare must have one renderer, not the legacy overlay",
-);
+]) assert(compareHtml.includes(marker), `Comparison HTML missing ${marker}`);
+assert(!compareHtml.includes("strategy-comparison.js"), "Compare must have one renderer, not the legacy overlay");
 
 for (const marker of [
   "Live Data",
-  "Battery & Solar",
-  "Full KEMS",
-  "Full KEMS Agile",
+  "KEMS",
   "Today",
   "Yesterday",
   "Last 7 days",
   "Last 30 days",
   "Year",
+  "Rolling 365",
   "All time",
-  "Estimated ROI",
-  "Net electricity cost",
-  "Current leader",
-  "sensor.kems_scenario_comparison_today",
-  "sensor.kems_agile_smart_export_plan",
+  "Estimated KEMS ROI",
+  "Total energy cost",
+  "sensor.kems_energy_cost_comparison",
+  "electricity_import_cost_pence",
+  "electricity_standing_charge_pence",
+  "electricity_export_income_pence",
+  "supplier_energy_credit_pence",
+  "gas_usage_cost_pence",
+  "gas_standing_charge_pence",
+  "total_energy_cost_pence",
+  "Battery wear is excluded",
   "/api/analytics?range=",
-  "KEMS retained period simulation ledger",
-  "Canonical KEMS scenario replay",
-  "mismatched Live Data evidence is left unavailable rather than guessed",
-]) {
-  assert(compareJs.includes(marker), `Extended comparison missing ${marker}`);
-}
-assert(
-  compareJs.includes('analytics: "year"') && compareJs.includes('analytics: "all"'),
-  "Compare must expose real analytics-backed Year and All time periods",
-);
-assert(
-  !/method\s*:\s*["'](?:POST|PUT|PATCH|DELETE)["']/i.test(compareJs),
-  "Comparison page must remain read-only",
-);
+]) assert(compareJs.includes(marker), `Unified comparison missing ${marker}`);
 
-for (const marker of [
-  ".web25-strategy-grid",
-  ".web25-cost-chart",
-  ".compare-periods",
-]) {
+for (const retired of ["Battery & Solar", "Full KEMS Agile", "one four-way canonical KEMS renderer"]) {
+  assert(!compareJs.includes(retired), `Retired user-facing product remains on Compare: ${retired}`);
+}
+assert(compareJs.includes('analytics: "year"') && compareJs.includes('analytics: "all"'), "Compare must expose real analytics-backed Year and All time periods");
+assert(!/method\s*:\s*["'](?:POST|PUT|PATCH|DELETE)["']/i.test(compareJs), "Comparison page must remain read-only");
+
+for (const marker of [".web25-strategy-grid", ".web25-cost-chart", ".compare-periods"]) {
   assert(css.includes(marker), `Extended comparison CSS missing ${marker}`);
 }
-assert(
-  worker.includes('"/compare.html"') &&
-    worker.includes(`/compare-page.js?v=${assetVersion}`),
-  "PWA shell must cache Compare",
-);
+assert(worker.includes('"/compare.html"') && worker.includes(`/compare-page.js?v=${assetVersion}`), "PWA shell must cache Compare");
 
-console.log(
-  `Compare page test passed for ${pkg.version}: one six-period selector and one four-way canonical KEMS renderer are present without inventing mismatched evidence.`,
-);
+console.log(`Compare page test passed for ${pkg.version}: Live Data vs KEMS uses one canonical total-energy-cost contract without local financial reconstruction.`);
