@@ -8,7 +8,7 @@ const compare = fs.readFileSync("public/compare-page.js", "utf8");
 const compareHtml = fs.readFileSync("public/compare.html", "utf8");
 
 assert.equal(project.version, packageJson.version);
-assert.match(project.tagline, /Full KEMS Agile|property data/i);
+assert.match(project.tagline, /actual energy bill|KEMS would have done/i);
 for (const marker of [
   "economic_opportunity_guard",
   "Remaining export plan",
@@ -19,13 +19,14 @@ for (const marker of [
 
 for (const marker of [
   "Live Data",
-  "Battery & Solar",
-  "Full KEMS Agile",
+  "KEMS",
+  "Total energy cost",
   "Estimated ROI",
 ]) {
   assert.match(compare, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
 }
+assert.doesNotMatch(compare, /Battery & Solar|Full KEMS Agile/);
 assert.match(compareHtml, /compare-page\.js\?v=build1/);
 assert.doesNotMatch(compareHtml, /strategy-comparison\.js/);
 
-console.log(`${packageJson.version} Agile-primary comparison contract passed.`);
+console.log(`${packageJson.version} adaptive-KEMS comparison contract passed.`);
