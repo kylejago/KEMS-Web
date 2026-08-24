@@ -63,7 +63,8 @@ for (const marker of [
   "sensor.kems_agile_smart_export_plan",
   "/api/analytics?range=",
   "KEMS retained period simulation ledger",
-  "does not scale",
+  "Canonical KEMS scenario replay",
+  "mismatched Live Data evidence is left unavailable rather than guessed",
 ]) {
   assert(compareJs.includes(marker), `Extended comparison missing ${marker}`);
 }
@@ -90,5 +91,5 @@ assert(
 );
 
 console.log(
-  `Compare page test passed for ${pkg.version}: one six-period selector and one four-way renderer are present without inventing long-period evidence.`,
+  `Compare page test passed for ${pkg.version}: one six-period selector and one four-way canonical KEMS renderer are present without inventing mismatched evidence.`,
 );
