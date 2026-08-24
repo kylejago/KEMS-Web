@@ -53,10 +53,12 @@ for (const marker of [
   "energy-ledger.json",
   "PUBLIC_DEMO_ORIGINS",
   "public-demo-evidence.json",
+  "sensor.kems_energy_cost_comparison",
   "sensor.kems_scenario_comparison_today",
   "sensor.kems_agile_smart_export_plan",
   "sensor.kems_today_energy_summary",
   "Home Assistant Recorder delayed KEMS evidence",
+  "totalEnergyCostGbp",
   "evKwh",
   "systemCostGbp",
 ]) {
@@ -71,8 +73,16 @@ expect(
   "demo hostname must reject every other path",
 );
 expect(
-  gateway.includes('row.products?.fullKemsAgile || row.simulated'),
-  "retained simulation must remain usable as delayed Agile evidence",
+  gateway.includes('products: ["actual", "kems"]'),
+  "public demo must expose only delayed Live Data and KEMS",
+);
+expect(
+  gateway.includes('finance: "only sensor.kems_energy_cost_comparison Recorder evidence is accepted for bill totals"'),
+  "public finance must come only from the canonical HA bill contract",
+);
+expect(
+  !gateway.includes("economic_net_cost_pence"),
+  "public bill totals must never fall back to the battery-wear economic metric",
 );
 expect(
   gateway.includes("row.date <= cutoff"),
@@ -194,5 +204,5 @@ expect(
 );
 
 console.log(
-  `${pkg.version} exact SVG, delayed demo and Cloudflare login contract passed.`,
+  `${pkg.version} exact SVG, canonical delayed demo and Cloudflare login contract passed.`,
 );
