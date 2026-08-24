@@ -1,3 +1,4 @@
+import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -8,9 +9,6 @@ const compare = read("public/compare-page.js");
 const products = read("public/product-model.js");
 const project = JSON.parse(read("config/project.json"));
 const pkg = JSON.parse(read("package.json"));
-const assert = (condition, message) => {
-  if (!condition) throw new Error(message);
-};
 
 assert.equal(pkg.version, "0.8.0-alpha8-web.4");
 assert.equal(project.version, pkg.version);
