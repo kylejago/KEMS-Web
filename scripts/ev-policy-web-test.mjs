@@ -50,9 +50,21 @@ const unavailable = deriveEvPolicyView({
 assert.equal(unavailable.power, 0);
 assert.equal(unavailable.unavailable, true);
 
-const html = fs.readFileSync("public/agile.html", "utf8");
-assert.match(html, /ev-policy-model\.js\?v=build1/);
-assert.match(html, /ev-policy-parity\.js\?v=build1/);
+const kemsHtml = fs.readFileSync("public/kems.html", "utf8");
+assert.match(kemsHtml, /kems-page\.js\?v=build1/);
+assert.doesNotMatch(
+  kemsHtml,
+  /ev-policy-model\.js|ev-policy-parity\.js|web21-agile\.js/,
+  "Canonical KEMS dashboard must not restore the legacy EV/Web21 overlay runtime",
+);
+
+const legacyAgileHtml = fs.readFileSync("public/agile.html", "utf8");
+assert.match(legacyAgileHtml, /\/kems\.html/);
+assert.doesNotMatch(
+  legacyAgileHtml,
+  /ev-policy-model\.js|ev-policy-parity\.js|web21-agile\.js/,
+  "Legacy Agile redirect must remain inert",
+);
 
 const parity = fs.readFileSync("public/ev-policy-parity.js", "utf8");
 assert.match(parity, /binary_sensor\.kems_ev_charging_allowed_by_control/);
@@ -60,8 +72,12 @@ assert.match(parity, /select\.kems_ev_charging_policy/);
 assert.match(parity, /does not fabricate shifted overnight EV energy/);
 assert.doesNotMatch(parity, /services\.async_call|\/api\/config|\/api\/services/);
 
+const worker = fs.readFileSync("public/service-worker.js", "utf8");
+assert.match(worker, /ev-policy-model\.js\?v=build1/);
+assert.match(worker, /ev-policy-parity\.js\?v=build1/);
+
 const demo = fs.readFileSync("public-site/demo.js", "utf8");
 assert.match(demo, /metrics\.evKwh/);
 assert.match(demo, /Aggregate delayed charging energy/);
 
-console.log("EV policy Web/Pi/public presentation contract: PASS");
+console.log("EV policy Web/Pi/public presentation contract: model and privacy evidence retained without reintroducing the legacy KEMS-page overlay runtime: PASS");
