@@ -15,7 +15,7 @@ export const KEMS_PRODUCTS = Object.freeze([
     description: "One adaptive KEMS product that selects self-use, fixed-export or Agile optimisation from the configured system and tariff.",
     source: "simulation",
     capabilities: Object.freeze(["Adaptive tariff strategy", "Solar & battery routing", "Forecast planning", "Bill-equivalent savings", "Full Agile slot plan"]),
-    href: "/agile.html"
+    href: "/kems.html"
   })
 ]);
 

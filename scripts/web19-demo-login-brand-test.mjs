@@ -134,7 +134,7 @@ expect(!worker.includes("approved-logo.png"), "PWA must not cache obsolete PNG c
 const propertyPages = [
   "public/index.html",
   "public/products.html",
-  "public/agile.html",
+  "public/kems.html",
   "public/compare.html",
   "public/remote-access.html",
   "public/performance.html",
@@ -151,6 +151,11 @@ for (const file of propertyPages) {
     `${file} must not embed development-generation cache identity`,
   );
 }
+const legacyAgile = read("public/agile.html");
+expect(legacyAgile.includes("/kems.html"), "legacy Agile URL must redirect to canonical KEMS route");
+expect(!legacyAgile.includes(propertyAssetVersion), "legacy Agile redirect must not start a second property asset shell");
+expect(!/agile-page\.js|web21-agile\.js|id="agile-app"/.test(legacyAgile), "legacy Agile redirect must not start a dashboard renderer");
+
 const publicPages = [
   "public-site/index.html",
   "public-site/demo.html",

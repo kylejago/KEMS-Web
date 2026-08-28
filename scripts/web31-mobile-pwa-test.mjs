@@ -18,11 +18,12 @@ assert.doesNotMatch(manifestText, /logo\.svg/);
 assert.ok(manifest.icons.some((icon) => icon.src.includes("kems-192.png") && icon.sizes === "192x192"));
 assert.ok(manifest.icons.some((icon) => icon.src.includes("kems-512.png") && icon.sizes === "512x512"));
 assert.ok(manifest.icons.some((icon) => icon.src.includes("kems-maskable-512.png") && icon.purpose === "maskable"));
+assert.ok(manifest.shortcuts.some((shortcut) => shortcut.name === "KEMS" && shortcut.url === "/kems.html"));
 
 for (const file of [
   "public/index.html",
   "public/compare.html",
-  "public/agile.html",
+  "public/kems.html",
   "public/performance.html",
   "public/settings.html",
 ]) {
@@ -35,11 +36,16 @@ for (const file of [
   assert.match(html, new RegExp(`pwa-bootstrap\\.js\\?v=${assetVersion}`));
 }
 
+const legacyAgile = read("public/agile.html");
+assert.match(legacyAgile, /\/kems\.html/);
+assert.doesNotMatch(legacyAgile, /pwa-bootstrap\.js|mobile-pwa\.css/, "Legacy route should redirect before starting a second app shell");
+
 const worker = read("public/service-worker.js");
 for (const marker of [
   "kems-web-shell-build1",
   `mobile-pwa.css?v=${assetVersion}`,
   `pwa-bootstrap.js?v=${assetVersion}`,
+  `kems-page.js?v=${assetVersion}`,
   `icons/kems-192.png?v=${assetVersion}`,
   `icons/kems-512.png?v=${assetVersion}`,
   `icons/kems-maskable-512.png?v=${assetVersion}`,
@@ -85,4 +91,4 @@ for (const marker of [
   assert.match(mobileCss, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
 }
 
-console.log(`${pkg.version} mobile/PWA contract passed: install icons, safe-area shell, shared worker bootstrap and Cloudflare Access cache guard are present.`);
+console.log(`${pkg.version} mobile/PWA contract passed: canonical KEMS route, install icons, safe-area shell, shared worker bootstrap and Cloudflare Access cache guard are present.`);

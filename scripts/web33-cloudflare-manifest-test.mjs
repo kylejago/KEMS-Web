@@ -11,7 +11,7 @@ assert.ok(pkg.version.length > 0, "KEMS Web release metadata must include a vers
 const propertyPages = [
   "public/index.html",
   "public/compare.html",
-  "public/agile.html",
+  "public/kems.html",
   "public/performance.html",
   "public/settings.html",
   "public/products.html",
@@ -32,6 +32,10 @@ for (const file of propertyPages) {
     `${file} must not retain the anonymous manifest request`,
   );
 }
+
+const legacyAgile = read("public/agile.html");
+assert.match(legacyAgile, /\/kems\.html/);
+assert.doesNotMatch(legacyAgile, /rel="manifest"/, "Compatibility redirect must not start a second PWA surface");
 
 const bootstrap = read("public/pwa-bootstrap.js");
 for (const marker of [
@@ -68,10 +72,12 @@ for (const marker of [
 
 const manifestText = read("public/site.webmanifest");
 assert.match(manifestText, new RegExp(assetVersion));
+assert.match(manifestText, /\/kems\.html/);
 
 const worker = read("public/service-worker.js");
 assert.match(worker, /kems-web-shell-build1/);
 assert.match(worker, new RegExp(`pwa-bootstrap\\.js\\?v=${assetVersion}`));
+assert.match(worker, /\/kems\.html/);
 
 const project = JSON.parse(read("config/project.json"));
 assert.equal(project.version, pkg.version);
@@ -81,5 +87,5 @@ assert.ok(
 );
 
 console.log(
-  `${pkg.version} Cloudflare manifest contract passed: every property page uses credentialed browser manifest loading and diagnostics verify the same installability path.`,
+  `${pkg.version} Cloudflare manifest contract passed: every active property page, including /kems.html, uses credentialed browser manifest loading.`,
 );

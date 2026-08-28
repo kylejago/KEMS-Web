@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#071217" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="KEMS" />
+  <meta name="description" content="KEMS digital-twin dashboard with canonical power routing, bill-equivalent costs, forecasts, full Agile slot plans, history and read-only safety evidence." />
+  <title>KEMS — Dashboard</title>
+  <link rel="icon" href="logo.svg?v=build1" type="image/svg+xml" />
+  <link rel="manifest" href="site.webmanifest" crossorigin="use-credentials" />
+  <link rel="apple-touch-icon" href="icons/kems-192.png?v=build1" />
+  <link rel="stylesheet" href="styles.css?v=build1" />
+  <link rel="stylesheet" href="brand.css?v=build1" />
+  <link rel="stylesheet" href="agile.css?v=build1" />
+  <link rel="stylesheet" href="web21.css?v=build1" />
+  <link rel="stylesheet" href="web26.css?v=build1" />
+  <link rel="stylesheet" href="mobile-pwa.css?v=build1" />
+</head>
+<body>
+  <div class="ambient" aria-hidden="true"><span></span><span></span><span></span></div>
+  <header class="topbar"><a class="brand" href="/"><img class="brand-lockup" src="brand-lockup.svg?v=build1" alt="KEMS" /></a>
+    <nav class="primary-nav" aria-label="Primary navigation"><a href="/">Live Data</a><a href="/compare.html">Compare</a><a class="active" aria-current="page" href="/kems.html">KEMS</a><a href="/performance.html">Cost &amp; ROI</a><a href="/settings.html">Settings</a></nav>
+    <div class="top-actions"><span class="connection-pill" id="connection-pill"><i></i><span>Starting</span></span><button class="icon-button" id="refresh-button" type="button" aria-label="Refresh KEMS">↻</button></div>
+  </header>
+  <nav class="web21-mobile-nav" aria-label="Mobile navigation"><a href="/">Live</a><a href="/compare.html">Compare</a><a class="active" aria-current="page" href="/kems.html">KEMS</a><a href="/performance.html">Cost</a><a href="/settings.html">Settings</a></nav>
+  <main id="agile-app" class="app agile-app"><section class="loading-screen"><img class="loading-brand-lockup" src="brand-lockup.svg?v=build1" alt="KEMS" /><h1>Loading KEMS</h1><p>Reading the canonical digital twin, Agile plan, forecasts, finance and safety evidence…</p></section></main>
+  <script type="module" src="pwa-bootstrap.js?v=build1"></script>
+  <script type="module" src="kems-page.js?v=build1"></script>
+</body>
+</html>

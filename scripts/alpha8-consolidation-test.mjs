@@ -13,7 +13,7 @@ assert.equal(project.version, pkg.version);
 const propertyPages = [
   "public/index.html",
   "public/compare.html",
-  "public/agile.html",
+  "public/kems.html",
   "public/performance.html",
   "public/settings.html",
   "public/products.html",
@@ -30,6 +30,10 @@ for (const file of propertyPages) {
   assert.match(html, /\?v=build1/, `${file} must use the neutral property asset identity`);
 }
 
+const legacyAgile = read("public/agile.html");
+assert.match(legacyAgile, /\/kems\.html/);
+assert.doesNotMatch(legacyAgile, /rel="manifest"|\?v=build1/, "Legacy Agile URL is redirect-only, not a second PWA page");
+
 const panelState = read("public/panel-state.js");
 assert.match(panelState, /export function derivePanelState/);
 assert.match(panelState, /PANEL_POWER_THRESHOLD_KW/);
@@ -44,9 +48,14 @@ assert.doesNotMatch(
   "Live page must not duplicate the shared PWA bootstrap registration",
 );
 
+const kemsHtml = read("public/kems.html");
+assert.match(kemsHtml, /kems-page\.js\?v=build1/);
+assert.doesNotMatch(kemsHtml, /web21-agile\.js|src="agile-page\.js/);
+
 const worker = read("public/service-worker.js");
 assert.match(worker, /kems-web-shell-build1/);
 assert.match(worker, /panel-state\.js\?v=build1/);
+assert.match(worker, /kems-page\.js\?v=build1/);
 assert.match(worker, /ev-policy-model\.js\?v=build1/);
 assert.match(worker, /ev-policy-parity\.js\?v=build1/);
 assert.match(worker, /url\.pathname === "\/site\.webmanifest"/);
@@ -55,5 +64,6 @@ assert.match(worker, /isAccessRedirect/);
 const manifest = JSON.parse(read("public/site.webmanifest"));
 assert.equal(manifest.display, "standalone");
 assert.ok(manifest.icons.every((icon) => icon.src.includes("build1")));
+assert.ok(manifest.shortcuts.some((shortcut) => shortcut.name === "KEMS" && shortcut.url === "/kems.html"));
 
-console.log(`KEMS ${pkg.version} consolidation contract passed: authenticated PWA parity, shared panel state, EV policy projection and coordinated versioning are intact.`);
+console.log(`KEMS ${pkg.version} consolidation contract passed: authenticated PWA parity, canonical KEMS route, single dashboard runtime, shared panel state, EV policy projection and coordinated versioning are intact.`);
