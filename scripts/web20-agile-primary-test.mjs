@@ -21,7 +21,7 @@ for (const marker of [
   "Today's KEMS plan",
   "Tomorrow",
   "History",
-  "System & control safety",
+  "System &amp; control safety",
   "economic_opportunity_guard",
 ]) {
   assert.match(agile, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
