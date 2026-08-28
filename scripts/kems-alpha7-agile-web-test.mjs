@@ -8,6 +8,7 @@ const project = JSON.parse(read("config/project.json"));
 const index = read("public/index.html");
 const products = read("public/product-model.js");
 const agile = read("public/agile-page.js");
+const agilePanel = read("public/web21-agile.js");
 const serviceWorker = read("public/service-worker.js");
 const publicSite = read("public-site/index.html");
 const publicPrivacy = read("public-site/privacy.html");
@@ -36,20 +37,28 @@ for (const key of ['key: "battery_solar"', 'key: "full_kems"', 'key: "full_kems_
 }
 
 for (const entityId of [
-  "sensor.kems_agile_smart_export_status",
+  "sensor.kems_agile_slots",
+  "sensor.kems_energy_cost_comparison",
   "sensor.kems_agile_price_horizon_status",
   "sensor.kems_agile_partial_horizon_dispatch",
-  "sensor.kems_agile_live_scenario",
   "sensor.kems_agile_shadow_status",
-  "sensor.kems_agile_shadow_command",
-  "sensor.kems_agile_shadow_safety",
+  "sensor.kems_simulated_house_load_power",
+  "sensor.kems_simulated_grid_import_power",
+  "sensor.kems_simulated_grid_export_power",
+  "sensor.kems_simulated_battery_power",
+  "sensor.kems_simulated_battery_state_of_charge",
+  "sensor.kems_simulated_battery_to_home_power",
+  "sensor.kems_simulated_battery_export_power",
 ]) {
-  if (!agile.includes(entityId)) throw new Error(`Agile page contract missing ${entityId}`);
+  if (!agile.includes(entityId) && !agilePanel.includes(entityId)) throw new Error(`KEMS page contract missing ${entityId}`);
 }
-if (!agile.includes("hardware_writes_blocked") || !agile.includes("independent_safety_13_of_13")) {
-  throw new Error("Agile proof safety evidence missing");
+if (!agile.includes("hardware_writes_blocked") || !agile.includes("unknown_price_dispatch_blocked")) {
+  throw new Error("KEMS optimiser safety evidence missing");
 }
-if (/\/api\/services|services\.async_call|method:\s*["']POST/i.test(agile)) throw new Error("Agile page must remain read-only");
+for (const marker of ["today_slots", "tomorrow_slots", "grid_import_kwh", "grid_export_kwh", "battery_export_kwh", "ending_soc_percent"]) {
+  if (!agile.includes(marker)) throw new Error(`KEMS slot contract missing ${marker}`);
+}
+if (/\/api\/services|services\.async_call|method:\s*["']POST/i.test(agile + agilePanel)) throw new Error("KEMS page must remain read-only");
 
 if (!serviceWorker.includes("kems-web-shell-build1") || !serviceWorker.includes(`/brand-lockup.svg?v=${assetVersion}`) || !serviceWorker.includes(`/brand.css?v=${assetVersion}`)) {
   throw new Error("PWA cache is not aligned with neutral KEMS brand shell");
@@ -58,4 +67,4 @@ if (!serviceWorker.includes("/performance.html") || !serviceWorker.includes("/se
 if (!publicSite.includes("kems.uk") || !publicSite.includes("Home Assistant remains private")) throw new Error("Public kems.uk boundary copy missing");
 if (/\/api\/|HA_TOKEN|long-lived access token/i.test(publicSite + publicPrivacy)) throw new Error("Public site must not reference private property APIs or credentials");
 
-console.log(`KEMS ${pkg.version} contract passed: two-product identity, retained Agile read-only evidence and property/public boundaries preserved.`);
+console.log(`KEMS ${pkg.version} contract passed: two-product identity, canonical current routing, full Agile slot evidence and property/public safety boundaries preserved.`);
