@@ -5,13 +5,14 @@ const read = (path) => fs.readFileSync(path, "utf8");
 const pkg = JSON.parse(read("package.json"));
 const project = JSON.parse(read("config/project.json"));
 
-assert.equal(pkg.version, "0.8.0-alpha8-web.5");
+assert.equal(pkg.version, "0.8.0-alpha8-web.6");
 assert.equal(project.version, pkg.version);
 
 const forbiddenLiveIdentity = /(?:alpha7web|alpha8web|kems-alpha7|kems-alpha8|KEMS Alpha7|KEMS Alpha8|Alpha7 shadow)/i;
 const propertySurfaces = [
   "public/index.html",
   "public/compare.html",
+  "public/kems.html",
   "public/agile.html",
   "public/performance.html",
   "public/settings.html",
@@ -21,6 +22,7 @@ const propertySurfaces = [
   "public/site.webmanifest",
   "public/live-page.js",
   "public/panel-widget.js",
+  "public/kems-page.js",
   "public/agile-page.js",
 ];
 for (const file of propertySurfaces) {
@@ -31,7 +33,7 @@ for (const file of propertySurfaces) {
 for (const file of [
   "public/index.html",
   "public/compare.html",
-  "public/agile.html",
+  "public/kems.html",
   "public/performance.html",
   "public/settings.html",
   "public/products.html",
@@ -40,6 +42,7 @@ for (const file of [
   "public/service-worker.js",
   "public/live-page.js",
   "public/panel-widget.js",
+  "public/kems-page.js",
 ]) assert.match(read(file), /build1/, `${file} must use the neutral property build identity`);
 
 const publicSitePages = [
@@ -64,6 +67,7 @@ assert.match(project.principles.at(-1), /Release versions identify published rep
 const productModel = read("public/product-model.js");
 assert.match(productModel, /key: "live_data"/);
 assert.match(productModel, /key: "kems"/);
+assert.match(productModel, /href: "\/kems\.html"/);
 assert.doesNotMatch(productModel, /key: "battery_solar"/);
 assert.doesNotMatch(productModel, /key: "full_kems_agile"/);
 
@@ -74,6 +78,7 @@ const versionPatternSource = bundleAgent.match(/const match = \/(.+)\/i\.exec\(t
 assert.ok(versionPatternSource, "Pi bundle agent must expose an appliance release ordering pattern");
 const versionPattern = new RegExp(versionPatternSource, "i");
 for (const version of [
+  "0.8.0-alpha8-web.6",
   "0.8.0-alpha8-web.5",
   "0.8.0-alpha8-web.4",
   "0.8.0-alpha8-web.3",
@@ -91,4 +96,4 @@ assert.match(remoteHelper, /const HELPER_VERSION = JSON\.parse\(/);
 assert.match(remoteHelper, /\.\.\/package\.json/);
 assert.doesNotMatch(remoteHelper, /const HELPER_VERSION = ["'][^"']*(?:alpha|beta|rc)/i);
 
-console.log("KEMS product identity contract passed: Live Data and KEMS are the two user-facing products; release versions stay in metadata.");
+console.log("KEMS product identity contract passed: Live Data and KEMS are the two user-facing products; /kems.html is canonical and release versions stay in metadata.");
