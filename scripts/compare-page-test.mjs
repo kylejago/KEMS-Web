@@ -24,10 +24,11 @@ for (const marker of [
   `compare-page.js?v=${assetVersion}`,
   `web21.css?v=${assetVersion}`,
   `web26.css?v=${assetVersion}`,
-  "/agile.html",
+  "/kems.html",
   "/performance.html",
   "/settings.html",
 ]) assert(compareHtml.includes(marker), `Comparison HTML missing ${marker}`);
+assert(!compareHtml.includes('href="/agile.html"'), "Compare must not navigate to the retired Agile route");
 assert(!compareHtml.includes("strategy-comparison.js"), "Compare must have one renderer, not the legacy overlay");
 
 for (const marker of [
@@ -65,4 +66,4 @@ for (const marker of [".web25-strategy-grid", ".web25-cost-chart", ".compare-per
 }
 assert(worker.includes('"/compare.html"') && worker.includes(`/compare-page.js?v=${assetVersion}`), "PWA shell must cache Compare");
 
-console.log(`Compare page test passed for ${pkg.version}: Live Data vs KEMS uses one canonical total-energy-cost contract without local financial reconstruction.`);
+console.log(`Compare page test passed for ${pkg.version}: Live Data vs KEMS uses one canonical total-energy-cost contract and the canonical /kems.html route without local financial reconstruction.`);
