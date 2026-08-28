@@ -10,7 +10,7 @@ const products = read("public/product-model.js");
 const project = JSON.parse(read("config/project.json"));
 const pkg = JSON.parse(read("package.json"));
 
-assert.equal(pkg.version, "0.8.0-alpha8-web.4");
+assert.equal(pkg.version, "0.8.0-alpha8-web.5");
 assert.equal(project.version, pkg.version);
 assert.match(products, /key: "live_data"/);
 assert.match(products, /key: "kems"/);
@@ -39,4 +39,4 @@ assert(!compare.includes("economic_net_cost_pence"));
 assert(!compare.includes("Battery & Solar"));
 assert(!compare.includes("Full KEMS Agile"));
 
-console.log("Web.4 unified energy bill contract passed: two products, bill-equivalent totals, no battery wear, no local accounting drift.");
+console.log("Unified energy bill contract passed: two products, bill-equivalent totals, no battery wear, no local accounting drift.");
