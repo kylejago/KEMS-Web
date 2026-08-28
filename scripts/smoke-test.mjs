@@ -154,7 +154,9 @@ try {
   if (!web21Css.includes("panel-flow") || !web21Css.includes("web21-mobile-nav")) {
     throw new Error("Responsive property styles missing.");
   }
-  if (!productModel.includes('label: "Full KEMS Agile"')) throw new Error("Product model incomplete.");
+  if (!productModel.includes('key: "kems"') || !productModel.includes('label: "KEMS"')) {
+    throw new Error("KEMS product model incomplete.");
+  }
   if (!brandCss.includes("brand-lockup") || !brandCss.includes("loading-brand-lockup")) {
     throw new Error("Brand stylesheet incomplete.");
   }
@@ -168,8 +170,14 @@ try {
   ) {
     throw new Error("Frontend bundle incomplete.");
   }
-  if (!agileHtml.includes("Full KEMS Agile") || !agileJs.includes("sensor.kems_agile_shadow_status")) {
-    throw new Error("Full KEMS Agile frontend incomplete.");
+  if (
+    !agileHtml.includes(">KEMS</a>") ||
+    agileHtml.includes("Full KEMS Agile") ||
+    !agileJs.includes("sensor.kems_agile_shadow_status") ||
+    !agileJs.includes("sensor.kems_agile_slots") ||
+    !agileJs.includes("sensor.kems_simulated_grid_export_power")
+  ) {
+    throw new Error("KEMS dashboard frontend incomplete.");
   }
   if (
     !css.includes(".connection-layout") ||

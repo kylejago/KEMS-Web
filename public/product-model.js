@@ -1,5 +1,3 @@
-// Compatibility marker for pre-Web.4 smoke tooling only: label: "Full KEMS Agile"
-// It is not exported or rendered; all user-facing product identity is below.
 export const KEMS_PRODUCTS = Object.freeze([
   Object.freeze({
     key: "live_data",
@@ -16,8 +14,8 @@ export const KEMS_PRODUCTS = Object.freeze([
     shortLabel: "KEMS",
     description: "One adaptive KEMS product that selects self-use, fixed-export or Agile optimisation from the configured system and tariff.",
     source: "simulation",
-    capabilities: Object.freeze(["Adaptive tariff strategy", "Solar & battery routing", "Forecast planning", "Bill-equivalent savings"]),
-    href: "/compare.html"
+    capabilities: Object.freeze(["Adaptive tariff strategy", "Solar & battery routing", "Forecast planning", "Bill-equivalent savings", "Full Agile slot plan"]),
+    href: "/agile.html"
   })
 ]);
 
