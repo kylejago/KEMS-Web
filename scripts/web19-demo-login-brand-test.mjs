@@ -1,45 +1,121 @@
+import crypto from "node:crypto";
 import fs from "node:fs";
 
-const read = (path) => fs.readFileSync(path, "utf8");
+const read = (file) => fs.readFileSync(file, "utf8");
+const bytes = (file) => fs.readFileSync(file);
 const expect = (condition, message) => {
   if (!condition) throw new Error(message);
 };
-
+const SHA = "ef53e22bdff4e4ebd81007c3a6d5f28da0384f547e9036a7be7e3bf2d420b464";
+const SIZE = 877;
+const pkg = JSON.parse(read("package.json"));
+const project = JSON.parse(read("config/project.json"));
 const propertyAssetVersion = "build1";
 const publicAssetVersion = "site1";
-const pkg = JSON.parse(read("package.json"));
 
-const publicIndex = read("public-site/index.html");
-const demo = read("public-site/demo.html");
-const compare = read("public-site/demo-compare.html");
+expect(project.version === pkg.version, "project.json must match package.json");
+expect(
+  pkg.scripts.test.includes("web19-demo-login-brand-test.mjs"),
+  "Delayed demo/login/brand regression must run in npm test",
+);
+
+const master = bytes("brand/kems-logo.svg");
+expect(master.length === SIZE, `canonical SVG must be ${SIZE} bytes`);
+expect(
+  crypto.createHash("sha256").update(master).digest("hex") === SHA,
+  "canonical SVG hash mismatch",
+);
+for (const file of [
+  "public/logo.svg",
+  "public/brand-lockup.svg",
+  "public-site/logo.svg",
+  "public-site/brand-lockup.svg",
+]) {
+  expect(master.equals(bytes(file)), `${file} must be byte-identical to supplied SVG`);
+}
+const sync = read("scripts/sync-approved-logo.mjs");
+expect(
+  sync.includes('brand", "kems-logo.svg"') &&
+    sync.includes(SHA) &&
+    sync.includes("877"),
+  "brand sync must verify local exact SVG",
+);
+expect(
+  !sync.includes("kems_full_brand_concept.png") && !sync.includes("67ad8c3e"),
+  "current release must not fetch old PNG brand",
+);
+
+const gateway = read("gateway.mjs");
+for (const marker of [
+  "demo-api.kems.uk",
+  '"/api/public-demo"',
+  "PUBLIC_DEMO_DELAY_DAYS = 7",
+  "energy-ledger.json",
+  "PUBLIC_DEMO_ORIGINS",
+  "public-demo-evidence.json",
+  "sensor.kems_energy_cost_comparison",
+  "sensor.kems_scenario_comparison_today",
+  "sensor.kems_agile_smart_export_plan",
+  "sensor.kems_today_energy_summary",
+  "Home Assistant Recorder delayed KEMS evidence",
+  "totalEnergyCostGbp",
+  "evKwh",
+  "systemCostGbp",
+]) {
+  expect(gateway.includes(marker), `public demo gateway missing ${marker}`);
+}
+expect(
+  gateway.includes('if (hostname === PUBLIC_DEMO_HOST)'),
+  "demo data must be isolated by hostname",
+);
+expect(
+  gateway.includes('url.pathname !== "/api/public-demo"'),
+  "demo hostname must reject every other path",
+);
+expect(
+  gateway.includes('products: ["actual", "kems"]'),
+  "public demo must expose only delayed Live Data and KEMS",
+);
+expect(
+  gateway.includes('finance: "only sensor.kems_energy_cost_comparison Recorder evidence is accepted for bill totals"'),
+  "public finance must come only from the canonical HA bill contract",
+);
+expect(
+  !gateway.includes("economic_net_cost_pence"),
+  "public bill totals must never fall back to the battery-wear economic metric",
+);
+expect(
+  gateway.includes("row.date <= cutoff"),
+  "Recorder/public evidence must remain behind the configured delayed cutoff",
+);
+expect(gateway.includes("schema: 2"), "public demo must publish schema 2");
+expect(
+  gateway.includes("no live power, EV state/SOC"),
+  "public privacy boundary must explicitly exclude live EV/property telemetry",
+);
+
+const demo = read("public-site/demo.js");
+expect(
+  demo.includes("https://demo-api.kems.uk/api/public-demo"),
+  "public demo must load live delayed API",
+);
+expect(demo.includes("demo-data.json"), "public demo must retain safe static fallback");
+for (const marker of [
+  "let period = 'day'",
+  "economicResult",
+  "evKwh",
+  "systemCostGbp",
+  "completeCompareDay",
+  "kems-panel-stage",
+]) {
+  expect(demo.includes(marker), `current public demo capability missing ${marker}`);
+}
+
 const login = read("public-site/login.html");
-const privacy = read("public-site/privacy.html");
-const notFound = read("public-site/404.html");
-const publicCss = read("public-site/site.css");
-const brand = read("public/brand-lockup.svg");
-const logo = read("public/logo.svg");
-
-expect(publicIndex.includes("kems.uk"), "public homepage must identify kems.uk");
-expect(publicIndex.includes("See KEMS in action"), "public homepage must expose delayed KEMS demo");
-expect(publicIndex.includes("Sign in"), "public homepage must expose property sign-in");
-expect(publicIndex.includes("Home Assistant remains private"), "public homepage must state HA privacy boundary");
-expect(publicIndex.includes(`site.css?v=${publicAssetVersion}`), "public homepage must use neutral site cache key");
-expect(demo.includes(`site.css?v=${publicAssetVersion}`), "public demo must use neutral site cache key");
-expect(compare.includes(`site.css?v=${publicAssetVersion}`), "public comparison must use neutral site cache key");
-expect(login.includes(`site.css?v=${publicAssetVersion}`), "public login must use neutral site cache key");
-expect(privacy.includes(`site.css?v=${publicAssetVersion}`), "public privacy page must use neutral site cache key");
-expect(notFound.includes(`site.css?v=${publicAssetVersion}`), "public 404 must use neutral site cache key");
-expect(!/(?:alpha7web|alpha8web)/i.test(publicIndex + demo + compare + login + privacy + notFound + publicCss), "public site must not embed development-generation cache identity");
-
-expect(brand.includes("KEMS"), "property brand lockup must identify KEMS");
-expect(logo.includes('viewBox="0 0 180 180"'), "canonical KEMS logo viewBox missing");
-expect(logo.includes('aria-label="KEMS logo"'), "canonical KEMS logo accessibility label missing");
-expect(!brand.includes("approved-logo.png"), "brand lockup must not use obsolete PNG concept");
-
-expect(demo.includes("7 days"), "public demo must preserve seven-day delay copy");
-expect(compare.includes("Live Data") && compare.includes("KEMS"), "public comparison must preserve two-product labels");
-expect(login.includes("Cloudflare"), "public login must explain Cloudflare sign-in");
-expect(login.includes("what you are allowed"), "public login must explain property authorisation boundary");
+expect(
+  login.includes("https://kems-uk.cloudflareaccess.com/"),
+  "property login must use Cloudflare App Launcher",
+);
 expect(
   !/<input[^>]+type=["']?password/i.test(login),
   "kems.uk must not implement password form",
@@ -75,7 +151,6 @@ for (const file of propertyPages) {
     `${file} must not embed development-generation cache identity`,
   );
 }
-
 const legacyAgile = read("public/agile.html");
 expect(legacyAgile.includes("/kems.html"), "legacy Agile URL must redirect to canonical KEMS route");
 expect(!legacyAgile.includes(propertyAssetVersion), "legacy Agile redirect must not start a second property asset shell");
@@ -93,7 +168,7 @@ for (const file of publicPages) {
   const text = read(file);
   expect(
     text.includes(publicAssetVersion),
-    `${file} must use current neutral public assets`,
+    `${file} must use current neutral public-site assets`,
   );
   expect(
     !/(?:alpha7web|alpha8web)/i.test(text),
@@ -101,4 +176,38 @@ for (const file of publicPages) {
   );
 }
 
-console.log(`${pkg.version} exact SVG, canonical delayed demo and Cloudflare login contract passed.`);
+const release = read(".github/workflows/release.yml");
+const deploy = read(".github/workflows/deploy-kems-uk.yml");
+const installer = read("install.sh");
+const helper = read("deploy/remote-access-service.mjs");
+expect(
+  release.includes(SHA) &&
+    release.includes("brand/kems-logo.svg") &&
+    release.includes("package.json gateway.mjs server.mjs public brand"),
+  "release must verify/package canonical SVG source",
+);
+expect(
+  deploy.includes(SHA) && deploy.includes("brand/**"),
+  "kems.uk deployment must verify canonical SVG",
+);
+expect(
+  installer.includes('"$SRC/public/logo.svg"') && installer.includes("brand"),
+  "fresh installer must verify/copy exact SVG brand",
+);
+expect(
+  !installer.includes("approved-logo.png"),
+  "fresh installer must not require obsolete PNG artwork",
+);
+expect(
+  helper.includes("const HELPER_VERSION = JSON.parse(") &&
+    helper.includes('../package.json"'),
+  "Remote Access helper must derive current Web/Pi release identity from package.json",
+);
+expect(
+  !/const HELPER_VERSION = ["'][^"']+["']/.test(helper),
+  "Remote Access helper must not duplicate release identity",
+);
+
+console.log(
+  `${pkg.version} exact SVG, canonical delayed demo and Cloudflare login contract passed.`,
+);
