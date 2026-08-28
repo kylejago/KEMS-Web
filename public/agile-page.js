@@ -5,164 +5,316 @@ let stream;
 let snapshot;
 
 const IDS = Object.freeze({
-  status: "sensor.kems_agile_smart_export_status",
-  rate: "sensor.kems_agile_export_rate_now",
-  plan: "sensor.kems_agile_smart_export_plan",
+  slots: "sensor.kems_agile_slots",
+  bill: "sensor.kems_energy_cost_comparison",
+  status: "sensor.kems_status",
+  operatingMode: "select.kems_operating_mode",
+  systemType: "select.kems_system_type",
+  exportTariff: "select.kems_export_tariff",
+  advice: "sensor.kems_advice",
   rolling: "sensor.kems_agile_rolling_export_plan",
   dispatchMode: "sensor.kems_agile_dispatch_mode",
-  dischargeTarget: "sensor.kems_agile_battery_discharge_target_now",
   exportTarget: "sensor.kems_agile_battery_export_target_now",
+  dischargeTarget: "sensor.kems_agile_battery_discharge_target_now",
   horizon: "sensor.kems_agile_price_horizon_status",
   partial: "sensor.kems_agile_partial_horizon_dispatch",
-  live: "sensor.kems_agile_live_scenario",
   shadowStatus: "sensor.kems_agile_shadow_status",
   shadowCommand: "sensor.kems_agile_shadow_command",
   shadowSafety: "sensor.kems_agile_shadow_safety",
-  shadowTargetExport: "sensor.kems_agile_shadow_target_export",
-  shadowTargetDischarge: "sensor.kems_agile_shadow_target_total_discharge"
+  simulatedHouse: "sensor.kems_simulated_house_load_power",
+  simulatedSolar: "sensor.kems_simulated_solar_power",
+  simulatedGridImport: "sensor.kems_simulated_grid_import_power",
+  simulatedGridExport: "sensor.kems_simulated_grid_export_power",
+  simulatedBattery: "sensor.kems_simulated_battery_power",
+  simulatedSoc: "sensor.kems_simulated_battery_state_of_charge",
+  simulatedSolarToBattery: "sensor.kems_simulated_solar_to_battery_power",
+  simulatedBatteryToHome: "sensor.kems_simulated_battery_to_home_power",
+  simulatedBatteryExport: "sensor.kems_simulated_battery_export_power",
+  simulatedGridImportToday: "sensor.kems_simulated_grid_import_today",
+  simulatedGridExportToday: "sensor.kems_simulated_grid_export_today",
+  simulatedSolarToday: "sensor.kems_simulated_solar_generation_today",
+  simulatedBatteryChargeToday: "sensor.kems_simulated_battery_charged_today",
+  simulatedBatteryChargeTodayAlt: "sensor.kems_simulated_battery_charge_today",
+  simulatedBatteryToHomeToday: "sensor.kems_simulated_battery_to_home_today",
+  simulatedBatteryExportToday: "sensor.kems_simulated_battery_export_today",
+  simulatedExportIncomeToday: "sensor.kems_simulated_export_income_today",
+  forecastSolarTomorrow: "sensor.kems_forecast_solar_tomorrow",
+  forecastHouseTomorrow: "sensor.kems_forecast_house_demand_tomorrow",
+  forecastMorningSoc: "sensor.kems_forecast_required_morning_soc",
+  forecastMaximumOvernightSoc: "sensor.kems_forecast_maximum_overnight_soc",
+  forecastAdditionalCheap: "sensor.kems_forecast_additional_cheap_time_required",
+  forecastSolarRecovery: "sensor.kems_forecast_solar_recovery_target",
+  hoursUntilCheap: "sensor.kems_hours_until_next_cheap_period",
+  exportableBattery: "sensor.kems_exportable_battery_energy_remaining",
+  targetBatteryExport: "sensor.kems_target_battery_export_power",
+  sourceValidation: "sensor.kems_source_validation",
+  dataQuality: "sensor.kems_data_quality",
+  accumulatorStatus: "sensor.kems_accumulator_status",
+  simulationReady: "binary_sensor.kems_simulation_ready",
+  panelStatus: "sensor.kems_panel_management_status",
+  controlPreflight: "sensor.kems_control_preflight",
+  controlPlanSafe: "binary_sensor.kems_control_plan_safe",
+  realBackend: "binary_sensor.kems_real_control_backend_available",
+  commandsPermitted: "binary_sensor.kems_control_commands_permitted",
+  commissioning: "sensor.kems_commissioning_readiness",
+  controlBlocked: "sensor.kems_control_blocked_reason"
 });
 
-function escapeHtml(value=""){return String(value).replace(/[&<>"']/g,(c)=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"})[c]);}
-function number(value){const n=Number.parseFloat(value);return Number.isFinite(n)?n:null;}
-function fmt(value,unit="",digits=3){const n=number(value);return n===null?"—":`${new Intl.NumberFormat("en-GB",{maximumFractionDigits:digits}).format(n)}${unit?` ${unit}`:""}`;}
-function moneyFromPence(value){const n=number(value);return n===null?"—":new Intl.NumberFormat("en-GB",{style:"currency",currency:"GBP",maximumFractionDigits:2}).format(n/100);}
-function entity(id){return snapshot?.entities?.find((item)=>item.entityId===id)||null;}
-function state(id,fallback="Unavailable"){const item=entity(id);return item?.available?String(item.state):fallback;}
-function attr(id,key,fallback=null){return entity(id)?.attributes?.[key]??fallback;}
-function tone(value){const text=String(value||"").toLowerCase();if(text.includes("pass")||text.includes("ready")||text.includes("active")||text==="13/13")return"good";if(text.includes("fail")||text.includes("blocked")||text.includes("error"))return"danger";return"attention";}
-function badge(text){return `<span class="agile-badge ${tone(text)}">${escapeHtml(text)}</span>`;}
-function metric(label,value,detail=""){return `<article class="agile-card"><small>${escapeHtml(label)}</small><strong>${escapeHtml(value)}</strong>${detail?`<p>${escapeHtml(detail)}</p>`:""}</article>`;}
-function proof(){return attr(IDS.shadowStatus,"nonzero_export_proof",{})||{};}
-function checks(){return proof().checks||{};}
-function boolWord(value){return value===true?"PASS":value===false?"FAIL":"—";}
-function timeLabel(slot){const raw=slot?.label||slot?.valid_from||"—";return String(raw).replace(/T/," ").replace(/:00(?:\+.*|Z)?$/g,"");}
-
-function rollingAttrs(){return entity(IDS.rolling)?.attributes||{};}
-function economicGuard(){return rollingAttrs().economic_opportunity_guard||{};}
-function deadlineGuard(){return rollingAttrs().deadline_guard||{};}
-
-function selectedSlots(){
-  const rolling=rollingAttrs();
-  const planAttrs=entity(IDS.plan)?.attributes||{};
-  const rows=rolling.selected_slots||planAttrs.today_slots||planAttrs.selected_slots||planAttrs.provisional_selected_slots||[];
-  return Array.isArray(rows)?rows.filter((row)=>number(row.planned_battery_export_kwh??row.rolling_planned_battery_export_kwh??row.battery_export_kwh??row.provisional_planned_battery_export_kwh)>0):[];
+function escapeHtml(value = "") {
+  return String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" })[char]);
+}
+function number(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+function fmt(value, unit = "", digits = 2) {
+  const parsed = number(value);
+  return parsed === null ? "—" : `${new Intl.NumberFormat("en-GB", { maximumFractionDigits: digits }).format(parsed)}${unit ? ` ${unit}` : ""}`;
+}
+function moneyPence(value) {
+  const parsed = number(value);
+  return parsed === null ? "—" : new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(parsed / 100);
+}
+function signedCredit(value) {
+  const parsed = number(value);
+  return parsed === null ? "—" : `−${moneyPence(Math.abs(parsed))}`;
+}
+function entity(id) {
+  return snapshot?.entities?.find((item) => item.entityId === id) || null;
+}
+function state(id, fallback = "Unavailable") {
+  const item = entity(id);
+  return item?.available ? String(item.state) : fallback;
+}
+function attr(id, key, fallback = null) {
+  return entity(id)?.attributes?.[key] ?? fallback;
+}
+function entityNumber(id) {
+  return entity(id)?.available ? number(entity(id)?.state) : null;
+}
+function firstEntityNumber(...ids) {
+  for (const id of ids) {
+    const value = entityNumber(id);
+    if (value !== null) return value;
+  }
+  return null;
+}
+function tone(value) {
+  const text = String(value || "").toLowerCase();
+  if (["on", "ready", "healthy", "pass", "passed", "active", "success"].some((word) => text.includes(word))) return "good";
+  if (["fail", "error", "unsafe"].some((word) => text.includes(word))) return "danger";
+  return "attention";
+}
+function badge(text) {
+  return `<span class="agile-badge ${tone(text)}">${escapeHtml(text)}</span>`;
+}
+function metric(label, value, detail = "") {
+  return `<article class="agile-card"><small>${escapeHtml(label)}</small><strong>${escapeHtml(value)}</strong>${detail ? `<p>${escapeHtml(detail)}</p>` : ""}</article>`;
+}
+function boolWord(value) {
+  return value === true ? "PASS" : value === false ? "FAIL" : "—";
+}
+function billContract() {
+  return entity(IDS.bill)?.attributes || {};
+}
+function billPeriod(key) {
+  return billContract()?.periods?.[key] || null;
+}
+function rollingAttrs() {
+  return entity(IDS.rolling)?.attributes || {};
+}
+function slotAttrs() {
+  return entity(IDS.slots)?.attributes || {};
+}
+function actionsLabel(slot = {}) {
+  const raw = Array.isArray(slot.actions) ? slot.actions.join(", ") : String(slot.actions || slot.action || "—");
+  const text = raw.toLowerCase();
+  if (text.includes("cheap charge")) return "Cheap charge";
+  if (text.includes("maximum discharge")) return "Max discharge";
+  if (text.includes("deadline")) return "Deadline export";
+  if (text.includes("export battery")) return "Battery export";
+  if (text.includes("store solar")) return "Store solar";
+  if (text.includes("battery to home") || text.includes("battery → home")) return "Battery → home";
+  return raw.length > 42 ? `${raw.slice(0, 39)}…` : raw;
+}
+function slotRows(slots, start, end) {
+  return (Array.isArray(slots) ? slots : []).slice(start, end);
+}
+function slotTable(title, slots, start, end, emptyText) {
+  const rows = slotRows(slots, start, end);
+  return `<section class="agile-card agile-slot-block"><h3>${escapeHtml(title)}</h3>${rows.length ? `<div class="agile-table-wrap"><table class="agile-table agile-slot-table"><thead><tr><th>Time</th><th>Rate</th><th>KEMS plan</th><th>Grid in / out</th><th>Batt out</th><th>End SOC</th></tr></thead><tbody>${rows.map((slot) => `<tr><td>${escapeHtml(slot.label || "—")}</td><td>${fmt(slot.rate_pence, "p/kWh", 2)}</td><td>${escapeHtml(actionsLabel(slot))}</td><td>${fmt(slot.grid_import_kwh, "", 2)} / ${fmt(slot.grid_export_kwh, "", 2)} kWh</td><td>${fmt(slot.battery_export_kwh, "kWh", 2)}</td><td>${fmt(slot.ending_soc_percent, "%", 1)}</td></tr>`).join("")}</tbody></table></div>` : `<div class="empty">${escapeHtml(emptyText)}</div>`}</section>`;
+}
+function slotPlan(day, slots) {
+  const prefix = day === "Today" ? "Today" : "Tomorrow";
+  return `<div class="agile-slot-grid">${slotTable(`${prefix} — 00:00 to 07:30`, slots, 0, 16, `${prefix}'s early plan is not available yet.`)}${slotTable(`${prefix} — 08:00 to 15:30`, slots, 16, 32, `${prefix}'s daytime plan is not available yet.`)}${slotTable(`${prefix} — 16:00 to 23:30`, slots, 32, 48, `${prefix}'s evening plan is not available yet.`)}</div>`;
+}
+function tomorrowSummary(slots, slotsState) {
+  const rows = Array.isArray(slots) ? slots : [];
+  const totals = rows.reduce((acc, slot) => {
+    acc.import += number(slot.grid_import_kwh) || 0;
+    acc.export += number(slot.grid_export_kwh) || 0;
+    acc.batteryExport += number(slot.battery_export_kwh) || 0;
+    acc.income += (number(slot.rate_pence) || 0) * (number(slot.grid_export_kwh) || 0);
+    if (number(slot.ending_soc_percent) !== null) acc.endSoc = number(slot.ending_soc_percent);
+    return acc;
+  }, { import: 0, export: 0, batteryExport: 0, income: 0, endSoc: null });
+  return `<div class="agile-grid">
+    ${metric("Price publication", slotsState.tomorrow_status || "Waiting for publication", `${rows.length}/${slotsState.tomorrow_expected || 48} published slots`)}
+    ${metric("Forecast house demand", fmt(entityNumber(IDS.forecastHouseTomorrow), "kWh", 2), "Tomorrow")}
+    ${metric("Forecast solar", fmt(entityNumber(IDS.forecastSolarTomorrow), "kWh", 2), "Tomorrow")}
+    ${metric("Planned grid import", fmt(totals.import, "kWh", 2), "Published slot plan")}
+    ${metric("Planned grid export", fmt(totals.export, "kWh", 2), "Published slot plan")}
+    ${metric("Planned battery export", fmt(totals.batteryExport, "kWh", 2), "Published slot plan")}
+    ${metric("Estimated Agile export income", moneyPence(totals.income), "Outgoing Agile rates only")}
+    ${metric("Forecast end SOC", fmt(totals.endSoc, "%", 1), "Last published slot")}
+  </div><p class="safety-note">KEMS does not infer tomorrow's import cost from the Outgoing Agile export-rate feed. Monetary forecasts are only shown where the published data supports them.</p>`;
+}
+function historyCard(key, label) {
+  const group = billPeriod(key);
+  if (!group) return metric(label, "Building", "No retained bill-equivalent period yet");
+  const live = group.live_data || {};
+  const kems = group.kems || {};
+  return `<article class="agile-card agile-history-card"><small>${escapeHtml(label)}</small><div class="proof-list"><div><span>Live total</span><b>${moneyPence(live.total_energy_cost_pence)}</b></div><div><span>KEMS total</span><b>${moneyPence(kems.total_energy_cost_pence)}</b></div><div><span>KEMS saving</span><b>${moneyPence(group.saving_pence)}</b></div><div><span>Live import</span><b>${fmt(live.grid_import_kwh, "kWh")}</b></div><div><span>KEMS import</span><b>${fmt(kems.grid_import_kwh, "kWh")}</b></div><div><span>KEMS export</span><b>${fmt(kems.grid_export_kwh, "kWh")}</b></div></div></article>`;
+}
+function advancedEvidence() {
+  const rolling = rollingAttrs();
+  const guard = rolling.economic_opportunity_guard || {};
+  const deadline = rolling.deadline_guard || {};
+  const proof = attr(IDS.shadowStatus, "nonzero_export_proof", {}) || {};
+  const tracking = proof.replay?.tracking || {};
+  const checks = proof.checks || {};
+  const horizon = entity(IDS.horizon)?.attributes || {};
+  return `<details class="agile-card agile-details"><summary>Advanced optimiser &amp; shadow evidence</summary><div class="proof-grid agile-details-body">
+    <article class="agile-card"><small>Economic opportunity guard</small><strong>${guard.active ? "ACTIVE" : "Standby"}</strong><div class="proof-list"><div><span>Current price</span><b>${fmt(guard.current_rate_pence, "p/kWh")}</b></div><div><span>Marginal future price</span><b>${fmt(guard.marginal_future_rate_pence, "p/kWh")}</b></div><div><span>Price advantage</span><b>${fmt(guard.price_advantage_pence, "p/kWh")}</b></div><div><span>Future capacity</span><b>${fmt(guard.future_capacity_kwh, "kWh")}</b></div></div></article>
+    <article class="agile-card"><small>Latest-safe protection</small><strong>${escapeHtml(deadline.mode || rolling.dispatch_mode || "Building")}</strong><div class="proof-list"><div><span>Target reachable</span><b>${boolWord(deadline.target_physically_reachable_now)}</b></div><div><span>Capacity margin</span><b>${fmt(deadline.solar_aware_deadline_margin_kwh ?? rolling.deadline_capacity_margin_kwh, "kWh")}</b></div><div><span>Latest safe start</span><b>${escapeHtml(deadline.latest_safe_export_start || "—")}</b></div><div><span>Forecast solar used</span><b>${boolWord(deadline.forecast_solar_used)}</b></div></div></article>
+    <article class="agile-card"><small>Shadow proof</small><strong>${escapeHtml(proof.state || state(IDS.shadowStatus))}</strong><div class="proof-list"><div><span>Candidate export</span><b>${fmt(proof.candidate_export_kw, "kW")}</b></div><div><span>Replay export</span><b>${fmt(tracking.outcome?.battery_export_kw, "kW")}</b></div><div><span>Tracking</span><b>${fmt(tracking.tracking_score_percent, "%", 1)}</b></div><div><span>Hardware blocked</span><b>${boolWord(checks.hardware_writes_blocked)}</b></div></div></article>
+    <article class="agile-card"><small>Price horizon</small><strong>${escapeHtml(state(IDS.horizon))}</strong><div class="proof-list"><div><span>Current slot known</span><b>${boolWord(attr(IDS.partial, "current_slot_known", horizon.current_slot_known))}</b></div><div><span>Upstream gap verified</span><b>${boolWord(attr(IDS.partial, "upstream_gap_verified"))}</b></div><div><span>Unknown dispatch blocked</span><b>${boolWord(attr(IDS.partial, "unknown_price_dispatch_blocked"))}</b></div><div><span>Missing prices</span><b>${escapeHtml(String((horizon.missing_labels || horizon.missing_relevant_labels || []).length))}</b></div></div></article>
+  </div></details>`;
 }
 
-function routingRows(live, today){
-  const rows=[
-    ["Solar → home",live.current_solar_to_home_kw,today.solar_to_home_kwh],
-    ["Solar → battery",live.current_solar_to_battery_kw,today.solar_to_battery_kwh],
-    ["Solar → export",live.current_solar_export_kw,today.solar_export_kwh],
-    ["Grid → battery",live.current_grid_to_battery_kw,today.grid_to_battery_kwh],
-    ["Battery → home",live.current_battery_to_home_kw,today.battery_to_home_kwh],
-    ["Battery → export",live.current_battery_export_kw,today.battery_export_kwh],
-    ["Grid import",live.current_grid_import_kw,today.grid_import_kwh],
-    ["Grid export",live.current_grid_export_kw,today.grid_export_kwh]
-  ];
-  return `<div style="overflow:auto"><table class="agile-table"><thead><tr><th>Route</th><th>Now</th><th>Today</th></tr></thead><tbody>${rows.map(([label,nowValue,todayValue])=>`<tr><td>${escapeHtml(label)}</td><td>${fmt(nowValue,"kW")}</td><td>${fmt(todayValue,"kWh")}</td></tr>`).join("")}</tbody></table></div>`;
-}
+function render() {
+  if (!snapshot?.connected) {
+    app.innerHTML = `<section class="agile-card empty"><h1>KEMS data unavailable</h1><p>The property dashboard is not currently connected to Home Assistant/KEMS.</p></section>`;
+    return;
+  }
 
-function render(){
-  if(!snapshot?.connected){app.innerHTML=`<section class="agile-card empty"><h1>Agile data unavailable</h1><p>The property dashboard is not currently connected to Home Assistant/KEMS.</p></section>`;return;}
-  const live=entity(IDS.live)?.attributes||{};
-  const command=entity(IDS.shadowCommand)?.attributes||{};
-  const horizon=entity(IDS.horizon)?.attributes||{};
-  const rolling=rollingAttrs();
-  const guard=economicGuard();
-  const deadline=deadlineGuard();
-  const planPeriods=attr(IDS.plan,"periods",{})||{};
-  const today=planPeriods?.today?.agile_smart_export||{};
-  const p=proof();
-  const strict=p.replay?.tracking||{};
-  const rows=selectedSlots();
-  const exportTarget=number(state(IDS.exportTarget))??number(command.battery_export_kw)??number(entity(IDS.shadowTargetExport)?.state);
-  const totalDischarge=number(state(IDS.dischargeTarget))??number(command.total_discharge_kw)??number(entity(IDS.shadowTargetDischarge)?.state);
-  const ac=number(command.total_kh7_ac_output_kw);
-  const safety=state(IDS.shadowSafety);
-  const missing=horizon.missing_labels||horizon.missing_relevant_labels||[];
-  const decision=rolling.dispatch_action||live.routing_action||state(IDS.dispatchMode);
-  const guardDetail=guard.active
-    ? `Early export active: current slot is ${fmt(guard.price_advantage_pence,"p/kWh",2)} better than the marginal future slot.`
-    : guard.reason||"No early economic pre-emption required.";
-  const deadlineDetail=deadline.latest_safe_export_start
-    ? `Latest safe start ${new Date(deadline.latest_safe_export_start).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})}`
-    : "Latest-safe evidence still building";
+  const slotsState = slotAttrs();
+  const todaySlots = Array.isArray(slotsState.today_slots) ? slotsState.today_slots : [];
+  const tomorrowSlots = Array.isArray(slotsState.tomorrow_slots) ? slotsState.tomorrow_slots : [];
+  const todayBill = billPeriod("today") || {};
+  const kemsBill = todayBill.kems || {};
+  const rolling = rollingAttrs();
+  const currentAction = slotsState.current_action || rolling.dispatch_action || state(IDS.dispatchMode, "Building plan");
+  const currentRate = number(slotsState.current_rate_pence);
+  const exportTarget = firstEntityNumber(IDS.targetBatteryExport, IDS.exportTarget);
+  const batteryChargeToday = firstEntityNumber(IDS.simulatedBatteryChargeToday, IDS.simulatedBatteryChargeTodayAlt);
 
-  app.innerHTML=`
-    <section class="agile-hero"><div><p class="eyebrow">KEMS · flagship strategy · read-only evidence</p><h1>Full KEMS Agile</h1><p>KEMS' primary optimisation view: live property demand, current routing, Region L Agile prices, rolling export plan, latest-safe protection, economic early-export guard and independent shadow proof.</p></div>${badge(state(IDS.status))}</section>
-    <section class="agile-card agile-section"><h2>Decision now</h2><strong>${escapeHtml(decision||"Building plan")}</strong><p>${escapeHtml(guardDetail)} ${escapeHtml(deadlineDetail)}.</p></section>
-    <section class="agile-grid">
-      ${metric("Agile export rate",fmt(state(IDS.rate),"p/kWh",2),"Current Region L settlement rate")}
-      ${metric("Dispatch mode",state(IDS.dispatchMode,rolling.dispatch_mode||"—"),"Rolling optimiser → shadow path")}
-      ${metric("Battery export target",fmt(exportTarget,"kW"),`Total discharge ${fmt(totalDischarge,"kW")}`)}
-      ${metric("Exportable battery",fmt(rolling.exportable_battery_energy_kwh,"kWh"),`Planned ${fmt(rolling.planned_battery_export_kwh,"kWh")}`)}
-      ${metric("Target SOC",fmt(rolling.target_soc_percent??10,"%",1),deadlineDetail)}
-      ${metric("Price horizon",state(IDS.horizon),missing.length?`Missing: ${missing.join(", ")}`:"Current relevant prices known")}
-      ${metric("Economic guard",guard.active?"ACTIVE":"Standby",guardDetail)}
-      ${metric("Independent safety",safety,`${attr(IDS.shadowSafety,"passed_checks","—")}/${attr(IDS.shadowSafety,"total_checks","—")} checks`)}
-    </section>
-    <section class="agile-section"><h2>Current routing</h2><p>Live house demand is kept separate from digital-twin routing so measured and simulated values are never blurred together.</p><div class="agile-grid">
-      ${metric("House demand — live",fmt(live.live_house_load_kw??live.current_house_load_kw,"kW"),live.live_house_load_source||"sensor.kems_house_load")}
-      ${metric("Digital-twin demand",fmt(live.simulated_house_load_kw,"kW"),live.simulated_house_load_basis||live.routing_basis||"slot replay")}
-      ${metric("Solar AC",fmt(live.current_solar_power_kw,"kW"),"Current routed solar")}
-      ${metric("Battery → home",fmt(live.current_battery_to_home_kw,"kW"),"Digital-twin route")}
-      ${metric("Battery → export",fmt(live.current_battery_export_kw??exportTarget,"kW"),"Current Agile target route")}
-      ${metric("Grid export",fmt(live.current_grid_export_kw,"kW"),"Current simulated export flow")}
+  app.innerHTML = `
+    <section class="agile-hero"><div><p class="eyebrow">KEMS · digital twin · read-only</p><h1>KEMS</h1><p>What KEMS would have done with the configured system, tariff and strategy. Current power uses the canonical Alpha8 simulation entities; costs use the coordinated Energy Bill contract; Agile planning uses the stable customer-facing slot feed.</p></div>${badge(state(IDS.status))}</section>
+
+    <section class="agile-card agile-section"><h2>Decision now</h2><strong>${escapeHtml(currentAction)}</strong><p>${currentRate === null ? "Waiting for the current published Agile rate." : `Current Agile export rate ${fmt(currentRate, "p/kWh", 2)}.`} Hardware control remains read-only from KEMS Web.</p></section>
+
+    <section class="agile-section"><h2>KEMS now</h2><p>Canonical instantaneous digital-twin power. No browser-side routing reconstruction is used for these headline values.</p><div class="agile-grid">
+      ${metric("House load", fmt(entityNumber(IDS.simulatedHouse), "kW"), "KEMS digital twin")}
+      ${metric("Solar", fmt(entityNumber(IDS.simulatedSolar), "kW"), "Canonical simulated solar")}
+      ${metric("Grid import", fmt(entityNumber(IDS.simulatedGridImport), "kW"), "Canonical simulated routing")}
+      ${metric("Grid export", fmt(entityNumber(IDS.simulatedGridExport), "kW"), "Canonical simulated routing")}
+      ${metric("Battery power", fmt(entityNumber(IDS.simulatedBattery), "kW"), "Canonical simulated battery")}
+      ${metric("Battery SOC", fmt(entityNumber(IDS.simulatedSoc), "%", 1), "KEMS simulated SOC")}
+      ${metric("Solar → battery", fmt(entityNumber(IDS.simulatedSolarToBattery), "kW"), "Canonical route")}
+      ${metric("Battery → home", fmt(entityNumber(IDS.simulatedBatteryToHome), "kW"), "Canonical route")}
+      ${metric("Battery → export", fmt(entityNumber(IDS.simulatedBatteryExport), "kW"), "Canonical route")}
     </div></section>
-    <section class="agile-card agile-section"><h2>Routing now vs today</h2>${routingRows(live,today)}<p class="safety-note">Solar curtailed/capped today: <b>${fmt(today.solar_curtailed_kwh,"kWh")}</b> where KEMS has enough evidence to calculate it.</p></section>
-    <section class="agile-card agile-section"><h2>Remaining export plan</h2><p>KEMS replans on every coordinator scan. Stronger current prices can now trigger proactive export before the hard latest-safe-start cliff when waiting risks pushing energy into a cheaper slot.</p>${rows.length?`<div style="overflow:auto"><table class="agile-table"><thead><tr><th>Slot</th><th>Rate</th><th>Battery export</th><th>Target</th><th>Why</th></tr></thead><tbody>${rows.slice(0,20).map((row)=>`<tr><td>${escapeHtml(timeLabel(row))}</td><td>${fmt(row.rate_pence,"p/kWh",2)}</td><td>${fmt(row.planned_battery_export_kwh??row.rolling_planned_battery_export_kwh??row.provisional_planned_battery_export_kwh??row.battery_export_kwh,"kWh")}</td><td>${fmt(row.rolling_target_battery_export_kw??row.provisional_target_battery_export_kw,"kW")}</td><td>${escapeHtml(row.rolling_action||row.actions?.[0]||"price-ranked rolling plan")}</td></tr>`).join("")}</tbody></table></div>`:`<div class="empty">No battery-export slots are selected in the currently exposed plan.</div>`}</section>
-    <section class="proof-grid">
-      <article class="agile-card"><small>Economic opportunity guard</small><strong>${guard.active?"ACTIVE":"Standby"}</strong><div class="proof-list">
-        <div><span>Current price</span><b>${fmt(guard.current_rate_pence,"p/kWh",2)}</b></div>
-        <div><span>Marginal future price</span><b>${fmt(guard.marginal_future_rate_pence,"p/kWh",2)}</b></div>
-        <div><span>Price advantage</span><b>${fmt(guard.price_advantage_pence,"p/kWh",2)}</b></div>
-        <div><span>Uncertainty margin</span><b>${fmt(guard.uncertainty_margin_kwh,"kWh")}</b></div>
-        <div><span>Minimum early export</span><b>${fmt(guard.minimum_current_export_kwh,"kWh")}</b></div>
-        <div><span>Future capacity</span><b>${fmt(guard.future_capacity_kwh,"kWh")}</b></div>
-      </div></article>
-      <article class="agile-card"><small>Latest-safe protection</small><strong>${escapeHtml(deadline.mode||rolling.dispatch_mode||"Building")}</strong><div class="proof-list">
-        <div><span>Target reachable</span><b>${boolWord(deadline.target_physically_reachable_now)}</b></div>
-        <div><span>Capacity margin</span><b>${fmt(deadline.solar_aware_deadline_margin_kwh??rolling.deadline_capacity_margin_kwh,"kWh")}</b></div>
-        <div><span>Latest safe start</span><b>${escapeHtml(deadline.latest_safe_export_start||"—")}</b></div>
-        <div><span>Guarded start</span><b>${escapeHtml(deadline.guarded_latest_safe_export_start||"—")}</b></div>
-        <div><span>Forecast solar used</span><b>${boolWord(deadline.forecast_solar_used)}</b></div>
-        <div><span>Skippable half-hours</span><b>${escapeHtml(deadline.skippable_half_hours??"—")}</b></div>
-      </div></article>
-    </section>
-    <section class="proof-grid">
-      <article class="agile-card"><small>Non-zero export proof</small><strong>${escapeHtml(p.state||state(IDS.shadowStatus))}</strong><p class="safety-note">Hardware writes remain <b>blocked</b>. This page reports the proven digital-twin shadow chain; it cannot issue a FoxESS command.</p><div class="proof-list">
-        <div><span>Candidate export</span><b>${fmt(p.candidate_export_kw,"kW")}</b></div>
-        <div><span>Replay export</span><b>${fmt(strict.outcome?.battery_export_kw,"kW")}</b></div>
-        <div><span>Strict tracking</span><b>${fmt(strict.tracking_score_percent,"%",1)}</b></div>
-        <div><span>Strict tolerance</span><b>${fmt(p.strict_tolerance_kw??0.01,"kW",2)}</b></div>
-        <div><span>Feed-in First</span><b>${boolWord(checks().feed_in_first_mode)}</b></div>
-        <div><span>Grid export allowed</span><b>${boolWord(checks().grid_export_allowed)}</b></div>
-        <div><span>13/13 safety</span><b>${boolWord(checks().independent_safety_13_of_13)}</b></div>
-        <div><span>Hardware blocked</span><b>${boolWord(checks().hardware_writes_blocked)}</b></div>
-      </div></article>
-      <article class="agile-card"><small>Horizon qualification</small><strong>${escapeHtml(state(IDS.partial,"Full horizon / inactive"))}</strong><div class="proof-list">
-        <div><span>Current slot known</span><b>${boolWord(attr(IDS.partial,"current_slot_known",horizon.current_slot_known))}</b></div>
-        <div><span>Upstream gap verified</span><b>${boolWord(attr(IDS.partial,"upstream_gap_verified"))}</b></div>
-        <div><span>Unknown capacity reserved</span><b>${fmt(attr(IDS.partial,"unknown_price_reserved_capacity_kwh"),"kWh")}</b></div>
-        <div><span>Unknown dispatch blocked</span><b>${boolWord(attr(IDS.partial,"unknown_price_dispatch_blocked"))}</b></div>
-      </div></article>
-    </section>
-    <section class="agile-card agile-section"><h2>Today economics</h2><div class="agile-grid">
-      ${metric("Import cost",moneyFromPence(today.import_cost_pence),`${fmt(today.grid_import_kwh,"kWh")} imported`)}
-      ${metric("Export income",moneyFromPence(today.export_income_pence),`${fmt(today.grid_export_kwh,"kWh")} exported`)}
-      ${metric("Economic net cost",moneyFromPence(today.economic_net_cost_pence??((number(today.import_cost_pence)||0)-(number(today.export_income_pence)||0))),"Common comparison basis")}
-      ${metric("Ending SOC",fmt(today.ending_soc_percent,"%",1),"Current simulated end-of-period SOC")}
-    </div></section>`;
+
+    <section class="agile-section"><h2>Today — Energy Bill</h2><p>The same bill-equivalent accounting shown by the managed Home Assistant KEMS dashboard.</p><div class="agile-grid">
+      ${metric("Electricity import", moneyPence(kemsBill.electricity_import_cost_pence), "KEMS today")}
+      ${metric("Standing charge", moneyPence(kemsBill.electricity_standing_charge_pence), "Electricity")}
+      ${metric("Export income", signedCredit(kemsBill.electricity_export_income_pence), "Credited against electricity")}
+      ${metric("Supplier credits", signedCredit(kemsBill.supplier_energy_credit_pence), "Where applicable")}
+      ${metric("Electricity total", moneyPence(kemsBill.electricity_total_cost_pence), "Bill-equivalent")}
+      ${metric("Gas", moneyPence(kemsBill.gas_total_cost_pence), "Same household gas basis")}
+      ${metric("TOTAL ENERGY COST", moneyPence(kemsBill.total_energy_cost_pence), "Electricity + gas")}
+      ${metric("KEMS saving", moneyPence(todayBill.saving_pence), "Live Data minus KEMS")}
+    </div></section>
+
+    <section class="agile-section"><h2>Energy today</h2><div class="agile-grid">
+      ${metric("Whole-home energy", fmt(kemsBill.home_energy_kwh, "kWh"), "KEMS")}
+      ${metric("Grid import", fmt(entityNumber(IDS.simulatedGridImportToday), "kWh"), "KEMS")}
+      ${metric("Grid export", fmt(entityNumber(IDS.simulatedGridExportToday), "kWh"), "KEMS")}
+      ${metric("Solar generation", fmt(entityNumber(IDS.simulatedSolarToday), "kWh"), "KEMS")}
+      ${metric("Battery charged", fmt(batteryChargeToday, "kWh"), "KEMS")}
+      ${metric("Battery → home", fmt(entityNumber(IDS.simulatedBatteryToHomeToday), "kWh"), "Settled KEMS ledger")}
+      ${metric("Battery export", fmt(entityNumber(IDS.simulatedBatteryExportToday), "kWh"), "Settled KEMS ledger")}
+      ${metric("Export income", moneyPence(entityNumber(IDS.simulatedExportIncomeToday)), "KEMS today")}
+    </div></section>
+
+    <section class="agile-section"><h2>Forecast &amp; charge targets</h2><div class="agile-grid">
+      ${metric("Solar tomorrow", fmt(entityNumber(IDS.forecastSolarTomorrow), "kWh"), "Forecast")}
+      ${metric("House demand tomorrow", fmt(entityNumber(IDS.forecastHouseTomorrow), "kWh"), "Forecast")}
+      ${metric("Required morning SOC", fmt(entityNumber(IDS.forecastMorningSoc), "%", 1), "Forecast")}
+      ${metric("Overnight charge target", fmt(entityNumber(IDS.forecastMaximumOvernightSoc), "%", 1), "Forecast")}
+      ${metric("Extra cheap time needed", fmt(entityNumber(IDS.forecastAdditionalCheap), "h", 2), "Forecast")}
+      ${metric("Solar recovery target", fmt(entityNumber(IDS.forecastSolarRecovery), "%", 1), "Forecast")}
+      ${metric("Hours until cheap", fmt(entityNumber(IDS.hoursUntilCheap), "h", 2), "Current plan")}
+      ${metric("Exportable battery", fmt(entityNumber(IDS.exportableBattery), "kWh"), "Remaining")}
+      ${metric("Battery export target", fmt(exportTarget, "kW"), "Current target")}
+    </div></section>
+
+    <section class="agile-section"><h2>Today's KEMS plan</h2><p><b>Price coverage:</b> ${escapeHtml(String(slotsState.today_count ?? todaySlots.length))}/${escapeHtml(String(slotsState.today_expected ?? 48))} slots · <b>Current rate:</b> ${fmt(currentRate, "p/kWh", 2)} · <b>Plan:</b> ${escapeHtml(rolling.action || rolling.dispatch_action || state(IDS.rolling, "—"))}.</p>${slotPlan("Today", todaySlots)}</section>
+
+    <section class="agile-section"><h2>Tomorrow</h2><p>Forward-looking KEMS planning from currently published prices, forecast demand and forecast solar.</p>${tomorrowSummary(tomorrowSlots, slotsState)}${slotPlan("Tomorrow", tomorrowSlots)}</section>
+
+    <section class="agile-section"><h2>History</h2><p>Retained bill-equivalent Live Data vs KEMS evidence from the same canonical contract used by Home Assistant and Compare.</p><div class="agile-history-grid">
+      ${historyCard("yesterday", "Yesterday")}
+      ${historyCard("this_week", "This Week")}
+      ${historyCard("last_week", "Last Week")}
+      ${historyCard("this_month", "This Month")}
+      ${historyCard("last_month", "Last Month")}
+      ${historyCard("year", "This Year")}
+      ${historyCard("all_time", "All time")}
+    </div></section>
+
+    <section class="agile-section"><h2>System &amp; control safety</h2><p>Read-only operator evidence. KEMS Web does not issue Home Assistant or FoxESS commands.</p><div class="proof-grid">
+      <article class="agile-card"><small>Health</small><div class="proof-list"><div><span>KEMS</span><b>${escapeHtml(state(IDS.status))}</b></div><div><span>Sources</span><b>${escapeHtml(state(IDS.sourceValidation))}</b></div><div><span>Data quality</span><b>${escapeHtml(state(IDS.dataQuality))}</b></div><div><span>Accumulator</span><b>${escapeHtml(state(IDS.accumulatorStatus))}</b></div><div><span>Simulation</span><b>${escapeHtml(state(IDS.simulationReady))}</b></div><div><span>Panel</span><b>${escapeHtml(state(IDS.panelStatus))}</b></div></div></article>
+      <article class="agile-card"><small>Control safety</small><div class="proof-list"><div><span>Preflight</span><b>${escapeHtml(state(IDS.controlPreflight))}</b></div><div><span>Plan safe</span><b>${escapeHtml(state(IDS.controlPlanSafe))}</b></div><div><span>Backend available</span><b>${escapeHtml(state(IDS.realBackend))}</b></div><div><span>Commands permitted</span><b>${escapeHtml(state(IDS.commandsPermitted))}</b></div><div><span>Commissioning</span><b>${escapeHtml(state(IDS.commissioning))}</b></div><div><span>Blocked reason</span><b>${escapeHtml(state(IDS.controlBlocked))}</b></div></div></article>
+    </div></section>
+
+    ${advancedEvidence()}
+  `;
 }
 
-async function refresh(){
+async function refresh() {
   refreshButton?.classList.add("spinning");
-  try{const response=await fetch("/api/live",{cache:"no-store"});if(!response.ok)throw new Error(`HTTP ${response.status}`);snapshot=await response.json();pill?.classList.toggle("connected",Boolean(snapshot.connected));pill?.querySelector("span")&&(pill.querySelector("span").textContent=snapshot.connected?"Live":"Connection issue");render();}
-  catch(error){app.innerHTML=`<section class="agile-card empty"><h1>Unable to load Agile</h1><p>${escapeHtml(error.message)}</p></section>`;pill?.classList.add("error");}
-  finally{refreshButton?.classList.remove("spinning");}
+  try {
+    const response = await fetch("/api/live", { cache: "no-store" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    snapshot = await response.json();
+    pill?.classList.toggle("connected", Boolean(snapshot.connected));
+    const label = pill?.querySelector("span");
+    if (label) label.textContent = snapshot.connected ? "Live" : "Connection issue";
+    render();
+  } catch (error) {
+    app.innerHTML = `<section class="agile-card empty"><h1>Unable to load KEMS</h1><p>${escapeHtml(error.message)}</p></section>`;
+    pill?.classList.add("error");
+  } finally {
+    refreshButton?.classList.remove("spinning");
+  }
 }
 
-function connectStream(){try{stream?.close();stream=new EventSource("/api/stream");stream.addEventListener("snapshot",(event)=>{try{snapshot=JSON.parse(event.data);render();}catch{}});}catch{}}
-refreshButton?.addEventListener("click",refresh);
+function connectStream() {
+  try {
+    stream?.close();
+    stream = new EventSource("/api/stream");
+    stream.addEventListener("snapshot", (event) => {
+      try {
+        snapshot = JSON.parse(event.data);
+        render();
+      } catch {}
+    });
+  } catch {}
+}
+
+refreshButton?.addEventListener("click", refresh);
 await refresh();
 connectStream();
