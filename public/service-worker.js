@@ -22,7 +22,6 @@ const APP_SHELL = [
   "/panel-widget.js?v=build1",
   "/kems-page.js?v=build2",
   "/agile-page.js?v=build2",
-  "/kems-flow-page.js?v=build2",
   "/ev-policy-model.js?v=build1",
   "/ev-policy-parity.js?v=build1",
   "/compare-page.js?v=build1",
