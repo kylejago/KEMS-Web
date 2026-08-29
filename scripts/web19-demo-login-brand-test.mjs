@@ -123,7 +123,7 @@ expect(
 
 const worker = read("public/service-worker.js");
 expect(
-  worker.includes("kems-web-shell-build1"),
+  worker.includes("kems-web-shell-build2"),
   "current Web release must use the neutral PWA build cache",
 );
 expect(
