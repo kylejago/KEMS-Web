@@ -10,7 +10,7 @@ const APP_SHELL = [
   "/remote-access.html",
   "/styles.css?v=build1",
   "/brand.css?v=build1",
-  "/agile.css?v=build1",
+  "/agile.css?v=build3",
   "/compare.css?v=build1",
   "/web21.css?v=build1",
   "/web26.css?v=build1",
