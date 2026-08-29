@@ -22,10 +22,12 @@ let eventSourceSuppressed = false;
 try {
   globalThis.EventSource = KemsIdleEventSource;
   eventSourceSuppressed = globalThis.EventSource === KemsIdleEventSource;
-  await import("./agile-page.js?v=build1");
+  await import("./agile-page.js?v=build2");
 } finally {
   if (eventSourceSuppressed) globalThis.EventSource = nativeEventSource;
 }
+
+await import("./kems-flow-page.js?v=build2");
 
 const REFRESH_INTERVAL_MS = 30_000;
 window.setInterval(() => {
