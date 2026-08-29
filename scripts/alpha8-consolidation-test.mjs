@@ -53,7 +53,7 @@ assert.match(kemsHtml, /kems-page\.js\?v=build2/);
 assert.doesNotMatch(kemsHtml, /web21-agile\.js|src="agile-page\.js/);
 
 const worker = read("public/service-worker.js");
-assert.match(worker, /kems-web-shell-build1/);
+assert.match(worker, /kems-web-shell-build2/);
 assert.match(worker, /panel-state\.js\?v=build1/);
 assert.match(worker, /kems-page\.js\?v=build2/);
 assert.match(worker, /ev-policy-model\.js\?v=build1/);
