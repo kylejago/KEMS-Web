@@ -117,13 +117,16 @@ for (const marker of [
   "Tomorrow",
   "History",
   "System &amp; control safety",
+  "00:00 to 23:30",
+  "NO DATA",
 ]) assert.match(kemsRenderer, re(marker), `KEMS renderer missing ${marker}`);
 assert.match(kemsHtml, new RegExp(`web26\\.css\\?v=${assetVersion}`));
-assert.match(kemsHtml, /kems-page\.js\?v=build2/);
+assert.match(kemsHtml, /agile\.css\?v=build3/);
+assert.match(kemsHtml, /kems-page\.js\?v=build3/);
 assert.doesNotMatch(kemsHtml, /web21-agile\.js|src="agile-page\.js/, "KEMS page must have exactly one dashboard owner");
 assert.match(kemsRuntime, /KemsIdleEventSource/);
 assert.match(kemsRuntime, /30_000/);
-assert.match(kemsRuntime, /import\("\.\/agile-page\.js\?v=build2"\)/);
+assert.match(kemsRuntime, /import\("\.\/agile-page\.js\?v=build3"\)/);
 assert.match(legacyAgileHtml, /\/kems\.html/);
 assert.doesNotMatch(legacyAgileHtml, /web21-agile\.js|agile-page\.js|id="agile-app"/, "Legacy Agile route must be redirect-only");
 
@@ -146,11 +149,13 @@ assert.doesNotMatch(manifest, /agile\.html/);
 assert.match(manifest, /performance\.html/);
 assert.match(manifest, /settings\.html/);
 assert.match(worker, /kems\.html/);
-assert.match(worker, /kems-page\.js\?v=build2/);
+assert.match(worker, /kems-page\.js\?v=build3/);
+assert.match(worker, /agile-page\.js\?v=build3/);
+assert.match(worker, /flow-presentation-model\.js\?v=build3/);
 assert.doesNotMatch(worker, /web21-agile\.js/);
 assert.match(worker, /performance\.html/);
 assert.match(worker, /settings\.html/);
-assert.match(worker, /kems-web-shell-build2/);
+assert.match(worker, /kems-web-shell-build3/);
 assert.match(worker, new RegExp(`live-page\\.js\\?v=${assetVersion}`));
 assert.match(worker, new RegExp(`panel-widget\\.js\\?v=${assetVersion}`));
 assert.match(worker, new RegExp(`panel-state\\.js\\?v=${assetVersion}`));
