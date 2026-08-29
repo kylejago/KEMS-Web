@@ -27,7 +27,7 @@ for (const page of pages) {
 }
 
 assert.match(kemsHtml, /href="\/kems\.html">KEMS<\/a>/);
-assert.match(kemsHtml, /src="kems-page\.js\?v=build2"/);
+assert.match(kemsHtml, /src="kems-page\.js\?v=build3"/);
 assert.doesNotMatch(kemsHtml, /web21-agile\.js|src="agile-page\.js/, "KEMS must not load two full-page renderers");
 assert.doesNotMatch(kemsHtml, /ev-policy-parity\.js|ev-policy-model\.js/, "KEMS planning page must not load unrelated legacy runtime modules");
 
@@ -37,7 +37,7 @@ assert.doesNotMatch(legacyAgileHtml, /id="agile-app"|web21-agile\.js|agile-page\
 
 assert.match(kemsRuntime, /class KemsIdleEventSource/);
 assert.match(kemsRuntime, /globalThis\.EventSource = KemsIdleEventSource/);
-assert.match(kemsRuntime, /import\("\.\/agile-page\.js\?v=build2"\)/);
+assert.match(kemsRuntime, /import\("\.\/agile-page\.js\?v=build3"\)/);
 assert.match(kemsRuntime, /REFRESH_INTERVAL_MS = 30_000/);
 assert.match(kemsRuntime, /document\.hidden/);
 
@@ -55,7 +55,7 @@ assert.match(manifest, /"url": "\/kems\.html"/);
 assert.doesNotMatch(manifest, /"url": "\/agile\.html"/);
 assert.match(productModel, /href: "\/kems\.html"/);
 assert.match(worker, /"\/kems\.html"/);
-assert.match(worker, /"\/kems-page\.js\?v=build2"/);
+assert.match(worker, /"\/kems-page\.js\?v=build3"/);
 assert.doesNotMatch(worker, /"\/web21-agile\.js/);
 
 assert.doesNotMatch(renderer + kemsRuntime, /\/api\/services|services\.async_call|method:\s*["']POST/i);
