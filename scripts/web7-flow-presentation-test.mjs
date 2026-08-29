@@ -13,7 +13,7 @@ assert.match(shell, /kems-web-shell-build3/);
 assert.match(shell, /agile-page\.js\?v=build3/);
 assert.doesNotMatch(shell, /kems-flow-page/);
 
-for (const heading of ["Time", "Price", "Est SOC", "Grid", "Solar", "Battery"]) {
+for (const heading of ["Time", "Price", "Est. SOC", "Grid", "Solar", "Battery"]) {
   assert.match(renderer, new RegExp(`<th>${heading}</th>`));
 }
 
@@ -41,4 +41,4 @@ assert.match(renderer, /flow_battery_charge_kwh/);
 assert.doesNotMatch(renderer, /services\.async_call|\/api\/services|providers\.foxess/i);
 assert.equal((renderer.match(/fetch\("\/api\/live"/g) || []).length, 1);
 
-console.log("Web.7 canonical flow presentation contract passed");
+console.log("Web.8 canonical flow presentation contract passed");
