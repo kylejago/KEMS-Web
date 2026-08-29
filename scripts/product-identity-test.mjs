@@ -5,7 +5,7 @@ const read = (path) => fs.readFileSync(path, "utf8");
 const pkg = JSON.parse(read("package.json"));
 const project = JSON.parse(read("config/project.json"));
 
-assert.equal(pkg.version, "0.8.0-alpha8-web.6");
+assert.equal(pkg.version, "0.8.0-alpha8-web.7");
 assert.equal(project.version, pkg.version);
 
 const forbiddenLiveIdentity = /(?:alpha7web|alpha8web|kems-alpha7|kems-alpha8|KEMS Alpha7|KEMS Alpha8|Alpha7 shadow)/i;
@@ -78,6 +78,7 @@ const versionPatternSource = bundleAgent.match(/const match = \/(.+)\/i\.exec\(t
 assert.ok(versionPatternSource, "Pi bundle agent must expose an appliance release ordering pattern");
 const versionPattern = new RegExp(versionPatternSource, "i");
 for (const version of [
+  "0.8.0-alpha8-web.7",
   "0.8.0-alpha8-web.6",
   "0.8.0-alpha8-web.5",
   "0.8.0-alpha8-web.4",
