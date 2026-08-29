@@ -23,7 +23,7 @@ let eventSourceSuppressed = false;
 try {
   globalThis.EventSource = KemsIdleEventSource;
   eventSourceSuppressed = globalThis.EventSource === KemsIdleEventSource;
-  await import("./agile-page.js?v=build2");
+  await import("./agile-page.js?v=build3");
 } finally {
   if (eventSourceSuppressed) globalThis.EventSource = nativeEventSource;
 }

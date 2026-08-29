@@ -30,14 +30,19 @@ for (const marker of [
 for (const marker of [
   "today_slots",
   "tomorrow_slots",
-  "0, 16",
-  "16, 32",
-  "32, 48",
-  "grid_import_kwh",
-  "grid_export_kwh",
-  "battery_export_kwh",
-  "ending_soc_percent",
+  "00:00 to 23:30",
+  "flow_grid_action",
+  "flow_grid_kwh",
+  "flow_solar_action",
+  "flow_solar_kwh",
+  "flow_battery_action",
+  "flow_battery_kwh",
+  "flow_estimated_soc_percent",
+  "NO DATA",
 ]) assert.match(kems, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+for (const retiredSplit of ["00:00 to 07:30", "08:00 to 15:30", "16:00 to 23:30"]) {
+  assert.doesNotMatch(kems, new RegExp(retiredSplit.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+}
 
 for (const id of [
   "sensor.kems_simulated_house_load_power",
@@ -49,7 +54,8 @@ for (const id of [
 ]) assert.match(kems, new RegExp(id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), `KEMS renderer missing canonical ${id}`);
 
 assert.match(kemsHtml, /href="\/kems\.html"[^>]*>KEMS<\/a>/);
-assert.match(kemsHtml, /kems-page\.js\?v=build2/);
+assert.match(kemsHtml, /kems-page\.js\?v=build3/);
+assert.match(kemsHtml, /agile\.css\?v=build3/);
 assert.doesNotMatch(kemsHtml, /web21-agile\.js|src="agile-page\.js/);
 assert.match(kemsRuntime, /KemsIdleEventSource/);
 assert.match(legacyAgileHtml, /\/kems\.html/);
@@ -71,4 +77,4 @@ assert.doesNotMatch(compare, /Battery & Solar|Full KEMS Agile/);
 assert.match(compareHtml, /compare-page\.js\?v=build1/);
 assert.doesNotMatch(compareHtml, /strategy-comparison\.js/);
 
-console.log(`${packageJson.version} canonical KEMS dashboard parity contract passed on /kems.html with one controlled renderer.`);
+console.log(`${packageJson.version} canonical KEMS dashboard parity contract passed on /kems.html with one full-day controlled renderer.`);

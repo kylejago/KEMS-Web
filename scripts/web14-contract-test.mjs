@@ -77,7 +77,7 @@ const payload = sanitisePublicDemo(
   },
   { now: cutoffNow, delayDays: 7 },
 );
-assert.equal(payload.schema, 2);
+assert.equal(payload.schema, 3);
 assert.deepEqual(payload.products, ["actual", "kems"]);
 assert.equal(payload.days.length, 1);
 assert.equal(payload.days[0].date, "2026-08-13");

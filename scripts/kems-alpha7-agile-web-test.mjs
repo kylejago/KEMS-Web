@@ -42,7 +42,7 @@ for (const key of ['key: "battery_solar"', 'key: "full_kems"', 'key: "full_kems_
   if (products.includes(key)) throw new Error(`Retired product key remains user-facing: ${key}`);
 }
 
-if (!kemsHtml.includes('src="kems-page.js?v=build2"') || kemsHtml.includes("web21-agile.js")) {
+if (!kemsHtml.includes('src="kems-page.js?v=build3"') || kemsHtml.includes("web21-agile.js")) {
   throw new Error("KEMS page must have one controlled renderer");
 }
 if (!legacyAgileHtml.includes("/kems.html") || /agile-page\.js|web21-agile\.js|id="agile-app"/.test(legacyAgileHtml)) {
@@ -76,10 +76,11 @@ for (const marker of ["today_slots", "tomorrow_slots", "grid_import_kwh", "grid_
 }
 if (/\/api\/services|services\.async_call|method:\s*["']POST/i.test(kems + kemsRuntime)) throw new Error("KEMS page must remain read-only");
 
-if (!serviceWorker.includes("kems-web-shell-build2") || !serviceWorker.includes(`/brand-lockup.svg?v=${assetVersion}`) || !serviceWorker.includes(`/brand.css?v=${assetVersion}`)) {
+if (!serviceWorker.includes("kems-web-shell-build3") || !serviceWorker.includes(`/brand-lockup.svg?v=${assetVersion}`) || !serviceWorker.includes(`/brand.css?v=${assetVersion}`)) {
   throw new Error("PWA cache is not aligned with neutral KEMS brand shell");
 }
-if (!serviceWorker.includes("/kems.html") || !serviceWorker.includes("/kems-page.js?v=build2")) throw new Error("PWA canonical KEMS route missing");
+if (!serviceWorker.includes("/kems.html") || !serviceWorker.includes("/kems-page.js?v=build3")) throw new Error("PWA canonical KEMS route missing");
+if (!serviceWorker.includes("/agile.css?v=build3") || !serviceWorker.includes("/flow-presentation-model.js?v=build3")) throw new Error("PWA Agile presentation assets missing");
 if (!serviceWorker.includes("/performance.html") || !serviceWorker.includes("/settings.html")) throw new Error("PWA property pages missing");
 if (!publicSite.includes("kems.uk") || !publicSite.includes("Home Assistant remains private")) throw new Error("Public kems.uk boundary copy missing");
 if (/\/api\/|HA_TOKEN|long-lived access token/i.test(publicSite + publicPrivacy)) throw new Error("Public site must not reference private property APIs or credentials");

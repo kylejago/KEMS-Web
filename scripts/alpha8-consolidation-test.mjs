@@ -49,13 +49,23 @@ assert.doesNotMatch(
 );
 
 const kemsHtml = read("public/kems.html");
-assert.match(kemsHtml, /kems-page\.js\?v=build2/);
+assert.match(kemsHtml, /kems-page\.js\?v=build3/);
+assert.match(kemsHtml, /agile\.css\?v=build3/);
 assert.doesNotMatch(kemsHtml, /web21-agile\.js|src="agile-page\.js/);
 
+const kemsRuntime = read("public/kems-page.js");
+assert.match(kemsRuntime, /agile-page\.js\?v=build3/);
+const agileRenderer = read("public/agile-page.js");
+assert.match(agileRenderer, /flow-presentation-model\.js\?v=build3/);
+assert.match(agileRenderer, /00:00 to 23:30/);
+assert.match(agileRenderer, /NO DATA/);
+
 const worker = read("public/service-worker.js");
-assert.match(worker, /kems-web-shell-build2/);
+assert.match(worker, /kems-web-shell-build3/);
 assert.match(worker, /panel-state\.js\?v=build1/);
-assert.match(worker, /kems-page\.js\?v=build2/);
+assert.match(worker, /kems-page\.js\?v=build3/);
+assert.match(worker, /agile-page\.js\?v=build3/);
+assert.match(worker, /flow-presentation-model\.js\?v=build3/);
 assert.match(worker, /ev-policy-model\.js\?v=build1/);
 assert.match(worker, /ev-policy-parity\.js\?v=build1/);
 assert.match(worker, /url\.pathname === "\/site\.webmanifest"/);
@@ -66,4 +76,4 @@ assert.equal(manifest.display, "standalone");
 assert.ok(manifest.icons.every((icon) => icon.src.includes("build1")));
 assert.ok(manifest.shortcuts.some((shortcut) => shortcut.name === "KEMS" && shortcut.url === "/kems.html"));
 
-console.log(`KEMS ${pkg.version} consolidation contract passed: authenticated PWA parity, canonical KEMS route, single dashboard runtime, shared panel state, EV policy projection and coordinated versioning are intact.`);
+console.log(`KEMS ${pkg.version} consolidation contract passed: authenticated PWA parity, canonical full-day KEMS flow route, shared flow/panel models, EV policy projection and coordinated versioning are intact.`);

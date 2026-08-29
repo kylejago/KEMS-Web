@@ -11,7 +11,7 @@ const SIZE = 877;
 const pkg = JSON.parse(read("package.json"));
 const project = JSON.parse(read("config/project.json"));
 const propertyAssetVersion = "build1";
-const publicAssetVersion = "site1";
+const publicAssetVersion = "site2";
 
 expect(project.version === pkg.version, "project.json must match package.json");
 expect(
@@ -56,11 +56,13 @@ for (const marker of [
   "sensor.kems_energy_cost_comparison",
   "sensor.kems_scenario_comparison_today",
   "sensor.kems_agile_smart_export_plan",
+  "sensor.kems_agile_slots",
   "sensor.kems_today_energy_summary",
   "Home Assistant Recorder delayed KEMS evidence",
   "totalEnergyCostGbp",
   "evKwh",
   "systemCostGbp",
+  "agileSlots",
 ]) {
   expect(gateway.includes(marker), `public demo gateway missing ${marker}`);
 }
@@ -88,10 +90,14 @@ expect(
   gateway.includes("row.date <= cutoff"),
   "Recorder/public evidence must remain behind the configured delayed cutoff",
 );
-expect(gateway.includes("schema: 2"), "public demo must publish schema 2");
+expect(gateway.includes("schema: 3"), "public demo must publish schema 3");
 expect(
   gateway.includes("no live power, EV state/SOC"),
   "public privacy boundary must explicitly exclude live EV/property telemetry",
+);
+expect(
+  gateway.includes("allow-listed half-hour KEMS routing evidence"),
+  "public demo must describe the privacy-delayed Agile Plan evidence boundary",
 );
 
 const demo = read("public-site/demo.js");
@@ -107,6 +113,8 @@ for (const marker of [
   "systemCostGbp",
   "completeCompareDay",
   "kems-panel-stage",
+  "Delayed Agile Plan",
+  "agileSlots",
 ]) {
   expect(demo.includes(marker), `current public demo capability missing ${marker}`);
 }
@@ -123,13 +131,14 @@ expect(
 
 const worker = read("public/service-worker.js");
 expect(
-  worker.includes("kems-web-shell-build2"),
-  "current Web release must use the neutral PWA build cache",
+  worker.includes("kems-web-shell-build3"),
+  "current Web release must use the current PWA build cache",
 );
 expect(
   worker.includes(`/brand-lockup.svg?v=${propertyAssetVersion}`),
   "PWA must cache current brand lockup",
 );
+expect(worker.includes("/flow-presentation-model.js?v=build3"), "PWA must cache shared flow presentation model");
 expect(!worker.includes("approved-logo.png"), "PWA must not cache obsolete PNG concept");
 const propertyPages = [
   "public/index.html",

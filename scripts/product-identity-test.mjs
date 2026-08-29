@@ -5,7 +5,7 @@ const read = (path) => fs.readFileSync(path, "utf8");
 const pkg = JSON.parse(read("package.json"));
 const project = JSON.parse(read("config/project.json"));
 
-assert.equal(pkg.version, "0.8.0-alpha8-web.7");
+assert.equal(pkg.version, "0.8.0-alpha8-web.8");
 assert.equal(project.version, pkg.version);
 
 const forbiddenLiveIdentity = /(?:alpha7web|alpha8web|kems-alpha7|kems-alpha8|KEMS Alpha7|KEMS Alpha8|Alpha7 shadow)/i;
@@ -24,6 +24,7 @@ const propertySurfaces = [
   "public/panel-widget.js",
   "public/kems-page.js",
   "public/agile-page.js",
+  "public/flow-presentation-model.js",
 ];
 for (const file of propertySurfaces) {
   const source = read(file);
@@ -42,9 +43,13 @@ for (const file of [
   "public/service-worker.js",
   "public/live-page.js",
   "public/panel-widget.js",
-]) assert.match(read(file), /build1/, `${file} must retain the unchanged neutral property build identity`);
-assert.match(read("public/kems-page.js"), /build2/, "Changed KEMS runtime must use the neutral build2 identity");
+]) assert.match(read(file), /build1/, `${file} must retain the unchanged neutral property build identity alongside any intentionally bumped KEMS assets`);
+assert.match(read("public/kems.html"), /kems-page\.js\?v=build3/);
+assert.match(read("public/kems.html"), /agile\.css\?v=build3/);
+assert.match(read("public/kems-page.js"), /build3/, "Changed KEMS runtime must use the neutral build3 identity");
+assert.match(read("public/agile-page.js"), /flow-presentation-model\.js\?v=build3/);
 assert.doesNotMatch(read("public/kems-page.js"), /alpha\d+web|alpha8-web/i, "KEMS runtime cache identity must remain release-independent");
+assert.doesNotMatch(read("public/agile-page.js"), /alpha\d+web|alpha8-web/i, "Agile renderer cache identity must remain release-independent");
 
 const publicSitePages = [
   "public-site/index.html",
@@ -57,7 +62,7 @@ const publicSitePages = [
 for (const file of publicSitePages) {
   const source = read(file);
   assert.doesNotMatch(source, /(?:alpha7web|alpha8web)/i, `${file} must keep public KEMS cache identity release-independent`);
-  assert.match(source, /site1/, `${file} must use the neutral public-site build identity`);
+  assert.match(source, /site2/, `${file} must use the neutral public-site build2 identity`);
 }
 
 assert.doesNotMatch(pkg.description, /Alpha\d/i);
@@ -79,6 +84,7 @@ const versionPatternSource = bundleAgent.match(/const match = \/(.+)\/i\.exec\(t
 assert.ok(versionPatternSource, "Pi bundle agent must expose an appliance release ordering pattern");
 const versionPattern = new RegExp(versionPatternSource, "i");
 for (const version of [
+  "0.8.0-alpha8-web.8",
   "0.8.0-alpha8-web.7",
   "0.8.0-alpha8-web.6",
   "0.8.0-alpha8-web.5",
@@ -98,4 +104,4 @@ assert.match(remoteHelper, /const HELPER_VERSION = JSON\.parse\(/);
 assert.match(remoteHelper, /\.\.\/package\.json/);
 assert.doesNotMatch(remoteHelper, /const HELPER_VERSION = ["'][^"']*(?:alpha|beta|rc)/i);
 
-console.log("KEMS product identity contract passed: Live Data and KEMS are the two user-facing products; /kems.html is canonical and release versions stay in metadata.");
+console.log("KEMS product identity contract passed: Live Data and KEMS are the two user-facing products; /kems.html is canonical and cache keys remain release-independent.");

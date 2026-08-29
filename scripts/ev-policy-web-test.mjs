@@ -51,12 +51,16 @@ assert.equal(unavailable.power, 0);
 assert.equal(unavailable.unavailable, true);
 
 const kemsHtml = fs.readFileSync("public/kems.html", "utf8");
-assert.match(kemsHtml, /kems-page\.js\?v=build2/);
+assert.match(kemsHtml, /kems-page\.js\?v=build3/);
+assert.match(kemsHtml, /agile\.css\?v=build3/);
 assert.doesNotMatch(
   kemsHtml,
   /ev-policy-model\.js|ev-policy-parity\.js|web21-agile\.js/,
   "Canonical KEMS dashboard must not restore the legacy EV/Web21 overlay runtime",
 );
+
+const kemsRuntime = fs.readFileSync("public/kems-page.js", "utf8");
+assert.match(kemsRuntime, /agile-page\.js\?v=build3/);
 
 const legacyAgileHtml = fs.readFileSync("public/agile.html", "utf8");
 assert.match(legacyAgileHtml, /\/kems\.html/);
@@ -75,9 +79,11 @@ assert.doesNotMatch(parity, /services\.async_call|\/api\/config|\/api\/services/
 const worker = fs.readFileSync("public/service-worker.js", "utf8");
 assert.match(worker, /ev-policy-model\.js\?v=build1/);
 assert.match(worker, /ev-policy-parity\.js\?v=build1/);
+assert.match(worker, /flow-presentation-model\.js\?v=build3/);
 
 const demo = fs.readFileSync("public-site/demo.js", "utf8");
 assert.match(demo, /metrics\.evKwh/);
 assert.match(demo, /Aggregate delayed charging energy/);
+assert.match(demo, /Delayed Agile Plan/);
 
 console.log("EV policy Web/Pi/public presentation contract: model and privacy evidence retained without reintroducing the legacy KEMS-page overlay runtime: PASS");
