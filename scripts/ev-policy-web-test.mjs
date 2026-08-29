@@ -51,7 +51,7 @@ assert.equal(unavailable.power, 0);
 assert.equal(unavailable.unavailable, true);
 
 const kemsHtml = fs.readFileSync("public/kems.html", "utf8");
-assert.match(kemsHtml, /kems-page\.js\?v=build1/);
+assert.match(kemsHtml, /kems-page\.js\?v=build2/);
 assert.doesNotMatch(
   kemsHtml,
   /ev-policy-model\.js|ev-policy-parity\.js|web21-agile\.js/,

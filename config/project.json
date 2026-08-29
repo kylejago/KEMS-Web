@@ -1,11 +1,11 @@
 {
   "name": "KEMS",
   "longName": "Kyle Energy Management System",
-  "version": "0.8.0-alpha8-web.6",
+  "version": "0.8.0-alpha8-web.7",
   "tagline": "Your actual energy bill compared with what KEMS would have done.",
   "summary": "The KEMS property PWA, Pi companion and public-site source, preserving the accepted Cloudflare-authenticated install path while sharing panel state and release contracts.",
   "repository": "https://github.com/kylejago/KEMS-Web",
-  "build": "KEMS Web/PWA runtime hotfix · canonical /kems.html route · single KEMS dashboard renderer · controlled planning refresh · canonical current routing · full today/tomorrow Agile slots · no Home Assistant control writes",
+  "build": "KEMS Web/PWA flow presentation · canonical /kems.html route · reconciled Grid/Solar/Battery slot ledger · live solar Today accounting · controlled planning refresh · no Home Assistant control writes",
   "principles": [
     "Home Assistant and KEMS remain the source of truth for each property.",
     "The user-facing product model is Live Data and KEMS; retired scenario names remain internal validation evidence only.",
@@ -15,6 +15,7 @@
     "The detailed KEMS planning dashboard refreshes at a controlled cadence rather than rebuilding its full today/tomorrow slot evidence on every high-frequency live snapshot.",
     "The KEMS property view consumes canonical generic simulation power entities for instantaneous routing and never rebuilds the current power balance in the browser.",
     "The KEMS property view consumes sensor.kems_agile_slots for the complete customer-facing today and tomorrow Agile plan rather than reconstructing slot plans from legacy strategy sensors.",
+    "The KEMS slot table renders canonical Home Assistant flow fields for Grid, Solar and Battery rather than recalculating the optimiser plan in the browser.",
     "The headline financial measure is bill-equivalent total energy cost: electricity import plus electricity standing charge minus export income and genuine supplier/account energy credits, plus gas usage and gas standing charge.",
     "Battery wear remains engineering/economic evidence and is never included in the household-bill headline.",
     "Every user-facing surface consumes the canonical KEMS bill contract rather than independently reconstructing cost.",

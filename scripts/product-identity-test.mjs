@@ -5,7 +5,7 @@ const read = (path) => fs.readFileSync(path, "utf8");
 const pkg = JSON.parse(read("package.json"));
 const project = JSON.parse(read("config/project.json"));
 
-assert.equal(pkg.version, "0.8.0-alpha8-web.6");
+assert.equal(pkg.version, "0.8.0-alpha8-web.7");
 assert.equal(project.version, pkg.version);
 
 const forbiddenLiveIdentity = /(?:alpha7web|alpha8web|kems-alpha7|kems-alpha8|KEMS Alpha7|KEMS Alpha8|Alpha7 shadow)/i;
@@ -42,8 +42,9 @@ for (const file of [
   "public/service-worker.js",
   "public/live-page.js",
   "public/panel-widget.js",
-  "public/kems-page.js",
-]) assert.match(read(file), /build1/, `${file} must use the neutral property build identity`);
+]) assert.match(read(file), /build1/, `${file} must retain the unchanged neutral property build identity`);
+assert.match(read("public/kems-page.js"), /build2/, "Changed KEMS runtime must use the neutral build2 identity");
+assert.doesNotMatch(read("public/kems-page.js"), /alpha\d+web|alpha8-web/i, "KEMS runtime cache identity must remain release-independent");
 
 const publicSitePages = [
   "public-site/index.html",
@@ -78,6 +79,7 @@ const versionPatternSource = bundleAgent.match(/const match = \/(.+)\/i\.exec\(t
 assert.ok(versionPatternSource, "Pi bundle agent must expose an appliance release ordering pattern");
 const versionPattern = new RegExp(versionPatternSource, "i");
 for (const version of [
+  "0.8.0-alpha8-web.7",
   "0.8.0-alpha8-web.6",
   "0.8.0-alpha8-web.5",
   "0.8.0-alpha8-web.4",

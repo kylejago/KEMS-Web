@@ -49,7 +49,7 @@ for (const id of [
 ]) assert.match(kems, new RegExp(id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), `KEMS renderer missing canonical ${id}`);
 
 assert.match(kemsHtml, /href="\/kems\.html"[^>]*>KEMS<\/a>/);
-assert.match(kemsHtml, /kems-page\.js\?v=build1/);
+assert.match(kemsHtml, /kems-page\.js\?v=build2/);
 assert.doesNotMatch(kemsHtml, /web21-agile\.js|src="agile-page\.js/);
 assert.match(kemsRuntime, /KemsIdleEventSource/);
 assert.match(legacyAgileHtml, /\/kems\.html/);
