@@ -71,7 +71,10 @@ for (const marker of [
 assert.doesNotMatch(settings, /Long-Lived Access Token/i, "PWA install flow must not ask for a Home Assistant token");
 
 const worker = read("public/service-worker.js");
-assert.match(worker, /kems-web-shell-build2/);
+assert.match(worker, /kems-web-shell-build3/);
+assert.match(worker, /kems-page\.js\?v=build3/);
+assert.match(worker, /agile-page\.js\?v=build3/);
+assert.match(worker, /flow-presentation-model\.js\?v=build3/);
 assert.match(worker, new RegExp(`pwa-settings\\.js\\?v=${assetVersion}`));
 assert.match(worker, /url\.pathname\.startsWith\("\/api\/"\)/);
 assert.match(worker, /url\.pathname === "\/site\.webmanifest"/);
