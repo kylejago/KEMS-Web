@@ -60,6 +60,15 @@ const IDS = Object.freeze({
   controlBlocked: "sensor.kems_control_blocked_reason"
 });
 
+const FLOW_FIELDS = Object.freeze({
+  grid: Object.freeze({ action: "flow_grid_action", value: "flow_grid_kwh" }),
+  solar: Object.freeze({ action: "flow_solar_action", value: "flow_solar_kwh" }),
+  battery: Object.freeze({ action: "flow_battery_action", value: "flow_battery_kwh" }),
+});
+const FLOW_SOC_FIELD = "flow_estimated_soc_percent";
+const FLOW_SCOPE_FIELD = "flow_scope";
+const FLOW_BASIS_FIELD = "flow_basis";
+
 function escapeHtml(value = "") {
   return String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" })[char]);
 }
@@ -138,12 +147,58 @@ function actionsLabel(slot = {}) {
   if (text.includes("battery to home") || text.includes("battery → home")) return "Battery → home";
   return raw.length > 42 ? `${raw.slice(0, 39)}…` : raw;
 }
+function displayFlowAction(action, kind) {
+  const raw = String(action || "IDLE").toUpperCase();
+  if (raw === "EXPO") return "EXPORT";
+  if (kind === "solar" && raw === "BATT") return "BATTERY";
+  return raw;
+}
+function fallbackRoutes(routes) {
+  const active = routes
+    .filter(([value]) => (number(value) || 0) > 0.0005)
+    .map(([, label]) => label === "EXPO" ? "EXPORT" : label);
+  return active.length ? active.join("/") : "IDLE";
+}
+function flowValue(slot, prefix) {
+  const field = FLOW_FIELDS[prefix];
+  const canonical = number(field ? slot[field.value] : null);
+  if (canonical !== null) return canonical;
+  if (prefix === "grid") {
+    return (number(slot.grid_import_kwh) || 0) + (number(slot.grid_export_kwh) || 0);
+  }
+  if (prefix === "solar") {
+    const generation = number(slot.solar_generation_kwh);
+    if (generation !== null) return generation;
+    return (number(slot.solar_to_home_kwh) || 0) + (number(slot.solar_to_battery_kwh) || 0) + (number(slot.solar_export_kwh) || 0);
+  }
+  return (number(slot.battery_to_home_kwh) || 0) + (number(slot.battery_export_kwh) || 0) + (number(slot.flow_battery_charge_kwh) || 0);
+}
+function flowAction(slot, prefix) {
+  const field = FLOW_FIELDS[prefix];
+  const canonical = field ? slot[field.action] : null;
+  if (canonical) return displayFlowAction(canonical, prefix);
+  if (prefix === "grid") {
+    return fallbackRoutes([[slot.grid_import_kwh, "IMPORT"], [slot.grid_export_kwh, "EXPO"]]);
+  }
+  if (prefix === "solar") {
+    return fallbackRoutes([[slot.solar_to_home_kwh, "HOME"], [slot.solar_to_battery_kwh, "BATTERY"], [slot.solar_export_kwh, "EXPO"]]);
+  }
+  return fallbackRoutes([[slot.flow_battery_charge_kwh, "CHARGE"], [slot.battery_to_home_kwh, "HOME"], [slot.battery_export_kwh, "EXPO"]]);
+}
+function flowCell(slot, prefix) {
+  const action = flowAction(slot, prefix);
+  const value = flowValue(slot, prefix);
+  const scope = String(slot[FLOW_SCOPE_FIELD] || "full slot");
+  const scopeText = scope === "remaining slot" ? "<br><small>remaining</small>" : "";
+  const basis = escapeHtml(slot[FLOW_BASIS_FIELD] || "legacy KEMS slot fields");
+  return `<span title="${basis}"><b>${escapeHtml(action)}</b><br>${fmt(value, "kWh", 2)}${scopeText}</span>`;
+}
 function slotRows(slots, start, end) {
   return (Array.isArray(slots) ? slots : []).slice(start, end);
 }
 function slotTable(title, slots, start, end, emptyText) {
   const rows = slotRows(slots, start, end);
-  return `<section class="agile-card agile-slot-block"><h3>${escapeHtml(title)}</h3>${rows.length ? `<div class="agile-table-wrap"><table class="agile-table agile-slot-table"><thead><tr><th>Time</th><th>Rate</th><th>KEMS plan</th><th>Grid in / out</th><th>Batt out</th><th>End SOC</th></tr></thead><tbody>${rows.map((slot) => `<tr><td>${escapeHtml(slot.label || "—")}</td><td>${fmt(slot.rate_pence, "p/kWh", 2)}</td><td>${escapeHtml(actionsLabel(slot))}</td><td>${fmt(slot.grid_import_kwh, "", 2)} / ${fmt(slot.grid_export_kwh, "", 2)} kWh</td><td>${fmt(slot.battery_export_kwh, "kWh", 2)}</td><td>${fmt(slot.ending_soc_percent, "%", 1)}</td></tr>`).join("")}</tbody></table></div>` : `<div class="empty">${escapeHtml(emptyText)}</div>`}</section>`;
+  return `<section class="agile-card agile-slot-block"><h3>${escapeHtml(title)}</h3>${rows.length ? `<div class="agile-table-wrap"><table class="agile-table agile-slot-table agile-flow-table"><thead><tr><th>Time</th><th>Price</th><th>Est SOC</th><th>Grid</th><th>Solar</th><th>Battery</th></tr></thead><tbody>${rows.map((slot) => `<tr><td>${escapeHtml(slot.label || "—")}</td><td>${fmt(slot.rate_pence, "p/kWh", 2)}</td><td>${fmt(slot[FLOW_SOC_FIELD] ?? slot.ending_soc_percent, "%", 1)}</td><td>${flowCell(slot, "grid")}</td><td>${flowCell(slot, "solar")}</td><td>${flowCell(slot, "battery")}</td></tr>`).join("")}</tbody></table></div>` : `<div class="empty">${escapeHtml(emptyText)}</div>`}</section>`;
 }
 function slotPlan(day, slots) {
   const prefix = day === "Today" ? "Today" : "Tomorrow";
@@ -202,6 +257,7 @@ function render() {
   const slotsState = slotAttrs();
   const todaySlots = Array.isArray(slotsState.today_slots) ? slotsState.today_slots : [];
   const tomorrowSlots = Array.isArray(slotsState.tomorrow_slots) ? slotsState.tomorrow_slots : [];
+  const todayAgile = slotsState.today_agile || {};
   const todayBill = billPeriod("today") || {};
   const kemsBill = todayBill.kems || {};
   const rolling = rollingAttrs();
@@ -209,6 +265,10 @@ function render() {
   const currentRate = number(slotsState.current_rate_pence);
   const exportTarget = firstEntityNumber(IDS.targetBatteryExport, IDS.exportTarget);
   const batteryChargeToday = firstEntityNumber(IDS.simulatedBatteryChargeToday, IDS.simulatedBatteryChargeTodayAlt);
+  const todayGridExport = number(todayAgile.grid_export_kwh) ?? entityNumber(IDS.simulatedGridExportToday);
+  const todaySolarExport = number(todayAgile.solar_export_kwh);
+  const todayBatteryExport = number(todayAgile.battery_export_kwh) ?? entityNumber(IDS.simulatedBatteryExportToday);
+  const todayExportIncome = number(todayAgile.export_income_pence) ?? entityNumber(IDS.simulatedExportIncomeToday);
 
   app.innerHTML = `
     <section class="agile-hero"><div><p class="eyebrow">KEMS · digital twin · read-only</p><h1>KEMS</h1><p>What KEMS would have done with the configured system, tariff and strategy. Current power uses the canonical Alpha8 simulation entities; costs use the coordinated Energy Bill contract; Agile planning uses the stable customer-facing slot feed.</p></div>${badge(state(IDS.status))}</section>
@@ -241,17 +301,18 @@ function render() {
     <section class="agile-section"><h2>Energy today</h2><div class="agile-grid">
       ${metric("Whole-home energy", fmt(kemsBill.home_energy_kwh, "kWh"), "KEMS")}
       ${metric("Grid import", fmt(entityNumber(IDS.simulatedGridImportToday), "kWh"), "KEMS")}
-      ${metric("Grid export", fmt(entityNumber(IDS.simulatedGridExportToday), "kWh"), "KEMS")}
+      ${metric("Grid export", fmt(todayGridExport, "kWh"), "Live solar + settled battery export")}
       ${metric("Solar generation", fmt(entityNumber(IDS.simulatedSolarToday), "kWh"), "KEMS")}
+      ${metric("Solar export", fmt(todaySolarExport, "kWh"), "Replay through latest recorder sample")}
       ${metric("Battery charged", fmt(batteryChargeToday, "kWh"), "KEMS")}
       ${metric("Battery → home", fmt(entityNumber(IDS.simulatedBatteryToHomeToday), "kWh"), "Settled KEMS ledger")}
-      ${metric("Battery export", fmt(entityNumber(IDS.simulatedBatteryExportToday), "kWh"), "Settled KEMS ledger")}
-      ${metric("Export income", moneyPence(entityNumber(IDS.simulatedExportIncomeToday)), "KEMS today")}
+      ${metric("Battery export", fmt(todayBatteryExport, "kWh"), "Completed settled battery export")}
+      ${metric("Export income", moneyPence(todayExportIncome), "KEMS today")}
     </div></section>
 
     <section class="agile-section"><h2>Forecast &amp; charge targets</h2><div class="agile-grid">
-      ${metric("Solar tomorrow", fmt(entityNumber(IDS.forecastSolarTomorrow), "kWh"), "Forecast")}
-      ${metric("House demand tomorrow", fmt(entityNumber(IDS.forecastHouseTomorrow), "kWh"), "Forecast")}
+      ${metric("Solar tomorrow", fmt(entityNumber(IDS.forecastSolarTomorrow), "kWh", 2), "Forecast")}
+      ${metric("House demand tomorrow", fmt(entityNumber(IDS.forecastHouseTomorrow), "kWh", 2), "Forecast")}
       ${metric("Required morning SOC", fmt(entityNumber(IDS.forecastMorningSoc), "%", 1), "Forecast")}
       ${metric("Overnight charge target", fmt(entityNumber(IDS.forecastMaximumOvernightSoc), "%", 1), "Forecast")}
       ${metric("Extra cheap time needed", fmt(entityNumber(IDS.forecastAdditionalCheap), "h", 2), "Forecast")}
