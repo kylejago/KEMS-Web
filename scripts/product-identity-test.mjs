@@ -42,8 +42,9 @@ for (const file of [
   "public/service-worker.js",
   "public/live-page.js",
   "public/panel-widget.js",
-  "public/kems-page.js",
-]) assert.match(read(file), /build1/, `${file} must use the neutral property build identity`);
+]) assert.match(read(file), /build1/, `${file} must retain the unchanged neutral property build identity`);
+assert.match(read("public/kems-page.js"), /build2/, "Changed KEMS runtime must use the neutral build2 identity");
+assert.doesNotMatch(read("public/kems-page.js"), /alpha\d+web|alpha8-web/i, "KEMS runtime cache identity must remain release-independent");
 
 const publicSitePages = [
   "public-site/index.html",
