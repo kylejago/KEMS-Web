@@ -5,6 +5,8 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 
+import { displayFlowAction, isHistoricalRuntimeGap } from "./public/flow-presentation-model.js";
+
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC_HOST = process.env.HOST || "0.0.0.0";
 const PUBLIC_PORT = Number.parseInt(process.env.PORT || "4173", 10) || 4173;
@@ -19,11 +21,12 @@ const PUBLIC_DEMO_HOST = String(process.env.KEMS_PUBLIC_DEMO_HOST || "demo-api.k
 const PUBLIC_DEMO_DELAY_DAYS = 7;
 const PUBLIC_DEMO_ORIGINS = new Set(["https://kems.uk", "https://www.kems.uk"]);
 const PUBLIC_BACKFILL_DAYS = 14;
-const PUBLIC_EVIDENCE_VERSION = 3;
+const PUBLIC_EVIDENCE_VERSION = 4;
 const PUBLIC_HISTORY_ENTITIES = [
   "sensor.kems_energy_cost_comparison",
   "sensor.kems_scenario_comparison_today",
   "sensor.kems_agile_smart_export_plan",
+  "sensor.kems_agile_slots",
   "sensor.kems_today_energy_summary",
   "sensor.kems_simulated_kems_cost_today"
 ];
@@ -199,6 +202,37 @@ function scenarioProduct(source, evKwh = null) {
   return Object.keys(mapped).length ? mapped : null;
 }
 
+function nullableRound(value, digits = 3) {
+  if (value === null || value === undefined || value === "") return null;
+  return round(value, digits);
+}
+
+function sanitisePublicAgileSlots(state, dateKey) {
+  const rows = state?.attributes?.today_slots;
+  if (!Array.isArray(rows)) return [];
+  return rows
+    .filter((slot) => String(slot?.local_from || "").slice(0, 10) === dateKey)
+    .slice(0, 48)
+    .map((slot) => {
+      const noData = isHistoricalRuntimeGap(slot);
+      return {
+        time: String(slot?.label || "").slice(0, 5),
+        pricePence: nullableRound(slot?.rate_pence, 2),
+        estimatedSocPercent: noData
+          ? null
+          : nullableRound(slot?.flow_estimated_soc_percent ?? slot?.ending_soc_percent, 1),
+        gridAction: noData ? "NO DATA" : displayFlowAction(slot?.flow_grid_action, "grid"),
+        gridKwh: noData ? null : nullableRound(slot?.flow_grid_kwh, 3),
+        solarAction: noData ? "NO DATA" : displayFlowAction(slot?.flow_solar_action, "solar"),
+        solarKwh: noData ? null : nullableRound(slot?.flow_solar_kwh, 3),
+        batteryAction: noData ? "NO DATA" : displayFlowAction(slot?.flow_battery_action, "battery"),
+        batteryKwh: noData ? null : nullableRound(slot?.flow_battery_kwh, 3),
+        noData,
+      };
+    })
+    .filter((slot) => /^\d{2}:\d{2}$/.test(slot.time));
+}
+
 function scenarioByKey(state, dateKey, keys) {
   const attrs = state?.attributes || {};
   const period = attrs?.periods?.today || attrs;
@@ -305,6 +339,10 @@ async function historicalEvidenceForDay(connection, dateKey) {
     const endDate = String(period?.end_date || period?.endDate || "").slice(0, 10);
     return !endDate || endDate === dateKey;
   });
+  const slotState = matchingLatestState(history, "sensor.kems_agile_slots", (attrs) =>
+    Array.isArray(attrs?.today_slots)
+      && attrs.today_slots.some((slot) => String(slot?.local_from || "").slice(0, 10) === dateKey));
+  const agileSlots = sanitisePublicAgileSlots(slotState, dateKey);
   const evKwh = evEnergyFromHistory(history, dateKey);
   const batterySolar = scenarioProduct(scenarioByKey(scenarioState, dateKey, ["solar_battery"]), evKwh);
   const fullKems = scenarioProduct(scenarioByKey(scenarioState, dateKey, ["kems_forecast", "kems_full"]), evKwh);
@@ -321,6 +359,7 @@ async function historicalEvidenceForDay(connection, dateKey) {
     strategyLabel: bill?.strategyLabel || null,
     evKwh: Number.isFinite(evKwh) ? round(evKwh, 3) : null,
     legacyKems,
+    agileSlots,
     capturedAt: new Date().toISOString(),
     source: "Home Assistant Recorder delayed KEMS evidence"
   };
@@ -353,6 +392,10 @@ async function refreshPublicEvidence(rows, cutoff) {
     const cache = readJsonIfExists(PUBLIC_EVIDENCE_FILE, { version: PUBLIC_EVIDENCE_VERSION, days: {}, economics: null });
     if (!cache || typeof cache !== "object") return { version: PUBLIC_EVIDENCE_VERSION, days: {}, economics: null };
     if (!cache.days || typeof cache.days !== "object") cache.days = {};
+    if (Number(cache.version) !== PUBLIC_EVIDENCE_VERSION) {
+      cache.days = {};
+      cache.economics = null;
+    }
     cache.version = PUBLIC_EVIDENCE_VERSION;
     const connection = storedHomeAssistantConnection();
     if (!connection) return cache;
@@ -437,25 +480,27 @@ async function publicDemoPayload() {
     if (Object.keys(actual).length) day.actual = actual;
     if (Object.keys(kems).length) day.kems = kems;
     if (recovered.strategyLabel) day.strategyLabel = recovered.strategyLabel;
+    if (Array.isArray(recovered.agileSlots) && recovered.agileSlots.length) day.agileSlots = recovered.agileSlots;
     return day;
   }).filter((day) => day.actual || day.kems);
 
   return {
-    schema: 2,
+    schema: 3,
     property: "Demo property",
     delayed: true,
     delayDays: PUBLIC_DEMO_DELAY_DAYS,
     generatedAt: new Date().toISOString(),
     dataThrough: days.at(-1)?.date || null,
     source: "KEMS Pi retained daily ledger plus delayed Recorder evidence",
-    privacy: "Sanitised daily totals only. Aggregate EV energy is included after the privacy delay; no live power, EV state/SOC, entity IDs, device identifiers, Home Assistant address, credentials or control endpoints are published.",
+    privacy: "Sanitised daily totals and allow-listed half-hour KEMS routing evidence only after the privacy delay. Aggregate EV energy may be included; no live power, EV state/SOC, entity IDs, device identifiers, Home Assistant address, credentials or control endpoints are published.",
     products: ["actual", "kems"],
     billBasis: "Total energy cost includes electricity and gas usage, both standing charges, export income and genuine supplier/account energy credits. Battery wear is excluded.",
     coverage: {
       actual: "retained measured energy plus delayed canonical KEMS bill evidence",
       kems: "delayed canonical KEMS bill evidence with strategy-matched replay energy where available",
       finance: "only sensor.kems_energy_cost_comparison Recorder evidence is accepted for bill totals",
-      ev: "aggregate daily EV energy only, delayed by at least seven days"
+      ev: "aggregate daily EV energy only, delayed by at least seven days",
+      agilePlan: "allow-listed half-hour KEMS route, energy, price and estimated SOC presentation only, delayed by at least seven days"
     },
     economics: evidence?.economics?.systemCostGbp ? { systemCostGbp: evidence.economics.systemCostGbp } : null,
     days
@@ -533,5 +578,5 @@ const gateway = http.createServer(async (request, response) => {
 });
 
 gateway.listen(PUBLIC_PORT, PUBLIC_HOST, () => {
-  console.log(`KEMS Web.4 gateway listening on http://${PUBLIC_HOST}:${PUBLIC_PORT}; app backend http://127.0.0.1:${BACKEND_PORT}; remote setup helper loopback-only on ${REMOTE_HELPER_PORT}; delayed demo host ${PUBLIC_DEMO_HOST}`);
+  console.log(`KEMS Web.8 gateway listening on http://${PUBLIC_HOST}:${PUBLIC_PORT}; app backend http://127.0.0.1:${BACKEND_PORT}; remote setup helper loopback-only on ${REMOTE_HELPER_PORT}; delayed demo host ${PUBLIC_DEMO_HOST}`);
 });

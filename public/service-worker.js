@@ -1,4 +1,4 @@
-const CACHE_NAME = "kems-web-shell-build2";
+const CACHE_NAME = "kems-web-shell-build3";
 const APP_SHELL = [
   "/",
   "/index.html",
@@ -20,8 +20,9 @@ const APP_SHELL = [
   "/panel-state.js?v=build1",
   "/live-page.js?v=build1",
   "/panel-widget.js?v=build1",
-  "/kems-page.js?v=build2",
-  "/agile-page.js?v=build2",
+  "/kems-page.js?v=build3",
+  "/agile-page.js?v=build3",
+  "/flow-presentation-model.js?v=build3",
   "/ev-policy-model.js?v=build1",
   "/ev-policy-parity.js?v=build1",
   "/compare-page.js?v=build1",

@@ -109,3 +109,8 @@
   .cost-bar{grid-template-columns:105px 1fr 66px}
 }
 @media(max-width:500px){.panel-view{grid-template-columns:1fr;grid-template-areas:"solar" "grid" "home" "battery" "ev"}.panel-node{min-height:96px}.panel-status-grid{grid-template-columns:1fr 1fr}.kems-panel-stage{grid-template-columns:1fr;grid-template-areas:"solar" "grid" "home" "battery" "ev"}.kems-panel-node{min-height:92px}}
+
+.agile-plan-table th,
+.agile-plan-table td { white-space: nowrap; }
+.agile-plan-table strong { font-weight: 800; }
+.agile-plan-table td:first-child { font-variant-numeric: tabular-nums; }

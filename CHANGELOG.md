@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.0-alpha8-web.8
+
+- Catch Pi Web up with the HA Alpha8.48–Alpha8.54 presentation contract: one full-day Agile table, canonical rebased estimated SOC, exact mixed-route labels, and truthful NO DATA runtime gaps.
+- Keep Today export accounting on canonical elapsed-solar plus completed-settled-battery evidence.
+- Extend the public demo with privacy-delayed, allow-listed half-hour KEMS routing evidence while keeping live power, device/entity identifiers, credentials and control endpoints private.
+- Share exact route-label and runtime-gap presentation rules between Pi Web and the delayed public feed.
+- Read-only presentation/data-publication release; no Home Assistant service calls or hardware control writes.
+
 ## 0.8.0-alpha8-web.1 — Release-independent KEMS product identity
 
 - Keeps the product and user-facing identity simply **KEMS / KEMS Web** while retaining `0.8.0-alpha8-web.1` only as release metadata.

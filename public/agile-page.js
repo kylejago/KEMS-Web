@@ -1,3 +1,5 @@
+import { displayFlowAction, isHistoricalRuntimeGap } from "./flow-presentation-model.js?v=build3";
+
 const app = document.querySelector("#agile-app");
 const pill = document.querySelector("#connection-pill");
 const refreshButton = document.querySelector("#refresh-button");
@@ -147,12 +149,6 @@ function actionsLabel(slot = {}) {
   if (text.includes("battery to home") || text.includes("battery → home")) return "Battery → home";
   return raw.length > 42 ? `${raw.slice(0, 39)}…` : raw;
 }
-function displayFlowAction(action, kind) {
-  const raw = String(action || "IDLE").toUpperCase();
-  if (raw === "EXPO") return "EXPORT";
-  if (kind === "solar" && raw === "BATT") return "BATTERY";
-  return raw;
-}
 function fallbackRoutes(routes) {
   const active = routes
     .filter(([value]) => (number(value) || 0) > 0.0005)
@@ -186,23 +182,31 @@ function flowAction(slot, prefix) {
   return fallbackRoutes([[slot.flow_battery_charge_kwh, "CHARGE"], [slot.battery_to_home_kwh, "HOME"], [slot.battery_export_kwh, "EXPO"]]);
 }
 function flowCell(slot, prefix) {
+  if (isHistoricalRuntimeGap(slot)) {
+    return '<span title="No retained KEMS sample"><b>NO DATA</b> · —</span>';
+  }
   const action = flowAction(slot, prefix);
   const value = flowValue(slot, prefix);
   const scope = String(slot[FLOW_SCOPE_FIELD] || "full slot");
-  const scopeText = scope === "remaining slot" ? "<br><small>remaining</small>" : "";
+  const scopeText = scope === "remaining slot" ? " <small>remaining</small>" : "";
   const basis = escapeHtml(slot[FLOW_BASIS_FIELD] || "legacy KEMS slot fields");
-  return `<span title="${basis}"><b>${escapeHtml(action)}</b><br>${fmt(value, "kWh", 2)}${scopeText}</span>`;
+  return `<span title="${basis}"><b>${escapeHtml(action)}</b> · ${fmt(value, "kWh", 2)}${scopeText}</span>`;
 }
 function slotRows(slots, start, end) {
   return (Array.isArray(slots) ? slots : []).slice(start, end);
 }
 function slotTable(title, slots, start, end, emptyText) {
   const rows = slotRows(slots, start, end);
-  return `<section class="agile-card agile-slot-block"><h3>${escapeHtml(title)}</h3>${rows.length ? `<div class="agile-table-wrap"><table class="agile-table agile-slot-table agile-flow-table"><thead><tr><th>Time</th><th>Price</th><th>Est SOC</th><th>Grid</th><th>Solar</th><th>Battery</th></tr></thead><tbody>${rows.map((slot) => `<tr><td>${escapeHtml(slot.label || "—")}</td><td>${fmt(slot.rate_pence, "p/kWh", 2)}</td><td>${fmt(slot[FLOW_SOC_FIELD] ?? slot.ending_soc_percent, "%", 1)}</td><td>${flowCell(slot, "grid")}</td><td>${flowCell(slot, "solar")}</td><td>${flowCell(slot, "battery")}</td></tr>`).join("")}</tbody></table></div>` : `<div class="empty">${escapeHtml(emptyText)}</div>`}</section>`;
+  return `<section class="agile-card agile-slot-block"><h3>${escapeHtml(title)}</h3>${rows.length ? `<div class="agile-table-wrap"><table class="agile-table agile-slot-table agile-flow-table"><thead><tr><th>Time</th><th>Price</th><th>Est. SOC</th><th>Grid</th><th>Solar</th><th>Battery</th></tr></thead><tbody>${rows.map((slot) => {
+    const soc = isHistoricalRuntimeGap(slot)
+      ? "—"
+      : fmt(slot[FLOW_SOC_FIELD] ?? slot.ending_soc_percent, "%", 1);
+    return `<tr><td>${escapeHtml(slot.label || "—")}</td><td>${fmt(slot.rate_pence, "p/kWh", 2)}</td><td>${soc}</td><td>${flowCell(slot, "grid")}</td><td>${flowCell(slot, "solar")}</td><td>${flowCell(slot, "battery")}</td></tr>`;
+  }).join("")}</tbody></table></div>` : `<div class="empty">${escapeHtml(emptyText)}</div>`}</section>`;
 }
 function slotPlan(day, slots) {
   const prefix = day === "Today" ? "Today" : "Tomorrow";
-  return `<div class="agile-slot-grid">${slotTable(`${prefix} — 00:00 to 07:30`, slots, 0, 16, `${prefix}'s early plan is not available yet.`)}${slotTable(`${prefix} — 08:00 to 15:30`, slots, 16, 32, `${prefix}'s daytime plan is not available yet.`)}${slotTable(`${prefix} — 16:00 to 23:30`, slots, 32, 48, `${prefix}'s evening plan is not available yet.`)}</div>`;
+  return `<div class="agile-slot-grid agile-slot-grid-full">${slotTable(`${prefix} — 00:00 to 23:30`, slots, 0, 48, `${prefix}'s plan is not available yet.`)}</div>`;
 }
 function tomorrowSummary(slots, slotsState) {
   const rows = Array.isArray(slots) ? slots : [];

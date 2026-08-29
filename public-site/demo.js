@@ -76,6 +76,22 @@ function latestAllowedDate(delayDays) {
   return date.toISOString().slice(0, 10);
 }
 
+function normaliseAgileSlots(source) {
+  if (!Array.isArray(source)) return [];
+  return source.slice(0, 48).map((slot) => ({
+    time: String(slot?.time || "").slice(0, 5),
+    pricePence: number(slot?.pricePence),
+    estimatedSocPercent: number(slot?.estimatedSocPercent),
+    gridAction: String(slot?.gridAction || (slot?.noData ? "NO DATA" : "IDLE")),
+    gridKwh: number(slot?.gridKwh),
+    solarAction: String(slot?.solarAction || (slot?.noData ? "NO DATA" : "IDLE")),
+    solarKwh: number(slot?.solarKwh),
+    batteryAction: String(slot?.batteryAction || (slot?.noData ? "NO DATA" : "IDLE")),
+    batteryKwh: number(slot?.batteryKwh),
+    noData: slot?.noData === true,
+  })).filter((slot) => /^\d{2}:\d{2}$/.test(slot.time));
+}
+
 function normaliseDay(day) {
   const legacyKems = day?.kems || day?.fullKemsAgile || day?.fullKems || day?.batterySolar || null;
   const strategyLabel = day?.strategyLabel
@@ -87,12 +103,13 @@ function normaliseDay(day) {
     date: day?.date,
     actual: day?.actual || null,
     kems: legacyKems,
-    strategyLabel
+    strategyLabel,
+    agileSlots: normaliseAgileSlots(day?.agileSlots)
   };
 }
 
 function validate(input) {
-  if (!input || ![1, 2].includes(input.schema)) throw new Error('Unsupported demo data format.');
+  if (!input || ![1, 2, 3].includes(input.schema)) throw new Error('Unsupported demo data format.');
   if (!input.delayed || !Number.isInteger(input.delayDays) || input.delayDays < 7) {
     throw new Error('The public demo feed does not satisfy the seven-day privacy delay.');
   }
@@ -107,7 +124,7 @@ function validate(input) {
   }
   return {
     ...input,
-    schema: 2,
+    schema: 3,
     products: ['actual', 'kems'],
     billBasis: input.billBasis || 'Total energy cost includes electricity and gas usage, both standing charges, export income and genuine supplier/account credits. Battery wear is excluded.',
     days
@@ -243,6 +260,27 @@ function billBreakdown(metrics) {
   return `<section class="routing-section"><div class="section-title"><div><h2>Total energy cost breakdown</h2><p>${escapeHtml(payload.billBasis || '')}</p></div></div><div class="demo-table-wrap"><table class="demo-table"><thead><tr><th>Bill component</th><th>Delayed value</th></tr></thead><tbody>${rows.map(([label, value, credit]) => `<tr><th>${escapeHtml(label)}</th><td>${value === null || value === undefined ? '—' : `${credit ? '−' : ''}${escapeHtml(money(Math.abs(number(value) || 0)))}`}</td></tr>`).join('')}</tbody></table></div></section>`;
 }
 
+function delayedFlowCell(action, value, noData) {
+  if (noData) return '<strong>NO DATA</strong> · —';
+  const amount = number(value);
+  return `<strong>${escapeHtml(action || "IDLE")}</strong> · ${amount === null ? "—" : `${amount.toFixed(2)} kWh`}`;
+}
+
+function delayedAgilePlan(day) {
+  if (!day) return '';
+  const slots = Array.isArray(day.agileSlots) ? day.agileSlots : [];
+  if (!slots.length) {
+    return '<section class="routing-section"><div class="section-title"><div><h2>Delayed Agile Plan</h2><p>Half-hour routing evidence is published only when a complete privacy-delayed KEMS slot snapshot was retained for this day.</p></div></div><div class="empty-state"><strong>Building delayed slot evidence.</strong><span>No current household power is exposed.</span></div></section>';
+  }
+  const rows = slots.map((slot) => {
+    const noData = slot.noData === true;
+    const soc = noData || number(slot.estimatedSocPercent) === null ? '—' : `${number(slot.estimatedSocPercent).toFixed(1)}%`;
+    const price = number(slot.pricePence) === null ? '—' : `${number(slot.pricePence).toFixed(2)}p`;
+    return `<tr><td>${escapeHtml(slot.time)}</td><td>${price}</td><td>${soc}</td><td>${delayedFlowCell(slot.gridAction, slot.gridKwh, noData)}</td><td>${delayedFlowCell(slot.solarAction, slot.solarKwh, noData)}</td><td>${delayedFlowCell(slot.batteryAction, slot.batteryKwh, noData)}</td></tr>`;
+  }).join('');
+  return `<section class="routing-section"><div class="section-title"><div><h2>Delayed Agile Plan</h2><p>Sanitised KEMS half-hour routing evidence for ${escapeHtml(dateLabel(day.date))}. Every row is at least ${escapeHtml(String(payload.delayDays))} days old; NO DATA means no retained KEMS runtime sample, not deliberate zero flow.</p></div></div><div class="demo-table-wrap"><table class="demo-table agile-plan-table"><thead><tr><th>Time</th><th>Price</th><th>Est. SOC</th><th>Grid</th><th>Solar</th><th>Battery</th></tr></thead><tbody>${rows}</tbody></table></div></section>`;
+}
+
 function routing(metrics) {
   const rows = [
     ['Home usage', energy(metrics.homeKwh)], ['EV charging', energy(metrics.evKwh)], ['Solar generation', energy(metrics.solarKwh)],
@@ -304,7 +342,7 @@ function renderAgile() {
   const strategy = selectedStrategy(selected.days);
   root.innerHTML = hero('KEMS', 'One adaptive product. The internal strategy follows the configured system and export tariff.') + toolbar(true)
     + `<section class="demo-grid">${card('KEMS strategy', strategy, selected.label)}${card('Home energy', energy(metrics.homeKwh), selected.label)}${card('EV charging', energy(metrics.evKwh), 'Aggregate delayed energy only')}${card('Grid import', energy(metrics.gridImportKwh), selected.label)}${card('Grid export', energy(metrics.gridExportKwh), selected.label)}${card(result.label, result.value, 'Bill-equivalent; battery wear excluded', result.className)}${card('Solar generation', energy(metrics.solarKwh), mode === 'actual' ? 'Delayed measured evidence' : 'Delayed KEMS replay')}${card('End battery SoC', percent(metrics.endSocPercent), selected.days.length === 1 ? dateLabel(selected.days.at(-1).date) : 'Latest day in period')}</section>`
-    + panel(metrics, selected) + trendChart(chartDays, mode) + routing(metrics) + billBreakdown(metrics) + privacyNote();
+    + delayedAgilePlan(selected.days.length === 1 ? selected.days[0] : null) + panel(metrics, selected) + trendChart(chartDays, mode) + routing(metrics) + billBreakdown(metrics) + privacyNote();
   bindControls();
 }
 
