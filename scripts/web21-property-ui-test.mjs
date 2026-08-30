@@ -61,10 +61,17 @@ assert.match(panelState, /export function derivePanelState/);
 assert.match(panelState, /export const PANEL_POWER_THRESHOLD_KW/);
 
 for (const marker of [
-  "gridImportPower",
-  "gridExportPower",
-  "solarDataAvailable",
-  "batteryDataAvailable",
+  "/api/live",
+  "derivePanelState",
+  `panel-state.js?v=${assetVersion}`,
+  "GRID",
+  "COST",
+  "IMPORT",
+  "EXPORT",
+  "SOLAR",
+  "HOME",
+  "BATTERY",
+  "EV",
   "batterySoc",
   "gridImporting",
   "gridExporting",
