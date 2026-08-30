@@ -42,7 +42,7 @@ assert.doesNotMatch(legacyAgile, /pwa-bootstrap\.js|mobile-pwa\.css/, "Legacy ro
 
 const worker = read("public/service-worker.js");
 for (const marker of [
-  "kems-web-shell-build3",
+  "kems-web-shell-build4",
   `mobile-pwa.css?v=${assetVersion}`,
   `pwa-bootstrap.js?v=${assetVersion}`,
   "kems-page.js?v=build3",
