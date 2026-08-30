@@ -1,4 +1,4 @@
-const CACHE_NAME = "kems-web-shell-build3";
+const CACHE_NAME = "kems-web-shell-build4";
 const APP_SHELL = [
   "/",
   "/index.html",

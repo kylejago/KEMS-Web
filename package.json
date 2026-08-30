@@ -1,6 +1,6 @@
 {
   "name": "kems-web-companion",
-  "version": "0.8.0-alpha8-web.8",
+  "version": "0.8.0-alpha8-web.9",
   "private": true,
   "type": "module",
   "description": "KEMS property PWA, Pi companion and public-site source with authenticated-install parity",

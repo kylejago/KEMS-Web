@@ -131,7 +131,7 @@ expect(
 
 const worker = read("public/service-worker.js");
 expect(
-  worker.includes("kems-web-shell-build3"),
+  worker.includes("kems-web-shell-build4"),
   "current Web release must use the current PWA build cache",
 );
 expect(

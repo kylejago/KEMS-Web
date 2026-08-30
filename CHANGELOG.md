@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.0-alpha8-web.9
+
+- Re-publishes the proven Web.8 HA-parity payload under a new appliance version so Pis already reporting Web.8 receive a real `.8 → .9` update transition instead of being treated as already current.
+- Advances the PWA service-worker shell cache to `kems-web-shell-build4`, forcing installed/browser clients to discard the previous shell cache and refetch the current property assets after the Pi update.
+- Preserves the Web.8 full-day Agile table, rebased SOC, exact route labels, truthful NO DATA gaps and delayed public evidence unchanged.
+- Read-only redeployment release; no Home Assistant optimiser, settlement, control or hardware-write logic changes.
+
 ## 0.8.0-alpha8-web.8
 
 - Catch Pi Web up with the HA Alpha8.48–Alpha8.54 presentation contract: one full-day Agile table, canonical rebased estimated SOC, exact mixed-route labels, and truthful NO DATA runtime gaps.
