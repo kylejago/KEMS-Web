@@ -6,10 +6,10 @@ const loader = await readFile(new URL("../public/kems-page.js", import.meta.url)
 const shell = await readFile(new URL("../public/service-worker.js", import.meta.url), "utf8");
 const pkg = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
 
-assert.equal(pkg.version, "0.8.0-alpha8-web.8");
+assert.equal(pkg.version, "0.8.0-alpha8-web.9");
 assert.match(loader, /agile-page\.js\?v=build3/);
 assert.doesNotMatch(loader, /kems-flow-page/);
-assert.match(shell, /kems-web-shell-build3/);
+assert.match(shell, /kems-web-shell-build4/);
 assert.match(shell, /agile-page\.js\?v=build3/);
 assert.doesNotMatch(shell, /kems-flow-page/);
 
@@ -41,4 +41,4 @@ assert.match(renderer, /flow_battery_charge_kwh/);
 assert.doesNotMatch(renderer, /services\.async_call|\/api\/services|providers\.foxess/i);
 assert.equal((renderer.match(/fetch\("\/api\/live"/g) || []).length, 1);
 
-console.log("Web.8 canonical flow presentation contract passed");
+console.log("Web.9 canonical flow presentation contract passed");
