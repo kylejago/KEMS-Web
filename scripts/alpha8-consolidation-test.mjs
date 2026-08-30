@@ -61,7 +61,7 @@ assert.match(agileRenderer, /00:00 to 23:30/);
 assert.match(agileRenderer, /NO DATA/);
 
 const worker = read("public/service-worker.js");
-assert.match(worker, /kems-web-shell-build3/);
+assert.match(worker, /kems-web-shell-build4/);
 assert.match(worker, /panel-state\.js\?v=build1/);
 assert.match(worker, /kems-page\.js\?v=build3/);
 assert.match(worker, /agile-page\.js\?v=build3/);
