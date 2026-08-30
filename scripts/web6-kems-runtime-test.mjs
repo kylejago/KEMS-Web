@@ -18,7 +18,7 @@ const manifest = read("public/site.webmanifest");
 const productModel = read("public/product-model.js");
 const worker = read("public/service-worker.js");
 
-assert.equal(pkg.version, "0.8.0-alpha8-web.8");
+assert.equal(pkg.version, "0.8.0-alpha8-web.9");
 assert.equal(project.version, pkg.version);
 
 for (const page of pages) {
