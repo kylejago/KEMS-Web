@@ -61,17 +61,10 @@ assert.match(panelState, /export function derivePanelState/);
 assert.match(panelState, /export const PANEL_POWER_THRESHOLD_KW/);
 
 for (const marker of [
-  "/api/live",
-  "derivePanelState",
-  `panel-state.js?v=${assetVersion}`,
-  "GRID",
-  "COST",
-  "IMPORT",
-  "EXPORT",
-  "SOLAR",
-  "HOME",
-  "BATTERY",
-  "EV",
+  "gridImportPower",
+  "gridExportPower",
+  "solarDataAvailable",
+  "batteryDataAvailable",
   "batterySoc",
   "gridImporting",
   "gridExporting",
@@ -155,7 +148,7 @@ assert.match(worker, /flow-presentation-model\.js\?v=build3/);
 assert.doesNotMatch(worker, /web21-agile\.js/);
 assert.match(worker, /performance\.html/);
 assert.match(worker, /settings\.html/);
-assert.match(worker, /kems-web-shell-build3/);
+assert.match(worker, /kems-web-shell-build4/);
 assert.match(worker, new RegExp(`live-page\\.js\\?v=${assetVersion}`));
 assert.match(worker, new RegExp(`panel-widget\\.js\\?v=${assetVersion}`));
 assert.match(worker, new RegExp(`panel-state\\.js\\?v=${assetVersion}`));
