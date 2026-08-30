@@ -75,7 +75,7 @@ assert.match(manifestText, new RegExp(assetVersion));
 assert.match(manifestText, /\/kems\.html/);
 
 const worker = read("public/service-worker.js");
-assert.match(worker, /kems-web-shell-build3/);
+assert.match(worker, /kems-web-shell-build4/);
 assert.match(worker, new RegExp(`pwa-bootstrap\\.js\\?v=${assetVersion}`));
 assert.match(worker, /kems-page\.js\?v=build3/);
 assert.match(worker, /agile-page\.js\?v=build3/);
