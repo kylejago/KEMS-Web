@@ -9,7 +9,6 @@ on:
       - "public-site/**"
       - "brand/**"
       - "scripts/sync-approved-logo.mjs"
-      - "package.json"
       - ".github/workflows/deploy-kems-uk.yml"
 
 permissions:
@@ -41,11 +40,24 @@ jobs:
       - name: Sync exact KEMS SVG
         run: node scripts/sync-approved-logo.mjs
 
+      - name: Resolve Public Web version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION=$(node -p "require('./public-site/version.json').version")
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+-alpha[0-9]+-public\.[0-9]+$ ]] || {
+            echo "Invalid Public Web version: $VERSION" >&2
+            exit 1
+          }
+          echo "value=$VERSION" >> "$GITHUB_OUTPUT"
+
       - name: Verify public/private boundary
         shell: bash
         run: |
           set -euo pipefail
           test -f public-site/index.html
+          test -f public-site/version.json
           test -f public-site/logo.svg
           test "$(sha256sum public-site/logo.svg | awk '{print $1}')" = "ef53e22bdff4e4ebd81007c3a6d5f28da0384f547e9036a7be7e3bf2d420b464"
           if grep -RIE --exclude=README.md "HA_TOKEN|long-lived access token|long-lived token|localhost:8123|:4174|:4175" public-site; then
@@ -92,6 +104,8 @@ jobs:
           {
             echo "### kems.uk deployment"
             echo ""
+            echo "- Product: KEMS Public Web"
+            echo "- Version: \`${{ steps.version.outputs.value }}\`"
             echo "- Source: \`public-site/\`"
             echo "- Canonical KEMS SVG: SHA-256 verified before upload"
             echo "- Delayed demo client: https://demo-api.kems.uk/api/public-demo"

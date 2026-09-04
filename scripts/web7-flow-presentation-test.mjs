@@ -6,7 +6,7 @@ const loader = await readFile(new URL("../public/kems-page.js", import.meta.url)
 const shell = await readFile(new URL("../public/service-worker.js", import.meta.url), "utf8");
 const pkg = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
 
-assert.match(pkg.version, /^0\.8\.0-alpha8-web\.\d+$/);
+assert.match(pkg.version, /^0\.\d+\.0-alpha\d+-web\.\d+$/);
 assert.match(loader, /agile-page\.js\?v=build3/);
 assert.doesNotMatch(loader, /kems-flow-page/);
 assert.match(shell, /kems-web-shell-build5/);

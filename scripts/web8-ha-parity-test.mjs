@@ -53,7 +53,7 @@ const pkg = JSON.parse(
   await readFile(new URL("../package.json", import.meta.url), "utf8"),
 );
 
-assert.match(pkg.version, /^0\.8\.0-alpha8-web\.\d+$/);
+assert.match(pkg.version, /^0\.\d+\.0-alpha\d+-web\.\d+$/);
 assert.match(renderer, /flow-presentation-model\.js\?v=build3/);
 assert.match(renderer, /isHistoricalRuntimeGap\(slot\)/);
 assert.match(renderer, /NO DATA/);

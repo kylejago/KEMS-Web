@@ -1,0 +1,96 @@
+import assert from "node:assert/strict";
+import fs from "node:fs";
+
+const read = (path) => fs.readFileSync(path, "utf8");
+const pkg = JSON.parse(read("package.json"));
+const project = JSON.parse(read("config/project.json"));
+const publicVersion = JSON.parse(read("public-site/version.json"));
+
+const versionMatch = pkg.version.match(/^0\.9\.0-alpha9-web\.(\d+)$/);
+assert.ok(versionMatch, `Expected Alpha9 Pi Web release family, got ${pkg.version}`);
+assert.equal(Number.parseInt(versionMatch[1], 10), 0, `Expected coordinated Web.0 baseline, got ${pkg.version}`);
+assert.equal(project.version, pkg.version);
+assert.equal(publicVersion.version, "0.9.0-alpha9-public.0");
+assert.notEqual(publicVersion.version, pkg.version);
+
+const propertyPages = [
+  "public/index.html",
+  "public/compare.html",
+  "public/kems.html",
+  "public/performance.html",
+  "public/settings.html",
+  "public/products.html",
+  "public/remote-access.html",
+];
+for (const file of propertyPages) {
+  const html = read(file);
+  assert.match(
+    html,
+    /<link rel="manifest" href="site\.webmanifest" crossorigin="use-credentials" \/>/,
+    `${file} must preserve credentialed manifest loading`,
+  );
+  assert.doesNotMatch(html, /alpha7web33/, `${file} must not serve the stale Web.33 asset key`);
+  assert.match(html, /\?v=build1/, `${file} must use the neutral property asset identity`);
+}
+
+const legacyAgile = read("public/agile.html");
+assert.match(legacyAgile, /\/kems\.html/);
+assert.doesNotMatch(legacyAgile, /rel="manifest"|\?v=build1/, "Legacy Agile URL is redirect-only, not a second PWA page");
+
+const panelState = read("public/panel-state.js");
+assert.match(panelState, /export function derivePanelState/);
+assert.match(panelState, /PANEL_POWER_THRESHOLD_KW/);
+for (const file of ["public/live-page.js", "public/panel-widget.js"]) {
+  const source = read(file);
+  assert.match(source, /panel-state\.js\?v=build1/, `${file} must use the shared panel-state model`);
+  assert.match(source, /derivePanelState/);
+}
+assert.doesNotMatch(
+  read("public/live-page.js"),
+  /navigator\.serviceWorker\.register/,
+  "Live page must not duplicate the shared PWA bootstrap registration",
+);
+
+const kemsHtml = read("public/kems.html");
+assert.match(kemsHtml, /kems-page\.js\?v=build3/);
+assert.match(kemsHtml, /agile\.css\?v=build3/);
+assert.doesNotMatch(kemsHtml, /web21-agile\.js|src="agile-page\.js/);
+
+const kemsRuntime = read("public/kems-page.js");
+assert.match(kemsRuntime, /agile-page\.js\?v=build3/);
+const agileRenderer = read("public/agile-page.js");
+assert.match(agileRenderer, /flow-presentation-model\.js\?v=build3/);
+assert.match(agileRenderer, /00:00 to 23:30/);
+assert.match(agileRenderer, /NO DATA/);
+
+const settingsHtml = read("public/settings.html");
+assert.match(settingsHtml, /control-safety-widget\.js\?v=build1/);
+const safetyModel = read("public/control-safety-model.js");
+assert.match(safetyModel, /kems_commissioning_readiness/);
+assert.match(safetyModel, /kems_control_commands_permitted/);
+assert.match(safetyModel, /kems_real_control_backend_available/);
+assert.match(safetyModel, /kems_system_commissioned_for_control/);
+
+const worker = read("public/service-worker.js");
+assert.match(worker, /kems-web-shell-build5/);
+assert.match(worker, /panel-state\.js\?v=build1/);
+assert.match(worker, /kems-page\.js\?v=build3/);
+assert.match(worker, /agile-page\.js\?v=build3/);
+assert.match(worker, /flow-presentation-model\.js\?v=build3/);
+assert.match(worker, /control-safety-model\.js\?v=build1/);
+assert.match(worker, /control-safety-widget\.js\?v=build1/);
+assert.match(worker, /ev-policy-model\.js\?v=build1/);
+assert.match(worker, /ev-policy-parity\.js\?v=build1/);
+assert.match(worker, /url\.pathname === "\/site\.webmanifest"/);
+assert.match(worker, /isAccessRedirect/);
+
+const manifest = JSON.parse(read("public/site.webmanifest"));
+assert.equal(manifest.display, "standalone");
+assert.ok(manifest.icons.every((icon) => icon.src.includes("build1")));
+assert.ok(manifest.shortcuts.some((shortcut) => shortcut.name === "KEMS" && shortcut.url === "/kems.html"));
+
+const deployWorkflow = read(".github/workflows/deploy-kems-uk.yml");
+assert.doesNotMatch(deployWorkflow, /- ["']?package\.json["']?/, "Pi Web version bumps must not redeploy Public Web");
+assert.match(read(".github/workflows/release-public.yml"), /public-site\/version\.json/);
+
+console.log(`KEMS ${pkg.version} / Public Web ${publicVersion.version} Alpha9 baseline contract passed: PWA parity, read-only safety projection and independent Public Web release identity are intact.`);

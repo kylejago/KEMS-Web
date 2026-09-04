@@ -6,7 +6,7 @@ const pkg = JSON.parse(read("package.json"));
 const entities = JSON.parse(read("config/entities.json"));
 const project = JSON.parse(read("config/project.json"));
 
-assert.equal(pkg.version, "0.8.0-alpha8-web.11");
+assert.match(pkg.version, /^(?:0\.8\.0-alpha8-web\.11|0\.9\.0-alpha9-web\.0)$/);
 assert.equal(project.version, pkg.version);
 assert.equal(entities.commissioning_readiness, "sensor.kems_commissioning_readiness");
 
