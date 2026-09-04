@@ -6,6 +6,7 @@ on:
       - main
       - "feature/**"
       - "fix/**"
+      - "release/**"
   pull_request:
 
 jobs:
