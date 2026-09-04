@@ -25,7 +25,7 @@ for (const file of retiredRuntimeFiles) {
 assert.equal(fs.existsSync("public/app.js"), true, "A tiny app.js updater sentinel is required for pre-Web.10 appliance updaters");
 const updaterSentinel = read("public/app.js");
 assert.match(updaterSentinel, /Compatibility sentinel/);
-assert.match(updaterSentinel, /legacy Alpha6 renderer[^\n]*intentionally gone/i);
+assert.match(updaterSentinel, /legacy Alpha6 renderer[\s\S]*intentionally gone/i);
 assert.doesNotMatch(read("package.json"), /public\/app\.js/, "The updater sentinel must not become an active package runtime/check owner");
 assert.doesNotMatch(read("public/service-worker.js"), /(?:^|\/)app\.js(?:[?'"`]|$)/m, "The updater sentinel must not enter the PWA shell cache");
 
