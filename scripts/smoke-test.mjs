@@ -52,7 +52,7 @@ try {
     live,
     history,
     html,
-    js,
+    liveJs,
     agileHtml,
     agileJs,
     css,
@@ -65,6 +65,9 @@ try {
     compareHtml,
     performanceHtml,
     settingsHtml,
+    settingsJs,
+    safetyModel,
+    safetyWidget,
     web21Css,
     logo,
   ] = await Promise.all([
@@ -76,7 +79,7 @@ try {
     get("/api/live").then((response) => response.json()),
     get("/api/history?hours=24").then((response) => response.json()),
     get("/").then((response) => response.text()),
-    get("/app.js").then((response) => response.text()),
+    get("/live-page.js").then((response) => response.text()),
     get("/agile.html").then((response) => response.text()),
     get("/agile-page.js").then((response) => response.text()),
     get("/styles.css").then((response) => response.text()),
@@ -89,6 +92,9 @@ try {
     get("/compare.html").then((response) => response.text()),
     get("/performance.html").then((response) => response.text()),
     get("/settings.html").then((response) => response.text()),
+    get("/settings-page.js").then((response) => response.text()),
+    get("/control-safety-model.js").then((response) => response.text()),
+    get("/control-safety-widget.js").then((response) => response.text()),
     get("/web21.css").then((response) => response.text()),
     get("/logo.svg").then(async (response) => ({ ok: response.ok, text: await response.text() })),
   ]);
@@ -161,14 +167,14 @@ try {
     throw new Error("Brand stylesheet incomplete.");
   }
   if (
-    !js.includes("renderConnectionPage") ||
-    !js.includes("liveView") ||
-    !js.includes("simulationView") ||
-    !js.includes("compareView") ||
-    !js.includes("scenarioView") ||
-    !js.includes("performanceView")
+    !liveJs.includes("derivePanelState") ||
+    !liveJs.includes("snapshotValues") ||
+    !liveJs.includes("panelReplica") ||
+    !liveJs.includes("todaySection") ||
+    !liveJs.includes("/api/live") ||
+    !liveJs.includes("/api/analytics?range=day")
   ) {
-    throw new Error("Frontend bundle incomplete.");
+    throw new Error("Current Live Data frontend bundle incomplete.");
   }
   if (
     !agileHtml.includes(">KEMS</a>") ||
@@ -189,8 +195,21 @@ try {
   ) {
     throw new Error("Styles incomplete.");
   }
-  if (!js.includes("systemSectionContent") || !js.includes("showBackupModal") || !js.includes("runSystemAction")) {
+  if (
+    !settingsJs.includes("updateControls") ||
+    !settingsJs.includes("maintenanceControls") ||
+    !settingsJs.includes("installUpdate") ||
+    !settingsJs.includes("/api/system/action")
+  ) {
     throw new Error("Pi management frontend is missing.");
+  }
+  if (
+    !settingsHtml.includes("control-safety-widget.js") ||
+    !safetyModel.includes("sensor.kems_commissioning_readiness") ||
+    !safetyModel.includes("binary_sensor.kems_control_commands_permitted") ||
+    !safetyWidget.includes("None — display only")
+  ) {
+    throw new Error("Authoritative read-only KEMS safety projection is missing.");
   }
   if (system.available !== false) {
     throw new Error("Non-Pi smoke environment should report manager unavailable rather than failing site.");
@@ -203,7 +222,7 @@ try {
   }
 
   console.log(
-    `Smoke test passed for ${packageVersion}: setup ready, runtime manifest installable and mobile property shell present.`,
+    `Smoke test passed for ${packageVersion}: setup ready, runtime manifest installable, authoritative safety evidence present and mobile property shell complete.`,
   );
 } finally {
   child.kill("SIGTERM");
