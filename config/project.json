@@ -1,11 +1,11 @@
 {
   "name": "KEMS",
   "longName": "Kyle Energy Management System",
-  "version": "0.8.0-alpha8-web.11",
+  "version": "0.9.0-alpha9-web.0",
   "tagline": "Your actual energy bill compared with what KEMS would have done.",
-  "summary": "The KEMS property PWA, Pi companion and public-site source, preserving the accepted Cloudflare-authenticated install path while sharing panel state and release contracts.",
+  "summary": "The KEMS property PWA and Pi companion, with the public kems.uk source retained in the same repository under an independent Public Web release identity.",
   "repository": "https://github.com/kylejago/KEMS-Web",
-  "build": "KEMS Web/PWA contract cleanup · authoritative read-only control/commissioning evidence · retired renderer removal · no Home Assistant control writes",
+  "build": "Coordinated parity baseline · authoritative read-only control/commissioning evidence · independent Pi/Public release identities · no Home Assistant control writes",
   "principles": [
     "Home Assistant and KEMS remain the source of truth for each property.",
     "The user-facing product model is Live Data and KEMS; retired scenario names remain internal validation evidence only.",
@@ -50,6 +50,6 @@
     "Cloudflare connector setup accepts only a tunnel token; pasted shell commands are never executed.",
     "The private property tunnel targets KEMS Web on localhost:4173 only and never exposes Pi management, setup helpers, SSH, Home Assistant or the wider LAN.",
     "Each property keeps its own Home Assistant credentials and KEMS data on its own appliance.",
-    "Release versions identify published repository states; live product naming and cache identities remain independent of development-generation labels."
+    "Release versions identify published repository states; Pi Web and Public Web have independent version sources, tags and publishers even while sharing one repository."
   ]
 }
