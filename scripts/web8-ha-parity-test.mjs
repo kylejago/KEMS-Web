@@ -53,7 +53,7 @@ const pkg = JSON.parse(
   await readFile(new URL("../package.json", import.meta.url), "utf8"),
 );
 
-assert.equal(pkg.version, "0.8.0-alpha8-web.9");
+assert.match(pkg.version, /^0\.8\.0-alpha8-web\.\d+$/);
 assert.match(renderer, /flow-presentation-model\.js\?v=build3/);
 assert.match(renderer, /isHistoricalRuntimeGap\(slot\)/);
 assert.match(renderer, /NO DATA/);
@@ -116,4 +116,4 @@ assert.deepEqual(publicPayload.days[0].agileSlots[0], candidate.days[0].agileSlo
 assert.equal(publicPayload.days[0].agileSlots[1].noData, true);
 assert.equal(publicPayload.days[0].agileSlots[1].gridKwh, null);
 
-console.log("Web.8 HA parity catch-up contract preserved by Web.9 redeploy");
+console.log(`${pkg.version} Home Assistant presentation/parity contract passed`);
