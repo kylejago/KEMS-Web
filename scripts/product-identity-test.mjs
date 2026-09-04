@@ -5,7 +5,7 @@ const read = (path) => fs.readFileSync(path, "utf8");
 const pkg = JSON.parse(read("package.json"));
 const project = JSON.parse(read("config/project.json"));
 
-assert.equal(pkg.version, "0.8.0-alpha8-web.9");
+assert.equal(pkg.version, "0.8.0-alpha8-web.10");
 assert.equal(project.version, pkg.version);
 
 const forbiddenLiveIdentity = /(?:alpha7web|alpha8web|kems-alpha7|kems-alpha8|KEMS Alpha7|KEMS Alpha8|Alpha7 shadow)/i;
@@ -25,6 +25,8 @@ const propertySurfaces = [
   "public/kems-page.js",
   "public/agile-page.js",
   "public/flow-presentation-model.js",
+  "public/control-safety-model.js",
+  "public/control-safety-widget.js",
 ];
 for (const file of propertySurfaces) {
   const source = read(file);
@@ -48,7 +50,7 @@ assert.match(read("public/kems.html"), /kems-page\.js\?v=build3/);
 assert.match(read("public/kems.html"), /agile\.css\?v=build3/);
 assert.match(read("public/kems-page.js"), /build3/, "Changed KEMS runtime must use the neutral build3 identity");
 assert.match(read("public/agile-page.js"), /flow-presentation-model\.js\?v=build3/);
-assert.match(read("public/service-worker.js"), /const CACHE_NAME = "kems-web-shell-build4";/, "Web.9 must force a fresh PWA shell cache after the Web.8 redeploy");
+assert.match(read("public/service-worker.js"), /const CACHE_NAME = "kems-web-shell-build5";/, "Web.10 must rotate the PWA shell for the safety/cleanup payload");
 assert.doesNotMatch(read("public/kems-page.js"), /alpha\d+web|alpha8-web/i, "KEMS runtime cache identity must remain release-independent");
 assert.doesNotMatch(read("public/agile-page.js"), /alpha\d+web|alpha8-web/i, "Agile renderer cache identity must remain release-independent");
 
@@ -85,6 +87,7 @@ const versionPatternSource = bundleAgent.match(/const match = \/(.+)\/i\.exec\(t
 assert.ok(versionPatternSource, "Pi bundle agent must expose an appliance release ordering pattern");
 const versionPattern = new RegExp(versionPatternSource, "i");
 for (const version of [
+  "0.8.0-alpha8-web.10",
   "0.8.0-alpha8-web.9",
   "0.8.0-alpha8-web.8",
   "0.8.0-alpha8-web.7",
