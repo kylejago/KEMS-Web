@@ -96,15 +96,13 @@ try {
     method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url: `http://127.0.0.1:${haPort}`, token, remember: true })
   }).then(async (r) => { const b = await r.json(); if (!r.ok) throw new Error(b.error); return b; });
 
-  const [live, day, week, month, year, all, js, css] = await Promise.all([
+  const [live, day, week, month, year, all] = await Promise.all([
     fetch(`http://127.0.0.1:${sitePort}/api/live`).then((r) => r.json()),
     fetch(`http://127.0.0.1:${sitePort}/api/analytics?range=day`).then((r) => r.json()),
     fetch(`http://127.0.0.1:${sitePort}/api/analytics?range=week`).then((r) => r.json()),
     fetch(`http://127.0.0.1:${sitePort}/api/analytics?range=month`).then((r) => r.json()),
     fetch(`http://127.0.0.1:${sitePort}/api/analytics?range=year`).then((r) => r.json()),
-    fetch(`http://127.0.0.1:${sitePort}/api/analytics?range=all`).then((r) => r.json()),
-    fetch(`http://127.0.0.1:${sitePort}/app.js`).then((r) => r.text()),
-    fetch(`http://127.0.0.1:${sitePort}/styles.css`).then((r) => r.text())
+    fetch(`http://127.0.0.1:${sitePort}/api/analytics?range=all`).then((r) => r.json())
   ]);
 
   if (live.metrics.housePower !== 1.57) throw new Error(`Unexpected alpha5 house load ${live.metrics.housePower}`);
@@ -133,8 +131,7 @@ try {
     });
     if (outOfRange) throw new Error(`${result.range} chart leaked a baseline bucket outside the native alpha5 period.`);
   }
-  if (!js.includes("Awaiting export tariff") || !js.includes("solarBatteryCurve") || !js.includes("Alpha5 period ledger") || !js.includes("chart-event-list") || !js.includes("KEMS Pi server")) throw new Error("Alpha5/web.6 frontend features missing.");
-  if (!css.includes(".alpha5-status-strip") || !css.includes(".alpha5-solar-battery")) throw new Error("Alpha5 styling missing.");
+
   const saved = fs.readFileSync(path.join(dataDir, "connection.enc.json"), "utf8");
   if (saved.includes(token)) throw new Error("Token was stored in plaintext.");
   const backupResponse = await fetch(`http://127.0.0.1:${sitePort}/api/system/backup`, {
@@ -149,7 +146,7 @@ try {
     body: backup
   });
   if (!restoreResponse.ok) throw new Error(`Encrypted restore endpoint failed: ${restoreResponse.status}`);
-  console.log(`KEMS alpha5 fixture passed: ${tested.kemsEntityCount} entities, native Day/Week/Month/Year/All-time totals, policy markers, filtered chart periods and encrypted backup/restore verified.`);
+  console.log(`KEMS alpha5 compatibility fixture passed: ${tested.kemsEntityCount} entities, native Day/Week/Month/Year/All-time totals, policy markers, filtered chart periods and encrypted backup/restore verified without retaining the retired Alpha5 frontend renderer.`);
 } finally {
   child.kill("SIGTERM");
   await new Promise((resolve) => ha.close(resolve));
