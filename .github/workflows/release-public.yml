@@ -1,0 +1,132 @@
+name: Publish KEMS Public Web release
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'public-v*'
+    paths:
+      - 'public-site/version.json'
+      - '.github/workflows/release-public.yml'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Public Web version from public-site/version.json, e.g. 0.9.0-alpha9-public.0'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-kems-public-web-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Sync exact KEMS SVG
+        run: node scripts/sync-approved-logo.mjs
+
+      - name: Validate Public Web release contract
+        run: node scripts/public-version-contract-test.mjs
+
+      - name: Verify public/private boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f public-site/index.html
+          test -f public-site/version.json
+          test -f public-site/logo.svg
+          test "$(sha256sum public-site/logo.svg | awk '{print $1}')" = "ef53e22bdff4e4ebd81007c3a6d5f28da0384f547e9036a7be7e3bf2d420b464"
+          if grep -RIE --exclude=README.md "HA_TOKEN|long-lived access token|long-lived token|localhost:8123|:4174|:4175" public-site; then
+            echo "The public site contains a forbidden private credential/control reference." >&2
+            exit 1
+          fi
+
+      - name: Resolve Public Web version
+        id: meta
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION=$(node -p "require('./public-site/version.json').version")
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            REQUESTED='${{ inputs.version }}'
+            [ "$VERSION" = "$REQUESTED" ] || { echo "Requested $REQUESTED but public-site/version.json is $VERSION" >&2; exit 1; }
+            TAG="public-v${VERSION}"
+          elif [[ "$GITHUB_REF" == refs/tags/public-v* ]]; then
+            TAG="$GITHUB_REF_NAME"
+            EXPECTED="${TAG#public-v}"
+            [ "$VERSION" = "$EXPECTED" ] || { echo "Tag version $EXPECTED does not match public-site/version.json $VERSION" >&2; exit 1; }
+          elif [ "$GITHUB_REF" = "refs/heads/main" ]; then
+            TAG="public-v${VERSION}"
+          else
+            echo "Unsupported release ref: $GITHUB_REF" >&2
+            exit 1
+          fi
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Check whether release already exists
+        id: existing
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.meta.outputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Release $TAG already exists; validation passed and no duplicate release will be created."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build Public Web release asset
+        if: steps.existing.outputs.exists != 'true'
+        id: build
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION='${{ steps.meta.outputs.version }}'
+          NAME="kems-public-${VERSION}"
+          mkdir -p "dist/${NAME}"
+          cp -a public-site/. "dist/${NAME}/"
+          rm -f "dist/${NAME}/README.md"
+          tar -C dist -czf "dist/${NAME}.tar.gz" "$NAME"
+          (cd dist && sha256sum "${NAME}.tar.gz" > "${NAME}.tar.gz.sha256")
+          echo "archive=dist/${NAME}.tar.gz" >> "$GITHUB_OUTPUT"
+          echo "checksum=dist/${NAME}.tar.gz.sha256" >> "$GITHUB_OUTPUT"
+
+      - name: Publish GitHub Release
+        if: steps.existing.outputs.exists != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION='${{ steps.meta.outputs.version }}'
+          TAG='${{ steps.meta.outputs.tag }}'
+          PRERELEASE=''
+          case "$VERSION" in
+            *alpha*|*beta*|*rc*) PRERELEASE='--prerelease' ;;
+          esac
+          gh release create "$TAG" \
+            '${{ steps.build.outputs.archive }}' \
+            '${{ steps.build.outputs.checksum }}' \
+            --target "$GITHUB_SHA" \
+            --title "KEMS Public Web ${VERSION}" \
+            --generate-notes \
+            $PRERELEASE
