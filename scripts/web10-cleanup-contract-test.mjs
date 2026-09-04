@@ -6,12 +6,11 @@ const pkg = JSON.parse(read("package.json"));
 const entities = JSON.parse(read("config/entities.json"));
 const project = JSON.parse(read("config/project.json"));
 
-assert.equal(pkg.version, "0.8.0-alpha8-web.10");
+assert.equal(pkg.version, "0.8.0-alpha8-web.11");
 assert.equal(project.version, pkg.version);
 assert.equal(entities.commissioning_readiness, "sensor.kems_commissioning_readiness");
 
 const retiredRuntimeFiles = [
-  "public/app.js",
   "public/web21-live.js",
   "public/web21-agile.js",
   "public/strategy-comparison.js",
@@ -22,6 +21,13 @@ for (const file of retiredRuntimeFiles) {
   assert.equal(fs.existsSync(file), false, `${file} must remain removed after the Alpha8 cleanup`);
   assert.doesNotMatch(read("package.json"), new RegExp(file.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), `${file} must not remain in package scripts`);
 }
+
+assert.equal(fs.existsSync("public/app.js"), true, "A tiny app.js updater sentinel is required for pre-Web.10 appliance updaters");
+const updaterSentinel = read("public/app.js");
+assert.match(updaterSentinel, /Compatibility sentinel/);
+assert.match(updaterSentinel, /legacy Alpha6 renderer[^\n]*intentionally gone/i);
+assert.doesNotMatch(read("package.json"), /public\/app\.js/, "The updater sentinel must not become an active package runtime/check owner");
+assert.doesNotMatch(read("public/service-worker.js"), /(?:^|\/)app\.js(?:[?'"`]|$)/m, "The updater sentinel must not enter the PWA shell cache");
 
 for (const compatibilityFile of ["public/agile.html", "public/products.html"]) {
   assert.equal(fs.existsSync(compatibilityFile), true, `${compatibilityFile} is an intentional compatibility route`);
@@ -71,4 +77,4 @@ for (const publicFile of [
   assert.doesNotMatch(source, /control-safety|commissioning_readiness|commands_permitted/i, `${publicFile} must not expose private commissioning detail`);
 }
 
-console.log("KEMS Web.10 cleanup contract passed: authoritative read-only safety evidence is projected on the property Pi, retired runtime/mask files are gone, compatibility routes remain, and the public site stays outside private commissioning detail.");
+console.log("KEMS Web.11 cleanup/bootstrap contract passed: authoritative read-only safety evidence remains on the property Pi, the legacy renderer remains removed, the inert updater sentinel is not a runtime owner, compatibility routes remain, and the public site stays outside private commissioning detail.");
