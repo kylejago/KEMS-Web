@@ -10,7 +10,7 @@ const products = read("public/product-model.js");
 const project = JSON.parse(read("config/project.json"));
 const pkg = JSON.parse(read("package.json"));
 
-assert.equal(pkg.version, "0.8.0-alpha8-web.9");
+assert.match(pkg.version, /^0\.8\.0-alpha8-web\.\d+$/);
 assert.equal(project.version, pkg.version);
 assert.match(products, /key: "live_data"/);
 assert.match(products, /key: "kems"/);
