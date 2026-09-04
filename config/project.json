@@ -5,7 +5,7 @@
   "tagline": "Your actual energy bill compared with what KEMS would have done.",
   "summary": "The KEMS property PWA and Pi companion, with the public kems.uk source retained in the same repository under an independent Public Web release identity.",
   "repository": "https://github.com/kylejago/KEMS-Web",
-  "build": "Coordinated parity baseline · authoritative read-only control/commissioning evidence · independent Pi/Public release identities · no Home Assistant control writes",
+  "build": "Coordinated PWA parity baseline · authoritative read-only control/commissioning evidence · independent Pi/Public release identities · no Home Assistant control writes",
   "principles": [
     "Home Assistant and KEMS remain the source of truth for each property.",
     "The user-facing product model is Live Data and KEMS; retired scenario names remain internal validation evidence only.",
