@@ -155,7 +155,7 @@ assert.match(worker, /flow-presentation-model\.js\?v=build3/);
 assert.doesNotMatch(worker, /web21-agile\.js/);
 assert.match(worker, /performance\.html/);
 assert.match(worker, /settings\.html/);
-assert.match(worker, /kems-web-shell-build4/);
+assert.match(worker, /kems-web-shell-build5/);
 assert.match(worker, new RegExp(`live-page\\.js\\?v=${assetVersion}`));
 assert.match(worker, new RegExp(`panel-widget\\.js\\?v=${assetVersion}`));
 assert.match(worker, new RegExp(`panel-state\\.js\\?v=${assetVersion}`));
