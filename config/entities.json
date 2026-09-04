@@ -114,6 +114,7 @@
   "control_enabled": "binary_sensor.kems_control_enabled",
   "commissioned": "binary_sensor.kems_system_commissioned_for_control",
   "real_backend_available": "binary_sensor.kems_real_control_backend_available",
+  "commissioning_readiness": "sensor.kems_commissioning_readiness",
   "desired_work_mode": "sensor.kems_desired_inverter_work_mode",
   "desired_charge_power": "sensor.kems_desired_battery_charge_power",
   "desired_battery_to_home_power": "sensor.kems_desired_battery_to_home_power",

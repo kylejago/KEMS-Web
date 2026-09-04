@@ -76,7 +76,7 @@ for (const marker of ["today_slots", "tomorrow_slots", "grid_import_kwh", "grid_
 }
 if (/\/api\/services|services\.async_call|method:\s*["']POST/i.test(kems + kemsRuntime)) throw new Error("KEMS page must remain read-only");
 
-if (!serviceWorker.includes("kems-web-shell-build4") || !serviceWorker.includes(`/brand-lockup.svg?v=${assetVersion}`) || !serviceWorker.includes(`/brand.css?v=${assetVersion}`)) {
+if (!serviceWorker.includes("kems-web-shell-build5") || !serviceWorker.includes(`/brand-lockup.svg?v=${assetVersion}`) || !serviceWorker.includes(`/brand.css?v=${assetVersion}`)) {
   throw new Error("PWA cache is not aligned with neutral KEMS brand shell");
 }
 if (!serviceWorker.includes("/kems.html") || !serviceWorker.includes("/kems-page.js?v=build3")) throw new Error("PWA canonical KEMS route missing");

@@ -60,12 +60,22 @@ assert.match(agileRenderer, /flow-presentation-model\.js\?v=build3/);
 assert.match(agileRenderer, /00:00 to 23:30/);
 assert.match(agileRenderer, /NO DATA/);
 
+const settingsHtml = read("public/settings.html");
+assert.match(settingsHtml, /control-safety-widget\.js\?v=build1/);
+const safetyModel = read("public/control-safety-model.js");
+assert.match(safetyModel, /kems_commissioning_readiness/);
+assert.match(safetyModel, /kems_control_commands_permitted/);
+assert.match(safetyModel, /kems_real_control_backend_available/);
+assert.match(safetyModel, /kems_system_commissioned_for_control/);
+
 const worker = read("public/service-worker.js");
-assert.match(worker, /kems-web-shell-build4/);
+assert.match(worker, /kems-web-shell-build5/);
 assert.match(worker, /panel-state\.js\?v=build1/);
 assert.match(worker, /kems-page\.js\?v=build3/);
 assert.match(worker, /agile-page\.js\?v=build3/);
 assert.match(worker, /flow-presentation-model\.js\?v=build3/);
+assert.match(worker, /control-safety-model\.js\?v=build1/);
+assert.match(worker, /control-safety-widget\.js\?v=build1/);
 assert.match(worker, /ev-policy-model\.js\?v=build1/);
 assert.match(worker, /ev-policy-parity\.js\?v=build1/);
 assert.match(worker, /url\.pathname === "\/site\.webmanifest"/);
@@ -76,4 +86,4 @@ assert.equal(manifest.display, "standalone");
 assert.ok(manifest.icons.every((icon) => icon.src.includes("build1")));
 assert.ok(manifest.shortcuts.some((shortcut) => shortcut.name === "KEMS" && shortcut.url === "/kems.html"));
 
-console.log(`KEMS ${pkg.version} consolidation contract passed: authenticated PWA parity, canonical full-day KEMS flow route, shared flow/panel models, EV policy projection and coordinated versioning are intact.`);
+console.log(`KEMS ${pkg.version} consolidation contract passed: authenticated PWA parity, canonical full-day KEMS flow route, shared flow/panel models, authoritative safety projection, EV policy projection and coordinated versioning are intact.`);

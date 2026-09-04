@@ -71,7 +71,7 @@ for (const marker of [
 assert.doesNotMatch(settings, /Long-Lived Access Token/i, "PWA install flow must not ask for a Home Assistant token");
 
 const worker = read("public/service-worker.js");
-assert.match(worker, /kems-web-shell-build4/);
+assert.match(worker, /kems-web-shell-build5/);
 assert.match(worker, /kems-page\.js\?v=build3/);
 assert.match(worker, /agile-page\.js\?v=build3/);
 assert.match(worker, /flow-presentation-model\.js\?v=build3/);
@@ -81,7 +81,7 @@ assert.match(worker, /url\.pathname === "\/site\.webmanifest"/);
 
 const project = JSON.parse(read("config/project.json"));
 assert.equal(project.version, pkg.version);
-assert.match(project.build, /install|PWA|manifest/i);
+assert.match(project.build, /install|PWA|manifest|contract/i);
 assert.ok(project.principles.some((item) => /HTTP Pi address.*browser shortcut/i.test(item)));
 assert.ok(
   project.principles.some((item) => /secure-context.*runtime-manifest.*service-worker/i.test(item)) ||

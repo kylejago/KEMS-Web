@@ -28,7 +28,7 @@ mustContain(".github/workflows/deploy-kems-uk.yml", ["sync-approved-logo.mjs", "
 mustContain(".github/workflows/build-pi-image.yml", ["latest-v22.x/SHASUMS256.txt", "kems-setup-status.mjs", "KEMS-Pi-${VERSION}-headless.img.xz"]);
 
 mustContain("server.mjs", ["/api/site", "/api/maintenance", "/api/system/update-policy", "/api/home-assistant/status", "/api/home-assistant/action", "site.json"]);
-mustContain("public/app.js", ["Site identity", "Automatic coordinated updates", "Planned KEMS maintenance", "Host on this KEMS Pi", "Install Home Assistant", "Connect KEMS to local HA"]);
+mustContain("public/settings-page.js", ["Property ID", "Automatic coordinated updates", "Maintenance window", "KEMS as a web app", "/api/home-assistant/status", "/api/system/update-policy"]);
 mustContain("public/brand.css", ["brand-lockup", "loading-brand-lockup", "page-brand-lockup"]);
 mustContain("public/brand-lockup.svg", ["KEMS logo", "viewBox=\"0 0 180 180\""]);
 
